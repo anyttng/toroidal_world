@@ -169,11 +169,20 @@ public final class PacketTranslator {
             Map.entry(ClientboundLevelParticlesPacket.class, rewriter(PacketTranslator::levelParticles)),
             Map.entry(ClientboundExplodePacket.class, rewriter(PacketTranslator::explode)),
             Map.entry(ClientboundSetDefaultSpawnPositionPacket.class, rewriter(PacketTranslator::setDefaultSpawnPosition)),
-            Map.entry(ClientboundInitializeBorderPacket.class, rewriter(PacketTranslator::initializeBorder)),
-            Map.entry(ClientboundSetBorderCenterPacket.class, rewriter(PacketTranslator::setBorderCenter)),
+            Map.entry(ClientboundInitializeBorderPacket.class, rewriter(
+                    (ClientboundInitializeBorderPacket packet, TranslationContext context) -> borderCenter(packet, context,
+                            (borderPacket, output) -> ((InitializeBorderPacketAccessor) borderPacket).toroidal$write(output),
+                            InitializeBorderPacketAccessor::toroidal$create))),
+            Map.entry(ClientboundSetBorderCenterPacket.class, rewriter(
+                    (ClientboundSetBorderCenterPacket packet, TranslationContext context) -> borderCenter(packet, context,
+                            (borderPacket, output) -> ((SetBorderCenterPacketAccessor) borderPacket).toroidal$write(output),
+                            SetBorderCenterPacketAccessor::toroidal$create))),
             Map.entry(ClientboundPlayerLookAtPacket.class, rewriter(PacketTranslator::playerLookAt)),
             Map.entry(ClientboundDamageEventPacket.class, rewriter(PacketTranslator::damageEvent)),
-            Map.entry(ClientboundCustomPayloadPacket.class, rewriter(PacketTranslator::clientboundCustomPayload)));
+            Map.entry(ClientboundCustomPayloadPacket.class, rewriter(
+                    (ClientboundCustomPayloadPacket packet, TranslationContext context) -> customPayload(packet,
+                            packet.payload(), context.rewriters()::rewriteClientbound, ClientboundCustomPayloadPacket::new,
+                            context))));
 
     private static final PacketRewriters PRODUCTION = new PacketRewriters();
 
@@ -211,7 +220,10 @@ public final class PacketTranslator {
             Map.entry(ServerboundSetCommandBlockPacket.class, rewriter(PacketTranslator::setCommandBlock)),
             Map.entry(ServerboundSetJigsawBlockPacket.class, rewriter(PacketTranslator::setJigsawBlock)),
             Map.entry(ServerboundSetStructureBlockPacket.class, rewriter(PacketTranslator::setStructureBlock)),
-            Map.entry(ServerboundCustomPayloadPacket.class, rewriter(PacketTranslator::serverboundCustomPayload)));
+            Map.entry(ServerboundCustomPayloadPacket.class, rewriter(
+                    (ServerboundCustomPayloadPacket packet, TranslationContext context) -> customPayload(packet,
+                            packet.payload(), context.rewriters()::rewriteServerbound, ServerboundCustomPayloadPacket::new,
+                            context))));
 
     public static <T extends net.minecraft.network.PacketListener> Packet<T> toClient(Packet<T> packet, ServerPlayer player) {
         WorldFold transformer = WorldLoopAttachments.wrappedTransformerOf(player.level());
@@ -318,14 +330,11 @@ public final class PacketTranslator {
         return new ClientboundSetChunkCacheCenterPacket(clientPos.x, clientPos.z);
     }
 
-    private static Packet<?> clientboundCustomPayload(ClientboundCustomPayloadPacket packet, TranslationContext context) {
-        CustomPacketPayload rewritten = context.rewriters().rewriteClientbound(packet.payload(), context);
-        return rewritten == packet.payload() ? packet : new ClientboundCustomPayloadPacket(rewritten);
-    }
-
-    private static Packet<?> serverboundCustomPayload(ServerboundCustomPayloadPacket packet, TranslationContext context) {
-        CustomPacketPayload rewritten = context.rewriters().rewriteServerbound(packet.payload(), context);
-        return rewritten == packet.payload() ? packet : new ServerboundCustomPayloadPacket(rewritten);
+    private static <P extends Packet<?>> Packet<?> customPayload(P packet, CustomPacketPayload payload,
+            BiFunction<CustomPacketPayload, TranslationContext, CustomPacketPayload> rewrite,
+            Function<CustomPacketPayload, P> wrap, TranslationContext context) {
+        CustomPacketPayload rewritten = rewrite.apply(payload, context);
+        return rewritten == payload ? packet : wrap.apply(rewritten);
     }
 
     private static ClientboundPlayerPositionPacket playerPosition(ClientboundPlayerPositionPacket packet, TranslationContext context) {
@@ -594,27 +603,13 @@ public final class PacketTranslator {
         return new ClientboundSetDefaultSpawnPositionPacket(clientPos, packet.getAngle());
     }
 
-    private static Packet<?> initializeBorder(ClientboundInitializeBorderPacket packet, TranslationContext context) {
+    private static <T extends Packet<?>> Packet<?> borderCenter(T packet, TranslationContext context,
+            BiConsumer<T, RegistryFriendlyByteBuf> writer, Function<FriendlyByteBuf, T> reader) {
         if (!context.clientPosition().describes(context.dimension())) {
             return packet;
         }
 
-        return rewritePosition(
-                (borderPacket, output) -> ((InitializeBorderPacketAccessor) borderPacket).toroidal$write(output),
-                InitializeBorderPacketAccessor::toroidal$create,
-                BORDER_CENTER_CODEC, packet, context,
-                center -> toClientBorderCenter(context, center));
-    }
-
-    private static Packet<?> setBorderCenter(ClientboundSetBorderCenterPacket packet, TranslationContext context) {
-        if (!context.clientPosition().describes(context.dimension())) {
-            return packet;
-        }
-
-        return rewritePosition(
-                (borderPacket, output) -> ((SetBorderCenterPacketAccessor) borderPacket).toroidal$write(output),
-                SetBorderCenterPacketAccessor::toroidal$create,
-                BORDER_CENTER_CODEC, packet, context,
+        return rewritePosition(writer, reader, BORDER_CENTER_CODEC, packet, context,
                 center -> toClientBorderCenter(context, center));
     }
 

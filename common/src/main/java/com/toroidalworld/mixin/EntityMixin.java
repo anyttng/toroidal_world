@@ -15,6 +15,7 @@ import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WorldLoopAttachments;
 import com.toroidalworld.engine.fold.NearestCopy;
 import com.toroidalworld.engine.seam.SeamAim;
+import com.toroidalworld.engine.seam.SeamSteering;
 import com.toroidalworld.engine.seam.VehicleDismountResync;
 import com.toroidalworld.engine.seam.circumnavigation.CircumnavigationTracker;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
@@ -108,7 +109,7 @@ public class EntityMixin implements TransformerSource {
     @ModifyVariable(method = "lookAt(Lnet/minecraft/commands/arguments/EntityAnchorArgument$Anchor;Lnet/minecraft/world/phys/Vec3;)V",
             at = @At("HEAD"), argsOnly = true)
     private Vec3 toroidal$lookAtNearestCopy(Vec3 pos) {
-        return SeamAim.nearestTo((Entity) (Object) this, pos);
+        return SeamSteering.nearestCopy((Entity) (Object) this, pos);
     }
 
     @ModifyVariable(method = "push(Lnet/minecraft/world/entity/Entity;)V", at = @At("STORE"), ordinal = 0)
