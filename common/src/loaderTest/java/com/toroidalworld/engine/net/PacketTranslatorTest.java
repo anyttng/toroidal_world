@@ -48,6 +48,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
@@ -1164,6 +1165,33 @@ class PacketTranslatorTest {
                     new ServerboundCustomPayloadPacket(new SeamProbePayload(SERVER_BLOCK));
 
             assertSame(packet, PacketTranslator.toServer(packet, productionContext()));
+        }
+    }
+
+    @Nested
+    class ClientboundPayloads {
+        @BeforeAll
+        static void registerTheProbeThroughThePublicSeamAlone() {
+            PacketRewriters.registerClientboundPayload(SeamProbePayload.class, (payload, context) -> {
+                BlockPos client = context.toClient(payload.pos());
+                return client.equals(payload.pos()) ? payload : new SeamProbePayload(client);
+            });
+        }
+
+        @Test
+        void registeredPayloadMovesToTheClientFrame() {
+            ClientboundCustomPayloadPacket translated = (ClientboundCustomPayloadPacket) PacketTranslator.toClient(
+                    new ClientboundCustomPayloadPacket(new SeamProbePayload(SERVER_BLOCK)), context());
+
+            assertEquals(CLIENT_BLOCK, ((SeamProbePayload) translated.payload()).pos());
+        }
+
+        @Test
+        void unregisteredPayloadPassesThrough() {
+            ClientboundCustomPayloadPacket packet =
+                    new ClientboundCustomPayloadPacket(new UnregisteredProbePayload(SERVER_BLOCK));
+
+            assertSame(packet, PacketTranslator.toClient(packet, context()));
         }
     }
 }
