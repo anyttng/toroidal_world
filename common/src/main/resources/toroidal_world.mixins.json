@@ -55,6 +55,7 @@
     "CommandSourceStackMixin",
     "ConnectionMixin",
     "CrossbowItemAimMixin",
+    "DedicatedServerMixin",
     "DefaultRandomPosMixin",
     "DensityFunctionsEndIslandMixin",
     "DensityFunctionsNoiseMixin",
