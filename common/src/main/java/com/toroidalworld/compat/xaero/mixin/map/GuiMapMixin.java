@@ -1,5 +1,6 @@
 package com.toroidalworld.compat.xaero.mixin.map;
 
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -22,6 +23,7 @@ import com.toroidalworld.core.CoordinateConstants;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Direction;
+import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.Entity;
 
 import xaero.map.MapProcessor;
@@ -49,6 +51,12 @@ public abstract class GuiMapMixin {
     private double cameraX;
     @Shadow
     private double cameraZ;
+
+    @Unique
+    private static final int SEAM_ARGB = 0xCCFFFFFF;
+
+    @Unique
+    private static final float CHANNEL_MAX = 255.0F;
 
     @Unique
     private MapProcessor toroidal$processor;
@@ -171,8 +179,8 @@ public abstract class GuiMapMixin {
             at = @At(
                     value = "INVOKE",
                     target = "Lxaero/map/MapProcessor;getLeveledRegion(IIII)Lxaero/map/region/LeveledRegion;"))
-    private LeveledRegion<?> toroidal$fetchLeveledRegion(MapProcessor processor, int caveLayer, int regX, int regZ,
-            int level, Operation<LeveledRegion<?>> original) {
+    private @Nullable LeveledRegion<?> toroidal$fetchLeveledRegion(MapProcessor processor, int caveLayer, int regX, int regZ,
+            int level, Operation<@Nullable LeveledRegion<?>> original) {
         this.toroidal$processor = processor;
         this.toroidal$viewLeveledRegX = regX;
         this.toroidal$viewLeveledRegZ = regZ;
@@ -200,8 +208,8 @@ public abstract class GuiMapMixin {
             at = @At(
                     value = "INVOKE",
                     target = XaeroInjectionTargets.MAP_PROCESSOR_GET_LEAF_MAP_REGION))
-    private xaero.map.region.MapRegion toroidal$fetchLeafRegion(MapProcessor processor, int caveLayer, int regX,
-            int regZ, boolean create, Operation<xaero.map.region.MapRegion> original) {
+    private xaero.map.region.@Nullable MapRegion toroidal$fetchLeafRegion(MapProcessor processor, int caveLayer, int regX,
+            int regZ, boolean create, Operation<xaero.map.region.@Nullable MapRegion> original) {
         xaero.map.region.MapRegion existing = original.call(processor, caveLayer, regX, regZ, create);
         if (existing != null || !XaeroWorldMapFold.active()) {
             return existing;
@@ -233,7 +241,7 @@ public abstract class GuiMapMixin {
                     value = "INVOKE",
                     target = "Lxaero/map/region/LeveledRegion;getTexture(II)Lxaero/map/region/texture/RegionTexture;",
                     ordinal = 0))
-    private RegionTexture<?> toroidal$foldHoverTexture(LeveledRegion<?> region, int textureX, int textureZ,
+    private @Nullable RegionTexture<?> toroidal$foldHoverTexture(LeveledRegion<?> region, int textureX, int textureZ,
             Operation<RegionTexture<?>> original) {
         if (!XaeroWorldMapFold.active()) {
             return original.call(region, textureX, textureZ);
@@ -248,7 +256,7 @@ public abstract class GuiMapMixin {
                     value = "INVOKE",
                     target = "Lxaero/map/region/LeveledRegion;getTexture(II)Lxaero/map/region/texture/RegionTexture;",
                     ordinal = 1))
-    private RegionTexture<?> toroidal$foldLeafTexture(LeveledRegion<?> region, int slotX, int slotZ,
+    private @Nullable RegionTexture<?> toroidal$foldLeafTexture(LeveledRegion<?> region, int slotX, int slotZ,
             Operation<RegionTexture<?>> original) {
         this.toroidal$slotFolded = false;
         boolean isCandidate = region == this.toroidal$leveledCandidate;
@@ -274,7 +282,7 @@ public abstract class GuiMapMixin {
     }
 
     @Unique
-    private RegionTexture<?> toroidal$canonicalRegionTexture(int canonicalBlockX, int canonicalBlockZ) {
+    private @Nullable RegionTexture<?> toroidal$canonicalRegionTexture(int canonicalBlockX, int canonicalBlockZ) {
         int level = this.toroidal$viewLevel;
         int slotSize = XaeroWorldMapFold.SLOT_BLOCKS << level;
         int side = XaeroWorldMapFold.REGION_BLOCKS << level;
@@ -296,7 +304,7 @@ public abstract class GuiMapMixin {
                     value = "INVOKE",
                     target = "Lxaero/map/region/LeveledRegion;getTexture(II)Lxaero/map/region/texture/RegionTexture;",
                     ordinal = 2))
-    private RegionTexture<?> toroidal$suppressFoldedRootTexture(LeveledRegion<?> region, int textureX, int textureZ,
+    private @Nullable RegionTexture<?> toroidal$suppressFoldedRootTexture(LeveledRegion<?> region, int textureX, int textureZ,
             Operation<RegionTexture<?>> original) {
         if (XaeroWorldMapFold.active() && this.toroidal$slotFolded) {
             return null;
@@ -394,14 +402,16 @@ public abstract class GuiMapMixin {
             MapRenderHelper.fillIntoExistingBuffer(matrix, overlayBuffer,
                     lineX - flooredCameraX, spanZ[0] - flooredCameraZ,
                     lineX - flooredCameraX + thickness, spanZ[1] - flooredCameraZ,
-                    1.0F, 1.0F, 1.0F, 0.8F);
+                    FastColor.ARGB32.red(SEAM_ARGB) / CHANNEL_MAX, FastColor.ARGB32.green(SEAM_ARGB) / CHANNEL_MAX,
+                    FastColor.ARGB32.blue(SEAM_ARGB) / CHANNEL_MAX, FastColor.ARGB32.alpha(SEAM_ARGB) / CHANNEL_MAX);
         }
 
         for (int lineZ : linesZ) {
             MapRenderHelper.fillIntoExistingBuffer(matrix, overlayBuffer,
                     spanX[0] - flooredCameraX, lineZ - flooredCameraZ,
                     spanX[1] - flooredCameraX, lineZ - flooredCameraZ + thickness,
-                    1.0F, 1.0F, 1.0F, 0.8F);
+                    FastColor.ARGB32.red(SEAM_ARGB) / CHANNEL_MAX, FastColor.ARGB32.green(SEAM_ARGB) / CHANNEL_MAX,
+                    FastColor.ARGB32.blue(SEAM_ARGB) / CHANNEL_MAX, FastColor.ARGB32.alpha(SEAM_ARGB) / CHANNEL_MAX);
         }
     }
 
