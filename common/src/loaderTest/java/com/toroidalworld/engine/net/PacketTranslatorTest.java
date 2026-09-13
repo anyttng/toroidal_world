@@ -3,6 +3,7 @@ package com.toroidalworld.engine.net;
 import static com.toroidalworld.engine.net.PacketTranslatorFixture.*;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -1077,7 +1078,9 @@ class PacketTranslatorTest {
         }
     }
 
-    record UnregisteredProbePayload(BlockPos pos) implements CustomPacketPayload {
+    private static final int COUNT = 7;
+
+    record UnregisteredProbePayload(int count) implements CustomPacketPayload {
         static final Type<UnregisteredProbePayload> TYPE =
                 new Type<>(Identifier.fromNamespaceAndPath(ToroidalWorld.MODID, "unregistered_probe"));
 
@@ -1108,7 +1111,7 @@ class PacketTranslatorTest {
         @Test
         void unregisteredPayloadPassesThrough() {
             ServerboundCustomPayloadPacket packet =
-                    new ServerboundCustomPayloadPacket(new UnregisteredProbePayload(CLIENT_BLOCK));
+                    new ServerboundCustomPayloadPacket(new UnregisteredProbePayload(COUNT));
 
             assertSame(packet, PacketTranslator.toServer(packet, context()));
         }
@@ -1143,9 +1146,104 @@ class PacketTranslatorTest {
         @Test
         void unregisteredPayloadPassesThrough() {
             ClientboundCustomPayloadPacket packet =
-                    new ClientboundCustomPayloadPacket(new UnregisteredProbePayload(SERVER_BLOCK));
+                    new ClientboundCustomPayloadPacket(new UnregisteredProbePayload(COUNT));
 
             assertSame(packet, PacketTranslator.toClient(packet, context()));
+        }
+    }
+
+    record RecordProbePayload(BlockPos pos, Optional<BlockPos> target, List<Vec3> path, ChunkPos chunk,
+            SectionPos section, GlobalPos home, int count) implements CustomPacketPayload {
+        static final Type<RecordProbePayload> TYPE =
+                new Type<>(Identifier.fromNamespaceAndPath(ToroidalWorld.MODID, "record_probe"));
+
+        @Override
+        public Type<RecordProbePayload> type() {
+            return TYPE;
+        }
+    }
+
+    record RewrittenProbePayload(BlockPos pos) implements CustomPacketPayload {
+        static final Type<RewrittenProbePayload> TYPE =
+                new Type<>(Identifier.fromNamespaceAndPath(ToroidalWorld.MODID, "rewritten_probe"));
+
+        @Override
+        public Type<RewrittenProbePayload> type() {
+            return TYPE;
+        }
+    }
+
+    record DeniedProbePayload(BlockPos pos) implements CustomPacketPayload {
+        static final Type<DeniedProbePayload> TYPE =
+                new Type<>(Identifier.fromNamespaceAndPath(ToroidalWorld.MODID, "denied_probe"));
+
+        @Override
+        public Type<DeniedProbePayload> type() {
+            return TYPE;
+        }
+    }
+
+    @Nested
+    class RecordPayloads {
+        private static final int SECTION_Y = 4;
+        private static final double PATH_Y = 70.0;
+
+        @BeforeAll
+        static void registerTheRewrittenProbeAndDenyTheDeniedOne() {
+            PacketRewriters.registerClientboundPayload(RewrittenProbePayload.class,
+                    (payload, context) -> new RewrittenProbePayload(BlockPos.ZERO));
+            RecordPayloadFold.deny(Set.of(DeniedProbePayload.TYPE.id()));
+        }
+
+        private static RecordProbePayload probeAt(BlockPos pos, Vec3 point, ChunkPos chunk) {
+            return new RecordProbePayload(pos, Optional.of(pos), List.of(point), chunk,
+                    SectionPos.of(chunk, SECTION_Y), GlobalPos.of(Level.OVERWORLD, pos), COUNT);
+        }
+
+        @Test
+        void clientboundRecordMovesEveryPositionToTheClientFrame() {
+            ClientboundCustomPayloadPacket translated = (ClientboundCustomPayloadPacket) PacketTranslator.toClient(
+                    new ClientboundCustomPayloadPacket(
+                            probeAt(SERVER_BLOCK, new Vec3(SERVER_X, PATH_Y, SERVER_Z), SERVER_CHUNK)),
+                    context());
+
+            assertEquals(probeAt(CLIENT_BLOCK, new Vec3(CLIENT_X, PATH_Y, CLIENT_Z), CLIENT_CHUNK), translated.payload());
+        }
+
+        @Test
+        void serverboundRecordReturnsEveryPositionToTheServerFrame() {
+            ServerboundCustomPayloadPacket translated = (ServerboundCustomPayloadPacket) PacketTranslator.toServer(
+                    new ServerboundCustomPayloadPacket(
+                            probeAt(CLIENT_BLOCK, new Vec3(CLIENT_X, PATH_Y, CLIENT_Z), CLIENT_CHUNK)),
+                    context());
+
+            assertEquals(probeAt(SERVER_BLOCK, new Vec3(SERVER_X, PATH_Y, SERVER_Z), SERVER_CHUNK), translated.payload());
+        }
+
+        @Test
+        void aRegisteredRewriterTakesPrecedenceOverTheRecordFold() {
+            ClientboundCustomPayloadPacket translated = (ClientboundCustomPayloadPacket) PacketTranslator.toClient(
+                    new ClientboundCustomPayloadPacket(new RewrittenProbePayload(SERVER_BLOCK)), context());
+
+            assertEquals(new RewrittenProbePayload(BlockPos.ZERO), translated.payload());
+        }
+
+        @Test
+        void aDeniedPayloadCrossesUntouchedBothWays() {
+            ClientboundCustomPayloadPacket clientbound =
+                    new ClientboundCustomPayloadPacket(new DeniedProbePayload(SERVER_BLOCK));
+            ServerboundCustomPayloadPacket serverbound =
+                    new ServerboundCustomPayloadPacket(new DeniedProbePayload(CLIENT_BLOCK));
+
+            assertSame(clientbound, PacketTranslator.toClient(clientbound, context()));
+            assertSame(serverbound, PacketTranslator.toServer(serverbound, context()));
+        }
+
+        @Test
+        void aRecordClassIsInspectedOnce() {
+            assertSame(RecordPayloadFold.formOf(RecordProbePayload.class),
+                    RecordPayloadFold.formOf(RecordProbePayload.class));
+            assertFalse(RecordPayloadFold.formOf(UnregisteredProbePayload.class).carriesPositions());
         }
     }
 }
