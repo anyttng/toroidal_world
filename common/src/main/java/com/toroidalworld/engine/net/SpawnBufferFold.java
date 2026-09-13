@@ -3,7 +3,7 @@ package com.toroidalworld.engine.net;
 import net.minecraft.nbt.CompoundTag;
 
 public final class SpawnBufferFold {
-    private static final TagPositions.Table TABLE = new TagPositions.Table();
+    private static final TagPositions.Table TABLE = new TagPositions.Table("Spawn buffer positions");
 
     public static void register(Class<?> entityType, TagPositions.PositionShape shape, String... keys) {
         TABLE.register(entityType, shape, keys);

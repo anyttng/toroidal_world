@@ -8,6 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jspecify.annotations.Nullable;
 
+import com.toroidalworld.core.StartupRegistry;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.DoubleTag;
@@ -172,8 +174,12 @@ public final class TagPositions {
     }
 
     public static final class Table {
-        private final Map<Class<?>, List<TagPosition>> registered = new ConcurrentHashMap<>();
+        private final StartupRegistry<Class<?>, List<TagPosition>> registered;
         private volatile Map<Class<?>, List<TagPosition>> resolved = new ConcurrentHashMap<>();
+
+        public Table(String subject) {
+            this.registered = new StartupRegistry<>(subject);
+        }
 
         public void register(Class<?> subjectType, PositionShape shape, String... keys) {
             register(subjectType, Nesting.TOP, null, shape, keys);
@@ -187,7 +193,7 @@ public final class TagPositions {
             register(subjectType, Nesting.EACH_OF_LIST, container, shape, keys);
         }
 
-        private void register(Class<?> subjectType, Nesting nesting, @Nullable String container,
+        private synchronized void register(Class<?> subjectType, Nesting nesting, @Nullable String container,
                 PositionShape shape, String... keys) {
             int keyCount = shape.keyCount();
             if (keys.length == 0 || keys.length % keyCount != 0) {
@@ -195,13 +201,13 @@ public final class TagPositions {
                         + keys.length + " were registered on " + subjectType.getName());
             }
 
-            List<TagPosition> added = new ArrayList<>();
+            List<TagPosition> positions = new ArrayList<>(registered.entries().getOrDefault(subjectType, List.of()));
             for (int index = 0; index < keys.length; index += keyCount) {
-                added.add(new TagPosition(nesting, container, Arrays.asList(keys).subList(index, index + keyCount),
-                        shape));
+                positions.add(new TagPosition(nesting, container,
+                        Arrays.asList(keys).subList(index, index + keyCount), shape));
             }
 
-            registered.merge(subjectType, List.copyOf(added), Table::joined);
+            registered.register(subjectType, List.copyOf(positions));
             resolved = new ConcurrentHashMap<>();
         }
 
@@ -217,7 +223,7 @@ public final class TagPositions {
         private List<TagPosition> positionsOf(Class<?> subjectType) {
             return resolved.computeIfAbsent(subjectType, type -> {
                 List<TagPosition> positions = new ArrayList<>();
-                registered.forEach((registeredType, registeredPositions) -> {
+                registered.entries().forEach((registeredType, registeredPositions) -> {
                     if (registeredType.isAssignableFrom(type)) {
                         positions.addAll(registeredPositions);
                     }
@@ -225,12 +231,6 @@ public final class TagPositions {
 
                 return List.copyOf(positions);
             });
-        }
-
-        private static List<TagPosition> joined(List<TagPosition> existing, List<TagPosition> added) {
-            List<TagPosition> all = new ArrayList<>(existing);
-            all.addAll(added);
-            return List.copyOf(all);
         }
     }
 

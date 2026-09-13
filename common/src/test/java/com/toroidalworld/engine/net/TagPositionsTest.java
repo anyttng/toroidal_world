@@ -23,6 +23,8 @@ import net.minecraft.world.phys.Vec3;
 class TagPositionsTest {
     private static final int LAP_BLOCKS = 512;
 
+    private static final String SUBJECT = "Test positions";
+
     private static final String PACKED_KEY = "Goal";
     private static final String BLOCK_POS_KEY = "ControllerPos";
     private static final String VEC3_KEY = "CurrentTarget";
@@ -336,7 +338,7 @@ class TagPositionsTest {
     class Tables {
         @Test
         void aTypeCarriesTheKeysRegisteredOnItAndOnEverySupertype() {
-            TagPositions.Table table = new TagPositions.Table();
+            TagPositions.Table table = new TagPositions.Table(SUBJECT);
             table.register(Anchored.class, TagPositions.PositionShape.BLOCK_POS, BLOCK_POS_KEY);
             table.register(AnchoredSubject.class, TagPositions.PositionShape.PACKED_LONG, PACKED_KEY);
 
@@ -352,7 +354,7 @@ class TagPositionsTest {
 
         @Test
         void aTypeCarriesTheKeysRegisteredOnItsSuperclass() {
-            TagPositions.Table table = new TagPositions.Table();
+            TagPositions.Table table = new TagPositions.Table(SUBJECT);
             table.register(Hung.class, TagPositions.PositionShape.BLOCK_POS, BLOCK_POS_KEY);
 
             CompoundTag tag = new CompoundTag();
@@ -366,7 +368,7 @@ class TagPositionsTest {
 
         @Test
         void anIntTripleRegisteredOnASuperclassSeatsTheSubclassTag() {
-            TagPositions.Table table = new TagPositions.Table();
+            TagPositions.Table table = new TagPositions.Table(SUBJECT);
             table.register(Hung.class, TagPositions.PositionShape.BLOCK_INT_TRIPLE,
                     TILE_X_KEY, TILE_Y_KEY, TILE_Z_KEY);
 
@@ -380,7 +382,7 @@ class TagPositionsTest {
 
         @Test
         void registeringATypeAgainKeepsTheKeysItAlreadyCarried() {
-            TagPositions.Table table = new TagPositions.Table();
+            TagPositions.Table table = new TagPositions.Table(SUBJECT);
             table.register(PackedSubject.class, TagPositions.PositionShape.PACKED_LONG, PACKED_KEY);
             table.register(PackedSubject.class, TagPositions.PositionShape.VEC3_LIST, VEC3_KEY);
 
@@ -396,7 +398,7 @@ class TagPositionsTest {
 
         @Test
         void aRegistrationMadeAfterAFirstReadReachesTheNextOne() {
-            TagPositions.Table table = new TagPositions.Table();
+            TagPositions.Table table = new TagPositions.Table(SUBJECT);
             table.register(PackedSubject.class, TagPositions.PositionShape.PACKED_LONG, PACKED_KEY);
 
             CompoundTag read = new CompoundTag();
@@ -411,7 +413,7 @@ class TagPositionsTest {
 
         @Test
         void aTypeNobodyRegisteredCarriesNothingAndGetsItsTagBack() {
-            TagPositions.Table table = new TagPositions.Table();
+            TagPositions.Table table = new TagPositions.Table(SUBJECT);
             table.register(PackedSubject.class, TagPositions.PositionShape.PACKED_LONG, PACKED_KEY);
 
             CompoundTag tag = new CompoundTag();
@@ -424,7 +426,7 @@ class TagPositionsTest {
 
         @Test
         void aKeyCountThatDoesNotFillTheShapeIsRefused() {
-            TagPositions.Table table = new TagPositions.Table();
+            TagPositions.Table table = new TagPositions.Table(SUBJECT);
 
             assertThrows(IllegalArgumentException.class, () -> table.register(
                     PackedSubject.class, TagPositions.PositionShape.BLOCK_INT_TRIPLE, TILE_X_KEY, TILE_Y_KEY));
@@ -434,7 +436,7 @@ class TagPositionsTest {
 
         @Test
         void anAddressedRegistrationSeatsInsideTheContainerItNames() {
-            TagPositions.Table table = new TagPositions.Table();
+            TagPositions.Table table = new TagPositions.Table(SUBJECT);
             table.registerIn(PackedSubject.class, COMPOUND_KEY, TagPositions.PositionShape.BLOCK_POS, BLOCK_POS_KEY);
             table.registerInEach(PackedSubject.class, LIST_KEY, TagPositions.PositionShape.BLOCK_POS, BLOCK_POS_KEY);
 
@@ -455,8 +457,8 @@ class TagPositionsTest {
 
         @Test
         void oneTableKnowsNothingOfWhatAnotherWasGiven() {
-            TagPositions.Table registeredInto = new TagPositions.Table();
-            TagPositions.Table untouched = new TagPositions.Table();
+            TagPositions.Table registeredInto = new TagPositions.Table(SUBJECT);
+            TagPositions.Table untouched = new TagPositions.Table(SUBJECT);
 
             registeredInto.register(PackedSubject.class, TagPositions.PositionShape.PACKED_LONG, PACKED_KEY);
 
