@@ -75,6 +75,7 @@
     "DragonTakeoffPhaseMixin",
     "DualNoiseProviderMixin",
     "EnderDragonMixin",
+    "EnderManMixin",
     "EntityGetterMixin",
     "EntityMixin",
     "EntityPortalPositionMixin",

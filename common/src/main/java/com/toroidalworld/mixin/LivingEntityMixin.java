@@ -6,8 +6,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.toroidalworld.InjectionTargets;
 import com.toroidalworld.accessors.TransformerSource;
@@ -47,13 +45,6 @@ public class LivingEntityMixin {
                     target = "Lnet/minecraft/world/phys/Vec3;vectorTo(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
     private Vec3 toroidal$blockConeThroughSeam(Vec3 attackDirection) {
         return SeamAim.foldDelta((LivingEntity) (Object) this, attackDirection);
-    }
-
-    @WrapOperation(
-            method = "isLookingAtMe",
-            at = @At(value = "NEW", target = InjectionTargets.VEC3_NEW))
-    private Vec3 toroidal$gazeThroughSeam(double x, double y, double z, Operation<Vec3> original) {
-        return SeamAim.foldDelta((LivingEntity) (Object) this, original.call(x, y, z));
     }
 
     @ModifyVariable(
