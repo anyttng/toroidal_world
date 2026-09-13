@@ -1,10 +1,12 @@
 package com.toroidalworld.engine.net;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import org.slf4j.Logger;
@@ -21,16 +23,18 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.resources.Identifier;
 
-public record PositionRows(Map<Identifier, List<TagPosition>> blockEntities, Map<Identifier, List<TagPosition>> entities) {
+public record PositionRows(Map<Identifier, List<TagPosition>> blockEntities, Map<Identifier, List<TagPosition>> entities,
+        Set<Identifier> deny) {
     public static final String DIRECTORY = ToroidalWorld.MODID;
     public static final String FILE_NAME = "positions";
 
-    public static final PositionRows EMPTY = new PositionRows(Map.of(), Map.of());
+    public static final PositionRows EMPTY = new PositionRows(Map.of(), Map.of(), Set.of());
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
     private static final String BLOCK_ENTITIES_KEY = "block_entities";
     private static final String ENTITIES_KEY = "entities";
+    private static final String DENY_KEY = "deny";
 
     private record Container(Nesting nesting, Map<String, PositionShape> keys) {
     }
@@ -53,21 +57,27 @@ public record PositionRows(Map<Identifier, List<TagPosition>> blockEntities, Map
     public static final Codec<Map<Identifier, List<TagPosition>>> SUBJECTS_CODEC =
             Codec.unboundedMap(Identifier.CODEC, SUBJECT_CODEC);
 
+    private static final Codec<Set<Identifier>> DENY_CODEC =
+            Identifier.CODEC.listOf().xmap(Set::copyOf, List::copyOf);
+
     public static final Codec<PositionRows> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                     SUBJECTS_CODEC.optionalFieldOf(BLOCK_ENTITIES_KEY, Map.of()).forGetter(PositionRows::blockEntities),
-                    SUBJECTS_CODEC.optionalFieldOf(ENTITIES_KEY, Map.of()).forGetter(PositionRows::entities))
+                    SUBJECTS_CODEC.optionalFieldOf(ENTITIES_KEY, Map.of()).forGetter(PositionRows::entities),
+                    DENY_CODEC.optionalFieldOf(DENY_KEY, Set.of()).forGetter(PositionRows::deny))
             .apply(instance, PositionRows::new));
 
     public static PositionRows merge(Map<Identifier, PositionRows> files, Predicate<Identifier> blockEntityTypeKnown,
             Predicate<Identifier> entityTypeKnown) {
         Map<Identifier, List<TagPosition>> blockEntities = new LinkedHashMap<>();
         Map<Identifier, List<TagPosition>> entities = new LinkedHashMap<>();
+        Set<Identifier> deny = new HashSet<>();
         files.forEach((file, rows) -> {
             mergeInto(blockEntities, file, BLOCK_ENTITIES_KEY, rows.blockEntities(), blockEntityTypeKnown);
             mergeInto(entities, file, ENTITIES_KEY, rows.entities(), entityTypeKnown);
+            deny.addAll(rows.deny());
         });
 
-        return new PositionRows(Map.copyOf(blockEntities), Map.copyOf(entities));
+        return new PositionRows(Map.copyOf(blockEntities), Map.copyOf(entities), Set.copyOf(deny));
     }
 
     private static void mergeInto(Map<Identifier, List<TagPosition>> merged, Identifier file, String section,

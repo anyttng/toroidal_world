@@ -96,9 +96,13 @@ Vec3 heading = folded.orientation().applyToDelta(velocity);
 
 Everything above moves a coordinate you are holding. This part is about the coordinates you are *sending*, and about groups of them that have to stay together.
 
-Every vanilla packet that carries a world position is already rewritten on its way out — the server's canonical position becomes whichever copy that client is holding, and back again on the way in. A payload of yours is not, and cannot be: nothing outside your mod knows which of its fields is a position. Registered rewriters are how you say.
+Every vanilla packet that carries a world position is already rewritten on its way out — the server's canonical position becomes whichever copy that client is holding, and back again on the way in. A payload of yours is too, when it is a record that keeps each world position in a component of its own; for the rest, a registered rewriter says which field is a position.
 
 ### A payload of your own
+
+A payload declared as a record needs no code. Each component whose declared type is `BlockPos`, `Vec3`, `ChunkPos`, `SectionPos` or `GlobalPos`, or an `Optional` or a `List` of one, is folded on its way out and on its way back, and the record is rebuilt through its canonical constructor; a `GlobalPos` folds only in the dimension the player stands in. A record with no such component, or none that moved, is handed on as it is.
+
+What a record cannot say takes a rewriter: a position written into a byte array by hand, a position inside a component of any other type, a `long` holding a packed position.
 
 ```java
 PacketRewriters.registerClientboundPayload(StationCursorPayload.class, (payload, context) ->
@@ -110,9 +114,19 @@ PacketRewriters.registerServerboundPayload(StationPickPayload.class, (payload, c
 
 `SeamContext` is the two frames one connection has. `toClient` takes a canonical position to the copy that client holds — the one to write into anything it will draw, place or measure against. `toServer` folds a position the client sent back into the world's bounds. Both come in `BlockPos`, `Vec3` and (clientbound) `ChunkPos` forms, both hand the argument instance itself back when nothing moved, and `context.shape()` is the level's whole geometry for anything the two do not cover.
 
-Register from your mod's initialiser, beside everything else: the table closes at `MinecraftServer.runServer`, before the levels load, and a later registration throws rather than being silently half-effective. A rewriter runs for payloads of that exact class, on a folding level and nowhere else — on an ordinary world nothing you registered is ever called.
+Register from your mod's initialiser, beside everything else: the table closes at `MinecraftServer.runServer`, before the levels load, and a later registration throws rather than being silently half-effective. A rewriter runs for payloads of that exact class, on a folding level and nowhere else — on an ordinary world nothing you registered is ever called. Where one is registered the record fold does not run for that class; the record fold spells each position the way `toClient` and `toServer` do, so moving a payload between the two routes changes nothing its receiver reads.
 
 A context belongs to the packet being rewritten. Never hold one past the call.
+
+A `BlockPos` component that is not a world position — an offset, a size — is folded all the same. Name such a payload by its payload type id in the `positions.json` file of your namespace, described in the next section, and it crosses untouched in both directions:
+
+```json
+{
+  "deny": [ "your_mod:structure_bounds" ]
+}
+```
+
+The lists of every namespace are joined on the server; a rewriter registered for the class still runs.
 
 ### Positions your block entity or entity stores
 
