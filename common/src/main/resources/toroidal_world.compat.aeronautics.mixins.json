@@ -11,6 +11,7 @@
     "DockingConnectorPairMixin",
     "MergingGlueBlockEntityMixin",
     "SpringBlockEntityMixin",
+    "LaunchedPlungerEntityMixin",
     "MagnetMapMixin",
     "MagnetPairMixin",
     "RedstoneMagnetBlockEntityMixin",
