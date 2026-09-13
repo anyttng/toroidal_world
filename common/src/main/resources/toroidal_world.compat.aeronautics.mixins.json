@@ -19,6 +19,7 @@
     "MapNavigationTargetMixin",
     "NavTableTargetFrameMixin",
     "PhysicsStaffBeamPacketAccessor",
+    "PropellerActorBehaviourMixin",
     "RopeStrandHolderBehaviorMixin",
     "ServerRopeStrandMixin"
   ],
