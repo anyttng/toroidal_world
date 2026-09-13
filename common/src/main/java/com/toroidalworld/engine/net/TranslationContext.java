@@ -40,6 +40,7 @@ public record TranslationContext(
         int heldViewDistance,
         IntPredicate ownVehicle,
         IntFunction<@Nullable Vec3> entityPosition,
+        IntFunction<@Nullable Class<?>> entityClass,
         Runnable rebase) implements SeamContext {
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -64,6 +65,7 @@ public record TranslationContext(
                 heldViewDistanceOf(player, trackedViewDistance),
                 entityId -> isControlledVehicle(player, entityId),
                 entityId -> positionOf(player, entityId),
+                entityId -> classOf(player, entityId),
                 () -> ClientPosition.rebase(player));
     }
 
@@ -87,6 +89,11 @@ public record TranslationContext(
     private static @Nullable Vec3 positionOf(ServerPlayer player, int entityId) {
         Entity entity = player.level().getEntity(entityId);
         return entity == null ? null : entity.position();
+    }
+
+    private static @Nullable Class<?> classOf(ServerPlayer player, int entityId) {
+        Entity entity = player.level().getEntity(entityId);
+        return entity == null ? null : entity.getClass();
     }
 
     @Override
@@ -124,6 +131,10 @@ public record TranslationContext(
 
     public ChunkPos nearestCopy(ChunkPos chunkPos) {
         return transformer.nearestCopy(clientPosition.chunk(), chunkPos);
+    }
+
+    public BlockPos nearestCopy(BlockPos pos) {
+        return transformer.reseat(pos, nearestCopy(ChunkPos.containing(pos)));
     }
 
     public List<ChunkPos> forgetCandidates(ChunkPos chunkPos) {
