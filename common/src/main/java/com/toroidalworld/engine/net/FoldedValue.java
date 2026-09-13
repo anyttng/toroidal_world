@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
+import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.engine.fold.FoldedCopies;
 
 import net.minecraft.core.BlockPos;
@@ -14,62 +15,84 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.phys.Vec3;
 
 public final class FoldedValue {
+    record Leaves(UnaryOperator<BlockPos> blockPos, UnaryOperator<Vec3> position, UnaryOperator<ChunkPos> chunkPos) {
+    }
+
     public static Object toward(TranslationContext context, Supplier<Vec3> anchor, Object value) {
         return toward(context, anchor, value, UnaryOperator.identity());
     }
 
     public static Object toward(TranslationContext context, Supplier<Vec3> anchor, Object value,
             UnaryOperator<Object> fallback) {
-        return switch (value) {
-            case BlockPos pos -> nearestCopy(context, anchor.get(), pos);
-            case Vec3 position -> context.transformer().nearestCopy(anchor.get(), position);
-            case ChunkPos chunkPos -> nearestCopy(context, anchor.get(), chunkPos);
-            case SectionPos sectionPos -> nearestCopy(context, anchor.get(), sectionPos);
-            case GlobalPos globalPos -> nearestCopy(context, anchor, globalPos);
-            case Optional<?> held -> inside(context, anchor, held, fallback);
-            case List<?> values -> inside(context, anchor, values, fallback);
-            default -> fallback.apply(value);
-        };
+        WorldFold transformer = context.transformer();
+        Leaves leaves = new Leaves(
+                pos -> nearestCopy(context, anchor.get(), pos),
+                position -> transformer.nearestCopy(anchor.get(), position),
+                chunkPos -> transformer.nearestCopy(ChunkPos.containing(BlockPos.containing(anchor.get())), chunkPos));
+        return walk(context, leaves, value, fallback);
+    }
+
+    static Leaves toClient(TranslationContext context) {
+        return new Leaves(context::toClient, context::toClient, context::toClient);
+    }
+
+    static Leaves toServer(TranslationContext context) {
+        WorldFold transformer = context.transformer();
+        return new Leaves(transformer::fold, transformer::fold, transformer::fold);
+    }
+
+    static Object walk(TranslationContext context, Leaves leaves, Object value) {
+        return walk(context, leaves, value, UnaryOperator.identity());
     }
 
     static BlockPos nearestCopy(TranslationContext context, Vec3 anchor, BlockPos pos) {
         return context.transformer().nearestCopy(BlockPos.containing(anchor), pos);
     }
 
-    private static ChunkPos nearestCopy(TranslationContext context, Vec3 anchor, ChunkPos chunkPos) {
-        return context.transformer().nearestCopy(new ChunkPos(BlockPos.containing(anchor)), chunkPos);
+    private static Object walk(TranslationContext context, Leaves leaves, Object value,
+            UnaryOperator<Object> fallback) {
+        return switch (value) {
+            case BlockPos pos -> leaves.blockPos().apply(pos);
+            case Vec3 position -> leaves.position().apply(position);
+            case ChunkPos chunkPos -> leaves.chunkPos().apply(chunkPos);
+            case SectionPos sectionPos -> inside(leaves, sectionPos);
+            case GlobalPos globalPos -> inside(context, leaves, globalPos);
+            case Optional<?> held -> inside(context, leaves, held, fallback);
+            case List<?> values -> inside(context, leaves, values, fallback);
+            default -> fallback.apply(value);
+        };
     }
 
-    private static SectionPos nearestCopy(TranslationContext context, Vec3 anchor, SectionPos sectionPos) {
+    private static SectionPos inside(Leaves leaves, SectionPos sectionPos) {
         ChunkPos chunkPos = sectionPos.chunk();
-        ChunkPos clientChunkPos = nearestCopy(context, anchor, chunkPos);
-        return clientChunkPos == chunkPos ? sectionPos : SectionPos.of(clientChunkPos, sectionPos.y());
+        ChunkPos foldedChunkPos = leaves.chunkPos().apply(chunkPos);
+        return foldedChunkPos == chunkPos ? sectionPos : SectionPos.of(foldedChunkPos, sectionPos.y());
     }
 
-    private static GlobalPos nearestCopy(TranslationContext context, Supplier<Vec3> anchor, GlobalPos globalPos) {
+    private static GlobalPos inside(TranslationContext context, Leaves leaves, GlobalPos globalPos) {
         if (!globalPos.dimension().equals(context.dimension())) {
             return globalPos;
         }
 
-        BlockPos clientPos = nearestCopy(context, anchor.get(), globalPos.pos());
-        return clientPos == globalPos.pos() ? globalPos : GlobalPos.of(globalPos.dimension(), clientPos);
+        BlockPos foldedPos = leaves.blockPos().apply(globalPos.pos());
+        return foldedPos == globalPos.pos() ? globalPos : GlobalPos.of(globalPos.dimension(), foldedPos);
     }
 
-    private static Optional<?> inside(TranslationContext context, Supplier<Vec3> anchor, Optional<?> held,
+    private static Optional<?> inside(TranslationContext context, Leaves leaves, Optional<?> held,
             UnaryOperator<Object> fallback) {
         Object value = held.orElse(null);
         if (value == null) {
             return held;
         }
 
-        Object clientValue = toward(context, anchor, value, fallback);
-        return clientValue == value ? held : Optional.of(clientValue);
+        Object foldedValue = walk(context, leaves, value, fallback);
+        return foldedValue == value ? held : Optional.of(foldedValue);
     }
 
     @SuppressWarnings("unchecked")
-    private static List<?> inside(TranslationContext context, Supplier<Vec3> anchor, List<?> values,
+    private static List<?> inside(TranslationContext context, Leaves leaves, List<?> values,
             UnaryOperator<Object> fallback) {
-        return FoldedCopies.of((List<Object>) values, value -> toward(context, anchor, value, fallback));
+        return FoldedCopies.of((List<Object>) values, value -> walk(context, leaves, value, fallback));
     }
 
     private FoldedValue() {

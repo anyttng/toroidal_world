@@ -21,6 +21,8 @@ import net.minecraft.resources.ResourceLocation;
 class PositionRowsTest {
     private static final ResourceLocation HOLDER_ID = ResourceLocation.fromNamespaceAndPath("cject", "holder");
     private static final ResourceLocation MISSING_ID = ResourceLocation.fromNamespaceAndPath("cject", "missing");
+    private static final ResourceLocation OFFSET_PAYLOAD_ID = ResourceLocation.fromNamespaceAndPath("cject", "offset_probe");
+    private static final ResourceLocation SIZE_PAYLOAD_ID = ResourceLocation.fromNamespaceAndPath("pack", "size_probe");
 
     private static final ResourceLocation CJECT_FILE = ResourceLocation.fromNamespaceAndPath("cject", PositionRows.FILE_NAME);
     private static final ResourceLocation PACK_FILE = ResourceLocation.fromNamespaceAndPath("pack", PositionRows.FILE_NAME);
@@ -63,6 +65,30 @@ class PositionRowsTest {
 
         assertTrue(rows.blockEntities().isEmpty());
         assertTrue(rows.entities().isEmpty());
+        assertTrue(rows.deny().isEmpty());
+    }
+
+    @Test
+    void theDenyListDecodesToPayloadIds() {
+        PositionRows rows = parse("""
+                { "deny": [ "cject:offset_probe" ] }
+                """).getOrThrow();
+
+        assertEquals(Set.of(OFFSET_PAYLOAD_ID), rows.deny());
+    }
+
+    @Test
+    void theDenyListsOfEveryNamespaceJoin() {
+        PositionRows cject = parse("""
+                { "deny": [ "cject:offset_probe" ] }
+                """).getOrThrow();
+        PositionRows pack = parse("""
+                { "deny": [ "pack:size_probe" ] }
+                """).getOrThrow();
+
+        PositionRows merged = PositionRows.merge(Map.of(CJECT_FILE, cject, PACK_FILE, pack), id -> true, id -> true);
+
+        assertEquals(Set.of(OFFSET_PAYLOAD_ID, SIZE_PAYLOAD_ID), merged.deny());
     }
 
     @Test

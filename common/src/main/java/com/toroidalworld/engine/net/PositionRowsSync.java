@@ -10,6 +10,7 @@ public final class PositionRowsSync {
     static void apply(PositionRows rows) {
         current = rows;
         SpawnBufferFold.declare(rows.entities());
+        RecordPayloadFold.deny(rows.deny());
     }
 
     public static void sendTo(ServerPlayer player) {

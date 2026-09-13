@@ -181,8 +181,8 @@ public final class PacketTranslator {
             Map.entry(ClientboundDamageEventPacket.class, rewriter(PacketTranslator::damageEvent)),
             Map.entry(ClientboundCustomPayloadPacket.class, rewriter(
                     (ClientboundCustomPayloadPacket packet, TranslationContext context) -> customPayload(packet,
-                            packet.payload(), context.rewriters()::rewriteClientbound, ClientboundCustomPayloadPacket::new,
-                            context))));
+                            packet.payload(), context.rewriters().clientboundPayloadFor(packet.payload()),
+                            RecordPayloadFold::toClient, ClientboundCustomPayloadPacket::new, context))));
 
     private static final PacketRewriters PRODUCTION = new PacketRewriters();
 
@@ -222,8 +222,8 @@ public final class PacketTranslator {
             Map.entry(ServerboundSetStructureBlockPacket.class, rewriter(PacketTranslator::setStructureBlock)),
             Map.entry(ServerboundCustomPayloadPacket.class, rewriter(
                     (ServerboundCustomPayloadPacket packet, TranslationContext context) -> customPayload(packet,
-                            packet.payload(), context.rewriters()::rewriteServerbound, ServerboundCustomPayloadPacket::new,
-                            context))));
+                            packet.payload(), context.rewriters().serverboundPayloadFor(packet.payload()),
+                            RecordPayloadFold::toServer, ServerboundCustomPayloadPacket::new, context))));
 
     public static <T extends net.minecraft.network.PacketListener> Packet<T> toClient(Packet<T> packet, ServerPlayer player) {
         WorldFold transformer = WorldLoopAttachments.wrappedTransformerOf(player.level());
@@ -331,9 +331,10 @@ public final class PacketTranslator {
     }
 
     private static <P extends Packet<?>> Packet<?> customPayload(P packet, CustomPacketPayload payload,
-            BiFunction<CustomPacketPayload, TranslationContext, CustomPacketPayload> rewrite,
+            @Nullable BiFunction<CustomPacketPayload, TranslationContext, CustomPacketPayload> payloadRewriter,
+            BiFunction<CustomPacketPayload, TranslationContext, CustomPacketPayload> recordFold,
             Function<CustomPacketPayload, P> wrap, TranslationContext context) {
-        CustomPacketPayload rewritten = rewrite.apply(payload, context);
+        CustomPacketPayload rewritten = (payloadRewriter == null ? recordFold : payloadRewriter).apply(payload, context);
         return rewritten == payload ? packet : wrap.apply(rewritten);
     }
 
