@@ -163,7 +163,8 @@ public final class PacketTranslator {
             Map.entry(ClientboundMoveMinecartPacket.class, rewriter(PacketTranslator::moveMinecart)),
             Map.entry(ClientboundCustomPayloadPacket.class, rewriter(
                     (ClientboundCustomPayloadPacket packet, TranslationContext context) -> customPayload(packet,
-                            packet.payload(), CLIENTBOUND_PAYLOAD_REWRITERS, ClientboundCustomPayloadPacket::new, context))));
+                            packet.payload(), CLIENTBOUND_PAYLOAD_REWRITERS, RecordPayloadFold::toClient,
+                            ClientboundCustomPayloadPacket::new, context))));
 
     public static <P extends CustomPacketPayload> void registerClientboundPayloadRewriter(Class<P> payloadType,
             BiFunction<P, TranslationContext, CustomPacketPayload> payloadRewriter) {
@@ -208,7 +209,8 @@ public final class PacketTranslator {
             Map.entry(ServerboundTestInstanceBlockActionPacket.class, rewriter(PacketTranslator::testInstanceBlockAction)),
             Map.entry(ServerboundCustomPayloadPacket.class, rewriter(
                     (ServerboundCustomPayloadPacket packet, TranslationContext context) -> customPayload(packet,
-                            packet.payload(), SERVERBOUND_PAYLOAD_REWRITERS, ServerboundCustomPayloadPacket::new, context))));
+                            packet.payload(), SERVERBOUND_PAYLOAD_REWRITERS, RecordPayloadFold::toServer,
+                            ServerboundCustomPayloadPacket::new, context))));
 
     public static <T extends net.minecraft.network.PacketListener> Packet<T> toClient(Packet<T> packet, ServerPlayer player) {
         WorldFold transformer = WorldLoopAttachments.wrappedTransformerOf(player.level());
@@ -316,17 +318,12 @@ public final class PacketTranslator {
 
     private static <P extends Packet<?>> Packet<?> customPayload(P packet, CustomPacketPayload payload,
             StartupRegistry<Class<?>, BiFunction<CustomPacketPayload, TranslationContext, CustomPacketPayload>> rewriters,
+            BiFunction<CustomPacketPayload, TranslationContext, CustomPacketPayload> recordFold,
             Function<CustomPacketPayload, P> wrap, TranslationContext context) {
-        CustomPacketPayload rewritten = rewritePayload(rewriters.entries(), payload, context);
-        return rewritten == payload ? packet : wrap.apply(rewritten);
-    }
-
-    private static CustomPacketPayload rewritePayload(
-            Map<Class<?>, BiFunction<CustomPacketPayload, TranslationContext, CustomPacketPayload>> rewriters,
-            CustomPacketPayload payload, TranslationContext context) {
         BiFunction<CustomPacketPayload, TranslationContext, CustomPacketPayload> payloadRewriter =
-                rewriters.get(payload.getClass());
-        return payloadRewriter == null ? payload : payloadRewriter.apply(payload, context);
+                rewriters.entries().get(payload.getClass());
+        CustomPacketPayload rewritten = (payloadRewriter == null ? recordFold : payloadRewriter).apply(payload, context);
+        return rewritten == payload ? packet : wrap.apply(rewritten);
     }
 
     private static ClientboundPlayerPositionPacket playerPosition(ClientboundPlayerPositionPacket packet, TranslationContext context) {

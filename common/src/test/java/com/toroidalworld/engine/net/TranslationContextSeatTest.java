@@ -40,6 +40,7 @@ class TranslationContextSeatTest {
                 VIEW_DISTANCE,
                 entityId -> false,
                 entityId -> null,
+                entityId -> null,
                 () -> {
                 });
     }

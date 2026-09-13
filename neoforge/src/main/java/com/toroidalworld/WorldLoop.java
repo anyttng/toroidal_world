@@ -7,6 +7,7 @@ import com.toroidalworld.engine.gen.WorldLoopGenerators;
 import com.toroidalworld.engine.gen.WorldLoopTicketTypes;
 import com.toroidalworld.engine.net.AuxiliaryLightTranslation;
 import com.toroidalworld.engine.net.BlockParticleTranslation;
+import com.toroidalworld.engine.net.SpawnBufferTranslation;
 import com.toroidalworld.engine.seam.circumnavigation.WorldLoopCriteria;
 import com.toroidalworld.platform.NeoForgePlatform;
 import com.toroidalworld.platform.Platforms;
@@ -54,6 +55,7 @@ public final class WorldLoop {
 
         AuxiliaryLightTranslation.register();
         BlockParticleTranslation.register();
+        SpawnBufferTranslation.register();
         modContainer.registerConfig(ModConfig.Type.CLIENT, WorldLoopConfig.SPEC);
 
         if (Platforms.get().isClient() && !WorldLoopConfig.SPEC.isEmpty()) {

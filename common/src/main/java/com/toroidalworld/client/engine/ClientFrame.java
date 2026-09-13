@@ -17,6 +17,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 public final class ClientFrame {
@@ -118,6 +119,10 @@ public final class ClientFrame {
 
         ChunkPos nearest = fold.nearestCopy(anchor, canonical);
         return holds.test(nearest) ? nearest : null;
+    }
+
+    public static boolean isClientLevel(Level level) {
+        return level == Minecraft.getInstance().level;
     }
 
     // mc/1.21: hands the fold out to compat/.

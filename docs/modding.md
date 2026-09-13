@@ -96,9 +96,13 @@ Vec3 heading = folded.orientation().applyToDelta(velocity);
 
 Everything above moves a coordinate you are holding. This part is about the coordinates you are *sending*, and about groups of them that have to stay together.
 
-Every vanilla packet that carries a world position is already rewritten on its way out — the server's canonical position becomes whichever copy that client is holding, and back again on the way in. A payload of yours is not, and cannot be: nothing outside your mod knows which of its fields is a position. Registered rewriters are how you say.
+Every vanilla packet that carries a world position is already rewritten on its way out — the server's canonical position becomes whichever copy that client is holding, and back again on the way in. A payload of yours is too, when it is a record that keeps each world position in a component of its own; for the rest, a registered rewriter says which field is a position.
 
 ### A payload of your own
+
+A payload declared as a record needs no code. Each component whose declared type is `BlockPos`, `Vec3`, `ChunkPos`, `SectionPos` or `GlobalPos`, or an `Optional` or a `List` of one, is folded on its way out and on its way back, and the record is rebuilt through its canonical constructor; a `GlobalPos` folds only in the dimension the player stands in. A record with no such component, or none that moved, is handed on as it is.
+
+What a record cannot say takes a rewriter: a position written into a byte array by hand, a position inside a component of any other type, a `long` holding a packed position.
 
 ```java
 PacketRewriters.registerClientboundPayload(StationCursorPayload.class, (payload, context) ->
@@ -110,9 +114,56 @@ PacketRewriters.registerServerboundPayload(StationPickPayload.class, (payload, c
 
 `SeamContext` is the two frames one connection has. `toClient` takes a canonical position to the copy that client holds — the one to write into anything it will draw, place or measure against. `toServer` folds a position the client sent back into the world's bounds. Both come in `BlockPos`, `Vec3` and (clientbound) `ChunkPos` forms, both hand the argument instance itself back when nothing moved, and `context.shape()` is the level's whole geometry for anything the two do not cover.
 
-Register from your mod's initialiser, beside everything else: the table closes at `MinecraftServer.runServer`, before the levels load, and a later registration throws rather than being silently half-effective. A rewriter runs for payloads of that exact class, on a folding level and nowhere else — on an ordinary world nothing you registered is ever called.
+Register from your mod's initialiser, beside everything else: the table closes at `MinecraftServer.runServer`, before the levels load, and a later registration throws rather than being silently half-effective. A rewriter runs for payloads of that exact class, on a folding level and nowhere else — on an ordinary world nothing you registered is ever called. Where one is registered the record fold does not run for that class; the record fold spells each position the way `toClient` and `toServer` do, so moving a payload between the two routes changes nothing its receiver reads.
 
 A context belongs to the packet being rewritten. Never hold one past the call.
+
+A `BlockPos` component that is not a world position — an offset, a size — is folded all the same. Name such a payload by its payload type id in the `positions.json` file of your namespace, described in the next section, and it crosses untouched in both directions:
+
+```json
+{
+  "deny": [ "your_mod:structure_bounds" ]
+}
+```
+
+The lists of every namespace are joined on the server; a rewriter registered for the class still runs.
+
+### Positions your block entity or entity stores
+
+A block entity's sync tag and an entity's spawn data are NBT, and nothing in a tag says which number is a world position. Name those keys in a data file, and each one reaches the client on the copy of the world that client holds — no code, and no dependency on Toroidal World. The file ships in your own jar or in a datapack, one per namespace:
+
+`data/<namespace>/toroidal_world/positions.json`
+
+```json
+{
+  "block_entities": {
+    "your_mod:relay": {
+      "Partner": "block_pos",
+      "Link": { "Target": "block_pos" },
+      "Queue": [ { "Destination": "vec3_list" } ]
+    }
+  },
+  "entities": {
+    "your_mod:tether": {
+      "Anchor": "packed_long"
+    }
+  }
+}
+```
+
+A row is keyed by the block entity type or entity type id. Inside it, a key whose value is a shape is a position at the top level of the tag; a key whose value is an object names a compound, and each key inside it is a position in that compound; a key whose value is a list of one object names a list of compounds, and each key of that object is a position in every compound of the list. One level of nesting is all a row describes.
+
+A shape says how the position is written:
+
+- `block_pos` — an int array of three, as `BlockPos.CODEC` writes it
+- `packed_long` — a long, as `BlockPos.asLong` writes it
+- `vec3_list` — a list of three doubles, as `Vec3.CODEC` writes it
+
+A value whose tag type does not match its shape is left as it is.
+
+`block_entities` rows apply to the tag a client receives for the block entity, with its chunk or on its own update. `entities` rows apply on NeoForge alone, to the spawn data of an entity implementing `IEntityWithComplexSpawn` whose buffer opens with a compound tag; Fabric has no such buffer.
+
+The server reads every namespace's file at start and on `/reload`, and sends the rows to each client as it joins and after each reload; a resource pack on the client adds none. A row naming an id no mod registers is logged and skipped. Where Toroidal World already carries a position at the same key for that block entity or entity, its own row is kept and yours is logged.
 
 ### A particle type of your own
 
