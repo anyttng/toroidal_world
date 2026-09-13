@@ -259,7 +259,7 @@ class WrapDomainTest {
             assertEquals(20, domain.unwrapAround(PLOT, 20));
             assertEquals(PLOT + 0.5, domain.unwrapAround(20.0, PLOT + 0.5), 0.0);
             assertEquals(20.5, domain.unwrapAround(PLOT + 0.5, 20.5), 0.0);
-            assertEquals(PLOT, domain.unwrap(20, PLOT));
+            assertEquals(PLOT, domain.unwrapAround(20, PLOT));
             assertEquals(PLOT + 3, domain.unwrapAround(PLOT, PLOT + 3));
         }
 
