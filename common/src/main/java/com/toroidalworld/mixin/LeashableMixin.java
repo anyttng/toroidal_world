@@ -2,7 +2,7 @@ package com.toroidalworld.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
 
-import com.toroidalworld.engine.seam.SeamAim;
+import com.toroidalworld.engine.seam.SeamSteering;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 
@@ -15,7 +15,7 @@ public interface LeashableMixin {
     @WrapMethod(method = "elasticRangeLeashBehaviour")
     private void toroidal$elasticPullThroughSeam(Entity leashHolder, float leashDistance, Operation<Void> original) {
         Entity leashed = (Entity) this;
-        Vec3 holder = SeamAim.nearestTo(leashed, leashHolder.position());
+        Vec3 holder = SeamSteering.nearestCopy(leashed, leashHolder.position());
         if (holder.x == leashHolder.getX() && holder.z == leashHolder.getZ()) {
             original.call(leashHolder, leashDistance);
             return;
