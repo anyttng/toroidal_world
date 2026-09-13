@@ -112,6 +112,22 @@ public interface WorldFold {
 
     boolean regionsOverlap(BoundingBox first, BoundingBox second);
 
+    default boolean boxesOverlap(AABB first, AABB second) {
+        if (first.minY >= second.maxY || second.minY >= first.maxY) {
+            return false;
+        }
+
+        for (Folded<AABB> firstPiece : split(first)) {
+            for (Folded<AABB> secondPiece : split(second)) {
+                if (firstPiece.value().intersects(secondPiece.value())) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     List<DeckTransformation> copiesTouching(BoundingBox region, int reach);
 
     boolean foldsOntoItself(BoundingBox region);

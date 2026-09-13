@@ -404,6 +404,61 @@ class SeamRegionTest {
             assertTrue(EVEN.regionsOverlap(pastTheTop, atTheBottom));
             assertFalse(WorldFolds.NOOP.regionsOverlap(pastTheTop, atTheBottom));
         }
+
+        private AABB sampleBox(Random random, WorldFold transformer) {
+            double minX = sampleBlock(random, blockX(transformer));
+            double minZ = sampleBlock(random, blockZ(transformer));
+            double minY = sampleY(random);
+            return new AABB(
+                    minX, minY, minZ,
+                    minX + random.nextDouble() * sampleBoxSpan(random, blockX(transformer)),
+                    minY + random.nextDouble() * 32,
+                    minZ + random.nextDouble() * sampleBoxSpan(random, blockZ(transformer)));
+        }
+
+        private double sampleBoxSpan(Random random, WrapDomain domain) {
+            return random.nextBoolean() ? 4.0 : 2 * reachCap(domain, 16_000);
+        }
+
+        private boolean boxOverlapNaive(WorldFold transformer, AABB first, AABB second) {
+            if (first.minY >= second.maxY || second.minY >= first.maxY) return false;
+            return axisBoxOverlapOnLattice(blockX(transformer), first.minX, first.maxX, second.minX, second.maxX)
+                    && axisBoxOverlapOnLattice(blockZ(transformer), first.minZ, first.maxZ, second.minZ, second.maxZ);
+        }
+
+        private boolean axisBoxOverlapOnLattice(WrapDomain domain, double aMin, double aMax, double bMin, double bMax) {
+            for (int laps = -LAPS; laps <= LAPS; laps++) {
+                double shift = laps * (double) domain.domainLength;
+                if (aMin + shift < bMax && bMin < aMax + shift) return true;
+            }
+            return false;
+        }
+
+        @Test
+        void boxesOverlapAgreesWithTheLatticeOfWorldCopies() {
+            Random random = new Random(SEED);
+            for (WorldFold transformer : TRANSFORMERS) {
+                for (int i = 0; i < SAMPLES; i++) {
+                    AABB first = sampleBox(random, transformer);
+                    AABB second = sampleBox(random, transformer);
+                    boolean expected = boxOverlapNaive(transformer, first, second);
+                    assertEquals(expected, transformer.boxesOverlap(first, second),
+                            () -> "boxesOverlap(" + first + ", " + second + ") should be " + expected + " "
+                                    + in(transformer));
+                }
+            }
+        }
+
+        @Test
+        void aBoxInsideTheBoundsOverlapsTheCopyOfABoxCrossingThem() {
+            WrapDomain domain = blockX(EVEN);
+            AABB straddler = new AABB(domain.upperBound - 1.19, 0, 0, domain.upperBound + 0.19, 1, 1);
+            AABB touching = new AABB(domain.upperBound - 1.0, 0, 0, domain.upperBound, 1, 1);
+            AABB query = new AABB(domain.lowerBound, 0, 0, domain.lowerBound + 0.6, 1, 1);
+            assertTrue(EVEN.boxesOverlap(query, straddler));
+            assertFalse(EVEN.boxesOverlap(query, touching));
+            assertFalse(WorldFolds.NOOP.boxesOverlap(query, straddler));
+        }
     }
 
     @Nested

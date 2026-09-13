@@ -1010,6 +1010,50 @@ class DeckGroupFoldMatrixTest {
             int minZ = sample(random);
             return new BoundingBox(minX, 60, minZ, minX + random.nextInt(40), 68, minZ + random.nextInt(40));
         }
+
+        @Test
+        void boxesOverlapAgreesWithTheOrbit() {
+            for (Case testCase : cases()) {
+                DeckGroupFold fold = testCase.fold();
+                Random random = new Random(SEED + 35);
+                for (int sample = 0; sample < SAMPLES; sample++) {
+                    AABB first = randomBox(random);
+                    AABB second = randomBox(random);
+                    assertEquals(anyCopyOverlaps(testCase.group(), first, second),
+                            fold.boxesOverlap(first, second),
+                            testCase.name() + ": boxesOverlap disagrees with the orbit");
+                }
+            }
+        }
+
+        private static boolean anyCopyOverlaps(Group group, AABB first, AABB second) {
+            if (first.minY >= second.maxY || second.minY >= first.maxY) {
+                return false;
+            }
+
+            for (int i = -ORBIT_REACH; i <= ORBIT_REACH; i++) {
+                for (int j = -ORBIT_REACH; j <= ORBIT_REACH; j++) {
+                    double[] low = group.coord(second.minX, second.minZ, i, j);
+                    double[] high = group.coord(second.maxX, second.maxZ, i, j);
+                    double minX = Math.min(low[0], high[0]);
+                    double maxX = Math.max(low[0], high[0]);
+                    double minZ = Math.min(low[1], high[1]);
+                    double maxZ = Math.max(low[1], high[1]);
+                    if (first.minX < maxX && minX < first.maxX && first.minZ < maxZ && minZ < first.maxZ) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static AABB randomBox(Random random) {
+            double minX = sample(random) + random.nextDouble();
+            double minZ = sample(random) + random.nextDouble();
+            return new AABB(minX, 60.0, minZ, minX + random.nextDouble() * 40.0, 68.0,
+                    minZ + random.nextDouble() * 40.0);
+        }
     }
 
     @Nested

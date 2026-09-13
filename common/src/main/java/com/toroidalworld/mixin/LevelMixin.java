@@ -1,5 +1,6 @@
 package com.toroidalworld.mixin;
 
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -29,6 +30,9 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -44,6 +48,7 @@ import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
+import net.minecraft.world.level.entity.EntitySectionStorage;
 import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.entity.LevelEntityGetter;
 import net.minecraft.world.phys.AABB;
@@ -114,15 +119,20 @@ public class LevelMixin implements TransformerCache, CrumbSweepCache, TerrainMas
                     target = "Lnet/minecraft/world/level/entity/LevelEntityGetter;get(Lnet/minecraft/world/phys/AABB;Ljava/util/function/Consumer;)V"))
     private void toroidal$entitiesThroughSeam(LevelEntityGetter<Entity> entities, AABB box, Consumer<Entity> output,
             Operation<Void> original) {
-        List<AABB> pieces = FoldedBoxQuery.pieces(toroidal$transformer(), box);
-        if (pieces.size() == 1) {
-            original.call(entities, pieces.getFirst(), output);
+        AABB reach = toroidal$sectionReach(box);
+        if (!toroidal$crossesSeam(reach)) {
+            original.call(entities, box, output);
             return;
         }
 
-        Consumer<Entity> once = FoldedBoxQuery.deduplicating(output);
-        for (AABB piece : pieces) {
-            original.call(entities, piece, once);
+        WorldFold transformer = toroidal$transformer();
+        Set<Entity> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (Folded<AABB> piece : transformer.split(reach)) {
+            original.call(entities, piece.value(), (Consumer<Entity>) entity -> {
+                if (transformer.boxesOverlap(box, entity.getBoundingBox()) && seen.add(entity)) {
+                    output.accept(entity);
+                }
+            });
         }
     }
 
@@ -133,16 +143,44 @@ public class LevelMixin implements TransformerCache, CrumbSweepCache, TerrainMas
                     target = "Lnet/minecraft/world/level/entity/LevelEntityGetter;get(Lnet/minecraft/world/level/entity/EntityTypeTest;Lnet/minecraft/world/phys/AABB;Lnet/minecraft/util/AbortableIterationConsumer;)V"))
     private <U extends Entity> void toroidal$typedEntitiesThroughSeam(LevelEntityGetter<Entity> entities,
             EntityTypeTest<Entity, U> type, AABB box, AbortableIterationConsumer<U> output, Operation<Void> original) {
-        List<AABB> pieces = FoldedBoxQuery.pieces(toroidal$transformer(), box);
-        if (pieces.size() == 1) {
-            original.call(entities, type, pieces.getFirst(), output);
+        AABB reach = toroidal$sectionReach(box);
+        if (!toroidal$crossesSeam(reach)) {
+            original.call(entities, type, box, output);
             return;
         }
 
-        AbortableIterationConsumer<U> once = FoldedBoxQuery.deduplicating(output);
-        for (AABB piece : pieces) {
-            original.call(entities, type, piece, once);
+        WorldFold transformer = toroidal$transformer();
+        Set<Entity> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+        MutableBoolean aborted = new MutableBoolean();
+        for (Folded<AABB> piece : transformer.split(reach)) {
+            original.call(entities, type, piece.value(), (AbortableIterationConsumer<U>) entity -> {
+                if (!transformer.boxesOverlap(box, entity.getBoundingBox()) || !seen.add(entity)) {
+                    return AbortableIterationConsumer.Continuation.CONTINUE;
+                }
+
+                AbortableIterationConsumer.Continuation next = output.accept(entity);
+                if (next.shouldAbort()) {
+                    aborted.setTrue();
+                }
+
+                return next;
+            });
+            if (aborted.isTrue()) {
+                return;
+            }
         }
+    }
+
+    @Unique
+    private boolean toroidal$crossesSeam(AABB box) {
+        WorldFold transformer = toroidal$transformer();
+        return transformer.isWrapped() && transformer.crossesBounds(box);
+    }
+
+    @Unique
+    private static AABB toroidal$sectionReach(AABB box) {
+        return box.inflate(EntitySectionStorage.CHONKY_ENTITY_SEARCH_GRACE, 0.0,
+                EntitySectionStorage.CHONKY_ENTITY_SEARCH_GRACE);
     }
 
     @Unique
