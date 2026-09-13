@@ -216,6 +216,7 @@
     "StructureStartMixin",
     "StructureTemplateMixin",
     "SurfaceSystemMixin",
+    "TargetGoalMixin",
     "TeleportEntityPacketAccessor",
     "TheEndBiomeSourceMixin",
     "TheEndGatewayBlockEntityMixin",
