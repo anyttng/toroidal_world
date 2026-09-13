@@ -15,10 +15,11 @@ import com.toroidalworld.accessors.RelocatableBlockEntity;
 import com.toroidalworld.accessors.TerrainMaskCache;
 import com.toroidalworld.accessors.TransformerCache;
 import com.toroidalworld.accessors.TransformerHolder;
-import com.toroidalworld.engine.fold.FoldedBoxQuery;
+import com.toroidalworld.core.CoordinateConstants;
 import com.toroidalworld.core.ForeignFrame;
 import com.toroidalworld.core.ForeignFrames;
 import com.toroidalworld.core.WorldFold;
+import com.toroidalworld.core.WorldFold.Folded;
 import com.toroidalworld.core.WorldFolds;
 import com.toroidalworld.engine.gen.FloatingCrumbs;
 import com.toroidalworld.core.ShapedChunkGenerator;
@@ -48,7 +49,6 @@ import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
-import net.minecraft.world.level.entity.EntitySectionStorage;
 import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.entity.LevelEntityGetter;
 import net.minecraft.world.phys.AABB;
@@ -179,8 +179,8 @@ public class LevelMixin implements TransformerCache, CrumbSweepCache, TerrainMas
 
     @Unique
     private static AABB toroidal$sectionReach(AABB box) {
-        return box.inflate(EntitySectionStorage.CHONKY_ENTITY_SEARCH_GRACE, 0.0,
-                EntitySectionStorage.CHONKY_ENTITY_SEARCH_GRACE);
+        return box.inflate(CoordinateConstants.ENTITY_SECTION_SEARCH_GRACE, 0.0,
+                CoordinateConstants.ENTITY_SECTION_SEARCH_GRACE);
     }
 
     @Unique

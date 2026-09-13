@@ -12,6 +12,8 @@ public final class CoordinateConstants {
 
     public static final int VIEW_DISTANCE_MARGIN = 3;
 
+    public static final double ENTITY_SECTION_SEARCH_GRACE = 2.0;
+
     private CoordinateConstants() {
     }
 }
