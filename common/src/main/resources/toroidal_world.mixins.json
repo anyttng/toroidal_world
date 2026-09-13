@@ -236,6 +236,7 @@
     "UseBonemealMixin",
     "ValidateNearbyPoiMixin",
     "Vec3iWaypointAccessor",
+    "VerticalGradientSeamMixin",
     "VexYawMixin",
     "VibrationSystemListenerMixin",
     "VibrationSystemTickerMixin",
