@@ -28,7 +28,7 @@ public final class FoldedValue {
         Leaves leaves = new Leaves(
                 pos -> nearestCopy(context, anchor.get(), pos),
                 position -> transformer.nearestCopy(anchor.get(), position),
-                chunkPos -> transformer.nearestCopy(ChunkPos.containing(BlockPos.containing(anchor.get())), chunkPos));
+                chunkPos -> transformer.nearestCopy(new ChunkPos(BlockPos.containing(anchor.get())), chunkPos));
         return walk(context, leaves, value, fallback);
     }
 

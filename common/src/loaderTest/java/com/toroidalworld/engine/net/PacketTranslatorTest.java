@@ -1201,7 +1201,7 @@ class PacketTranslatorTest {
     record RecordProbePayload(BlockPos pos, Optional<BlockPos> target, List<Vec3> path, ChunkPos chunk,
             SectionPos section, GlobalPos home, int count) implements CustomPacketPayload {
         static final Type<RecordProbePayload> TYPE =
-                new Type<>(Identifier.fromNamespaceAndPath(ToroidalWorld.MODID, "record_probe"));
+                new Type<>(ResourceLocation.fromNamespaceAndPath(ToroidalWorld.MODID, "record_probe"));
 
         @Override
         public Type<RecordProbePayload> type() {
@@ -1211,7 +1211,7 @@ class PacketTranslatorTest {
 
     record RewrittenProbePayload(BlockPos pos) implements CustomPacketPayload {
         static final Type<RewrittenProbePayload> TYPE =
-                new Type<>(Identifier.fromNamespaceAndPath(ToroidalWorld.MODID, "rewritten_probe"));
+                new Type<>(ResourceLocation.fromNamespaceAndPath(ToroidalWorld.MODID, "rewritten_probe"));
 
         @Override
         public Type<RewrittenProbePayload> type() {
@@ -1221,7 +1221,7 @@ class PacketTranslatorTest {
 
     record DeniedProbePayload(BlockPos pos) implements CustomPacketPayload {
         static final Type<DeniedProbePayload> TYPE =
-                new Type<>(Identifier.fromNamespaceAndPath(ToroidalWorld.MODID, "denied_probe"));
+                new Type<>(ResourceLocation.fromNamespaceAndPath(ToroidalWorld.MODID, "denied_probe"));
 
         @Override
         public Type<DeniedProbePayload> type() {
@@ -1269,7 +1269,7 @@ class PacketTranslatorTest {
         @Test
         void aRegisteredRewriterTakesPrecedenceOverTheRecordFold() {
             ClientboundCustomPayloadPacket translated = (ClientboundCustomPayloadPacket) PacketTranslator.toClient(
-                    new ClientboundCustomPayloadPacket(new RewrittenProbePayload(SERVER_BLOCK)), context());
+                    new ClientboundCustomPayloadPacket(new RewrittenProbePayload(SERVER_BLOCK)), productionContext());
 
             assertEquals(new RewrittenProbePayload(BlockPos.ZERO), translated.payload());
         }

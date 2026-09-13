@@ -1,6 +1,5 @@
 package com.toroidalworld.engine.net;
 
-import java.util.Map;
 import java.util.function.BiFunction;
 
 import org.jspecify.annotations.Nullable;
@@ -54,12 +53,14 @@ public final class PacketRewriters {
         entityData.register(serializer, (value, context, anchor) -> dataRewriter.rewrite((T) value, context, anchor));
     }
 
-    CustomPacketPayload rewriteClientbound(CustomPacketPayload payload, TranslationContext context) {
-        return rewritten(clientboundPayloads.entries(), payload, context);
+    @Nullable BiFunction<CustomPacketPayload, TranslationContext, CustomPacketPayload> clientboundPayloadFor(
+            CustomPacketPayload payload) {
+        return clientboundPayloads.entries().get(payload.getClass());
     }
 
-    CustomPacketPayload rewriteServerbound(CustomPacketPayload payload, TranslationContext context) {
-        return rewritten(serverboundPayloads.entries(), payload, context);
+    @Nullable BiFunction<CustomPacketPayload, TranslationContext, CustomPacketPayload> serverboundPayloadFor(
+            CustomPacketPayload payload) {
+        return serverboundPayloads.entries().get(payload.getClass());
     }
 
     @Nullable ParticleRewriter<ParticleOptions> particleFor(ParticleOptions particle) {
@@ -68,14 +69,6 @@ public final class PacketRewriters {
 
     @Nullable EntityDataRewriter<Object> entityDataFor(SynchedEntityData.DataValue<?> item) {
         return entityData.entries().get(item.serializer());
-    }
-
-    private static CustomPacketPayload rewritten(
-            Map<Class<?>, BiFunction<CustomPacketPayload, TranslationContext, CustomPacketPayload>> rewriters,
-            CustomPacketPayload payload, TranslationContext context) {
-        BiFunction<CustomPacketPayload, TranslationContext, CustomPacketPayload> payloadRewriter =
-                rewriters.get(payload.getClass());
-        return payloadRewriter == null ? payload : payloadRewriter.apply(payload, context);
     }
 
     private static <P extends CustomPacketPayload> BiFunction<CustomPacketPayload, TranslationContext, CustomPacketPayload>

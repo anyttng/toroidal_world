@@ -57,8 +57,8 @@ public record PositionRows(Map<ResourceLocation, List<TagPosition>> blockEntitie
     public static final Codec<Map<ResourceLocation, List<TagPosition>>> SUBJECTS_CODEC =
             Codec.unboundedMap(ResourceLocation.CODEC, SUBJECT_CODEC);
 
-    private static final Codec<Set<Identifier>> DENY_CODEC =
-            Identifier.CODEC.listOf().xmap(Set::copyOf, List::copyOf);
+    private static final Codec<Set<ResourceLocation>> DENY_CODEC =
+            ResourceLocation.CODEC.listOf().xmap(Set::copyOf, List::copyOf);
 
     public static final Codec<PositionRows> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                     SUBJECTS_CODEC.optionalFieldOf(BLOCK_ENTITIES_KEY, Map.of()).forGetter(PositionRows::blockEntities),

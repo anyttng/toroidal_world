@@ -22,7 +22,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.phys.Vec3;
 
@@ -45,9 +45,9 @@ public final class RecordPayloadFold {
         }
     };
 
-    private static volatile Set<Identifier> denied = Set.of();
+    private static volatile Set<ResourceLocation> denied = Set.of();
 
-    static void deny(Set<Identifier> payloadIds) {
+    static void deny(Set<ResourceLocation> payloadIds) {
         denied = Set.copyOf(payloadIds);
     }
 
