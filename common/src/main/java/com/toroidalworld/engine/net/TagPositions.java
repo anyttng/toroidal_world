@@ -3,11 +3,14 @@ package com.toroidalworld.engine.net;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 import com.toroidalworld.core.StartupRegistry;
+import com.mojang.logging.LogUtils;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -16,9 +19,12 @@ import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
 
 public final class TagPositions {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     private static final int COMPONENTS = 3;
 
     private static final int X = 0;
@@ -141,13 +147,23 @@ public final class TagPositions {
                 throw new IllegalArgumentException(nesting + " names a container, and " + container + " was given");
             }
         }
+
+        boolean sharesAddressWith(TagPosition other) {
+            return nesting == other.nesting && Objects.equals(container, other.container) && key.equals(other.key);
+        }
+    }
+
+    public record Subject(Class<?> type, @Nullable Identifier id) {
     }
 
     public static final class Table {
+        private final String label;
         private final StartupRegistry<Class<?>, List<TagPosition>> registered;
-        private volatile Map<Class<?>, List<TagPosition>> resolved = new ConcurrentHashMap<>();
+        private volatile Map<Identifier, List<TagPosition>> declared = Map.of();
+        private volatile Map<Subject, List<TagPosition>> resolved = new ConcurrentHashMap<>();
 
         public Table(String subject) {
+            this.label = subject;
             this.registered = new StartupRegistry<>(subject);
         }
 
@@ -179,26 +195,44 @@ public final class TagPositions {
             resolved = new ConcurrentHashMap<>();
         }
 
-        public boolean carriesPositions(Class<?> subjectType) {
-            return !positionsOf(subjectType).isEmpty();
+        public synchronized void declare(Map<Identifier, List<TagPosition>> rows) {
+            declared = Map.copyOf(rows);
+            resolved = new ConcurrentHashMap<>();
         }
 
-        public CompoundTag seatedIn(Seat seat, Class<?> subjectType, CompoundTag tag) {
-            List<TagPosition> positions = positionsOf(subjectType);
+        public boolean carriesPositions(Subject carrier) {
+            return !positionsOf(carrier).isEmpty();
+        }
+
+        public CompoundTag seatedIn(Seat seat, Subject carrier, CompoundTag tag) {
+            List<TagPosition> positions = positionsOf(carrier);
             return positions.isEmpty() ? tag : TagPositions.seatedIn(seat, positions, tag);
         }
 
-        private List<TagPosition> positionsOf(Class<?> subjectType) {
-            return resolved.computeIfAbsent(subjectType, type -> {
-                List<TagPosition> positions = new ArrayList<>();
-                registered.entries().forEach((registeredType, registeredPositions) -> {
-                    if (registeredType.isAssignableFrom(type)) {
-                        positions.addAll(registeredPositions);
-                    }
-                });
+        private List<TagPosition> positionsOf(Subject carrier) {
+            return resolved.computeIfAbsent(carrier, this::resolve);
+        }
 
-                return List.copyOf(positions);
+        private List<TagPosition> resolve(Subject carrier) {
+            List<TagPosition> positions = new ArrayList<>();
+            registered.entries().forEach((registeredType, registeredPositions) -> {
+                if (registeredType.isAssignableFrom(carrier.type())) {
+                    positions.addAll(registeredPositions);
+                }
             });
+
+            List<TagPosition> registeredOnly = List.copyOf(positions);
+            List<TagPosition> rows = carrier.id() == null ? List.of() : declared.getOrDefault(carrier.id(), List.of());
+            for (TagPosition row : rows) {
+                if (registeredOnly.stream().anyMatch(row::sharesAddressWith)) {
+                    LOGGER.warn("{}: a data file declares {} for {} at an address a registration on {} already holds;"
+                            + " the registration is kept", label, row, carrier.id(), carrier.type().getName());
+                } else {
+                    positions.add(row);
+                }
+            }
+
+            return List.copyOf(positions);
         }
     }
 

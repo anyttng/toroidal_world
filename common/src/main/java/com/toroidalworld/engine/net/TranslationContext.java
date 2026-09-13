@@ -21,6 +21,7 @@ import com.mojang.logging.LogUtils;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ChunkTrackingView;
@@ -40,7 +41,7 @@ public record TranslationContext(
         int heldViewDistance,
         IntPredicate ownVehicle,
         IntFunction<@Nullable Vec3> entityPosition,
-        IntFunction<@Nullable Class<?>> entityClass,
+        IntFunction<TagPositions.@Nullable Subject> entity,
         Runnable rebase) implements SeamContext {
 
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -65,7 +66,7 @@ public record TranslationContext(
                 heldViewDistanceOf(player, trackedViewDistance),
                 entityId -> isControlledVehicle(player, entityId),
                 entityId -> positionOf(player, entityId),
-                entityId -> classOf(player, entityId),
+                entityId -> subjectOf(player, entityId),
                 () -> ClientPosition.rebase(player));
     }
 
@@ -91,9 +92,11 @@ public record TranslationContext(
         return entity == null ? null : entity.position();
     }
 
-    private static @Nullable Class<?> classOf(ServerPlayer player, int entityId) {
+    private static TagPositions.@Nullable Subject subjectOf(ServerPlayer player, int entityId) {
         Entity entity = player.level().getEntity(entityId);
-        return entity == null ? null : entity.getClass();
+        return entity == null
+                ? null
+                : new TagPositions.Subject(entity.getClass(), BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()));
     }
 
     @Override

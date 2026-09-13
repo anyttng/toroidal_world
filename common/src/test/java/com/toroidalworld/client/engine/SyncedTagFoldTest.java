@@ -76,6 +76,10 @@ class SyncedTagFoldTest {
                 TARGET_KEY);
     }
 
+    private static TagPositions.Subject subject(Class<?> type) {
+        return new TagPositions.Subject(type, null);
+    }
+
     private static CompoundTag cannonTag(BlockPos anchor, BlockPos... targets) {
         CompoundTag printer = new CompoundTag();
         printer.store(ANCHOR_KEY, BlockPos.CODEC, anchor);
@@ -123,7 +127,7 @@ class SyncedTagFoldTest {
                 new BlockPos(17 + WORLD_BLOCKS, 102, 0));
 
         for (WorldFold fold : FOLDS) {
-            CompoundTag seated = SyncedTagFold.seatedIn(TABLE, fold, worldPosition, CannonSubject.class, tag);
+            CompoundTag seated = SyncedTagFold.seatedIn(TABLE, fold, worldPosition, subject(CannonSubject.class), tag);
 
             assertEquals(new BlockPos(15, 102, 0), blockPosIn(seated.getCompoundOrEmpty(PRINTER_KEY), ANCHOR_KEY),
                     "in " + fold);
@@ -138,7 +142,7 @@ class SyncedTagFoldTest {
         CompoundTag tag = cannonTag(new BlockPos(15 + WORLD_BLOCKS, 102, 0), new BlockPos(16 + WORLD_BLOCKS, 102, 0));
 
         for (WorldFold fold : FOLDS) {
-            CompoundTag seated = SyncedTagFold.seatedIn(TABLE, fold, worldPosition, CannonSubject.class, tag);
+            CompoundTag seated = SyncedTagFold.seatedIn(TABLE, fold, worldPosition, subject(CannonSubject.class), tag);
 
             assertEquals(SCHEMATIC_CURSOR, blockPosIn(seated.getCompoundOrEmpty(PRINTER_KEY), CURRENT_POS_KEY),
                     "in " + fold);
@@ -152,7 +156,7 @@ class SyncedTagFoldTest {
         tag.putLong(PACKED_KEY, new BlockPos(3 + WORLD_BLOCKS, 102, 0).asLong());
 
         for (WorldFold fold : FOLDS) {
-            CompoundTag seated = SyncedTagFold.seatedIn(TABLE, fold, worldPosition, PackedSubject.class, tag);
+            CompoundTag seated = SyncedTagFold.seatedIn(TABLE, fold, worldPosition, subject(PackedSubject.class), tag);
 
             assertEquals(new BlockPos(3, 102, 0), BlockPos.of(seated.getLong(PACKED_KEY).orElseThrow()),
                     "in " + fold);
@@ -166,7 +170,7 @@ class SyncedTagFoldTest {
         tag.store(BLOCK_POS_KEY, BlockPos.CODEC, new BlockPos(7 + WORLD_BLOCKS, 102, 0));
 
         for (WorldFold fold : FOLDS) {
-            CompoundTag seated = SyncedTagFold.seatedIn(TABLE, fold, worldPosition, BlockPosSubject.class, tag);
+            CompoundTag seated = SyncedTagFold.seatedIn(TABLE, fold, worldPosition, subject(BlockPosSubject.class), tag);
 
             assertEquals(new BlockPos(7, 102, 0), blockPosIn(seated, BLOCK_POS_KEY), "in " + fold);
         }
@@ -179,7 +183,7 @@ class SyncedTagFoldTest {
         tag.put(VEC3_KEY, doubleList(0.5 + WORLD_BLOCKS, 0.5, 0.5));
 
         for (WorldFold fold : FOLDS) {
-            CompoundTag seated = SyncedTagFold.seatedIn(TABLE, fold, worldPosition, Vec3Subject.class, tag);
+            CompoundTag seated = SyncedTagFold.seatedIn(TABLE, fold, worldPosition, subject(Vec3Subject.class), tag);
 
             assertEquals(new Vec3(0.5, 0.5, 0.5), vec3In(seated, VEC3_KEY), "in " + fold);
         }
@@ -192,7 +196,7 @@ class SyncedTagFoldTest {
         tag.putLong(PACKED_KEY, new BlockPos(3 + WORLD_BLOCKS, 102, 0).asLong());
         tag.putDouble(UNRELATED_KEY, UNRELATED_VALUE);
 
-        CompoundTag seated = SyncedTagFold.seatedIn(TABLE, PER_AXIS, worldPosition, PackedSubject.class, tag);
+        CompoundTag seated = SyncedTagFold.seatedIn(TABLE, PER_AXIS, worldPosition, subject(PackedSubject.class), tag);
 
         assertEquals(UNRELATED_VALUE, seated.getDoubleOr(UNRELATED_KEY, Double.NaN));
     }
@@ -203,7 +207,7 @@ class SyncedTagFoldTest {
         CompoundTag tag = new CompoundTag();
         tag.store(BLOCK_POS_KEY, BlockPos.CODEC, new BlockPos(7 + WORLD_BLOCKS, 102, 0));
 
-        CompoundTag seated = SyncedTagFold.seatedIn(TABLE, PER_AXIS, worldPosition, BlockPosSubject.class, tag);
+        CompoundTag seated = SyncedTagFold.seatedIn(TABLE, PER_AXIS, worldPosition, subject(BlockPosSubject.class), tag);
 
         assertEquals(new BlockPos(7, 102, 0), blockPosIn(seated, BLOCK_POS_KEY));
     }
@@ -214,7 +218,7 @@ class SyncedTagFoldTest {
         CompoundTag tag = new CompoundTag();
         tag.putLong(PACKED_KEY, new BlockPos(3, 102, 0).asLong());
 
-        assertSame(tag, SyncedTagFold.seatedIn(TABLE, PER_AXIS, worldPosition, PackedSubject.class, tag));
+        assertSame(tag, SyncedTagFold.seatedIn(TABLE, PER_AXIS, worldPosition, subject(PackedSubject.class), tag));
     }
 
     @Test
@@ -222,7 +226,7 @@ class SyncedTagFoldTest {
         CompoundTag tag = new CompoundTag();
         tag.putDouble(UNRELATED_KEY, UNRELATED_VALUE);
 
-        assertSame(tag, SyncedTagFold.seatedIn(TABLE, PER_AXIS, new BlockPos(2, 102, 0), PackedSubject.class, tag));
+        assertSame(tag, SyncedTagFold.seatedIn(TABLE, PER_AXIS, new BlockPos(2, 102, 0), subject(PackedSubject.class), tag));
     }
 
     @Test
@@ -230,7 +234,7 @@ class SyncedTagFoldTest {
         CompoundTag tag = new CompoundTag();
         tag.store(VEC3_KEY, BlockPos.CODEC, new BlockPos(WORLD_BLOCKS, 0, 0));
 
-        assertSame(tag, SyncedTagFold.seatedIn(TABLE, PER_AXIS, new BlockPos(10, 102, 0), Vec3Subject.class, tag));
+        assertSame(tag, SyncedTagFold.seatedIn(TABLE, PER_AXIS, new BlockPos(10, 102, 0), subject(Vec3Subject.class), tag));
     }
 
     @Test
@@ -239,6 +243,6 @@ class SyncedTagFoldTest {
         tag.putLong(PACKED_KEY, new BlockPos(3 + WORLD_BLOCKS, 102, 0).asLong());
 
         assertSame(tag,
-                SyncedTagFold.seatedIn(TABLE, PER_AXIS, new BlockPos(2, 102, 0), UnregisteredSubject.class, tag));
+                SyncedTagFold.seatedIn(TABLE, PER_AXIS, new BlockPos(2, 102, 0), subject(UnregisteredSubject.class), tag));
     }
 }
