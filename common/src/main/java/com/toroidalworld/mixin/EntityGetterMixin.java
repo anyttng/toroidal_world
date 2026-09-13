@@ -15,7 +15,8 @@ import net.minecraft.world.level.EntityGetter;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-@Mixin(EntityGetter.class)
+// Mixin refuses to inject into a method a mixin of equal priority overwrote; Sable overwrites isUnobstructed at 1000.
+@Mixin(value = EntityGetter.class, priority = 1100)
 public interface EntityGetterMixin {
     @WrapOperation(
             method = "getEntityCollisions(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;)Ljava/util/List;",
