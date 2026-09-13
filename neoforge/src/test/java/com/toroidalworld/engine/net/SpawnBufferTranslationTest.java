@@ -6,6 +6,9 @@ import static com.toroidalworld.engine.net.PacketTranslatorFixture.context;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
+import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 
 import io.netty.buffer.Unpooled;
@@ -17,6 +20,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.decoration.Painting;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.phys.Vec3;
@@ -33,12 +37,15 @@ class SpawnBufferTranslationTest {
 
     private static final byte TAIL_BYTE = 7;
 
-    private static final Class<?> BLOCK_ATTACHED_TYPE = Painting.class;
-    private static final Class<?> UNREGISTERED_TYPE = Boat.class;
+    private static final Identifier OAK_BOAT_ID = Identifier.withDefaultNamespace("oak_boat");
 
-    private static TranslationContext contextHolding(Class<?> entityClass) {
+    private static final TagPositions.Subject BLOCK_ATTACHED_TYPE =
+            new TagPositions.Subject(Painting.class, Identifier.withDefaultNamespace("painting"));
+    private static final TagPositions.Subject UNREGISTERED_TYPE = new TagPositions.Subject(Boat.class, OAK_BOAT_ID);
+
+    private static TranslationContext contextHolding(TagPositions.Subject entity) {
         return context(entityId -> false, entityId -> null,
-                entityId -> entityId == ENTITY_ID ? entityClass : null);
+                entityId -> entityId == ENTITY_ID ? entity : null);
     }
 
     private static ListTag doubleList(double x, double y, double z) {
@@ -136,5 +143,19 @@ class SpawnBufferTranslationTest {
         AdvancedAddEntityPayload payload = payloadOf(MISSING_ENTITY_ID, attachmentData(SERVER_BLOCK), false);
 
         assertSame(payload, SpawnBufferTranslation.seated(payload, contextHolding(BLOCK_ATTACHED_TYPE)));
+    }
+
+    @Test
+    void aRowADataFileDeclaresForTheEntityTypeSeatsItsKey() {
+        SpawnBufferFold.declare(Map.of(OAK_BOAT_ID,
+                List.of(new TagPositions.TagPosition(BLOCK_POS_KEY, TagPositions.PositionShape.BLOCK_POS))));
+        try {
+            CustomPacketPayload seated = SpawnBufferTranslation.seated(
+                    payloadOf(ENTITY_ID, attachmentData(SERVER_BLOCK), false), contextHolding(UNREGISTERED_TYPE));
+
+            assertEquals(CLIENT_BLOCK, bufferOf(seated).readNbt().read(BLOCK_POS_KEY, BlockPos.CODEC).orElseThrow());
+        } finally {
+            SpawnBufferFold.declare(Map.of());
+        }
     }
 }

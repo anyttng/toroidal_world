@@ -114,6 +114,43 @@ Register from your mod's initialiser, beside everything else: the table closes a
 
 A context belongs to the packet being rewritten. Never hold one past the call.
 
+### Positions your block entity or entity stores
+
+A block entity's sync tag and an entity's spawn data are NBT, and nothing in a tag says which number is a world position. Name those keys in a data file, and each one reaches the client on the copy of the world that client holds — no code, and no dependency on Toroidal World. The file ships in your own jar or in a datapack, one per namespace:
+
+`data/<namespace>/toroidal_world/positions.json`
+
+```json
+{
+  "block_entities": {
+    "your_mod:relay": {
+      "Partner": "block_pos",
+      "Link": { "Target": "block_pos" },
+      "Queue": [ { "Destination": "vec3_list" } ]
+    }
+  },
+  "entities": {
+    "your_mod:tether": {
+      "Anchor": "packed_long"
+    }
+  }
+}
+```
+
+A row is keyed by the block entity type or entity type id. Inside it, a key whose value is a shape is a position at the top level of the tag; a key whose value is an object names a compound, and each key inside it is a position in that compound; a key whose value is a list of one object names a list of compounds, and each key of that object is a position in every compound of the list. One level of nesting is all a row describes.
+
+A shape says how the position is written:
+
+- `block_pos` — an int array of three, as `BlockPos.CODEC` writes it
+- `packed_long` — a long, as `BlockPos.asLong` writes it
+- `vec3_list` — a list of three doubles, as `Vec3.CODEC` writes it
+
+A value whose tag type does not match its shape is left as it is.
+
+`block_entities` rows apply to the tag a client receives for the block entity, with its chunk or on its own update. `entities` rows apply on NeoForge alone, to the spawn data of an entity implementing `IEntityWithComplexSpawn` whose buffer opens with a compound tag; Fabric has no such buffer.
+
+The server reads every namespace's file at start and on `/reload`, and sends the rows to each client as it joins and after each reload; a resource pack on the client adds none. A row naming an id no mod registers is logged and skipped. Where Toroidal World already carries a position at the same key for that block entity or entity, its own row is kept and yours is logged.
+
 ### A particle type of your own
 
 ```java

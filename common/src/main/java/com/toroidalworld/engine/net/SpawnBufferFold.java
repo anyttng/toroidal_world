@@ -1,6 +1,10 @@
 package com.toroidalworld.engine.net;
 
+import java.util.List;
+import java.util.Map;
+
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.Identifier;
 
 public final class SpawnBufferFold {
     private static final TagPositions.Table TABLE = new TagPositions.Table("Spawn buffer positions");
@@ -9,12 +13,16 @@ public final class SpawnBufferFold {
         TABLE.register(entityType, shape, keys);
     }
 
-    public static boolean carriesPositions(Class<?> entityType) {
-        return TABLE.carriesPositions(entityType);
+    static void declare(Map<Identifier, List<TagPositions.TagPosition>> rows) {
+        TABLE.declare(rows);
     }
 
-    public static CompoundTag seatedIn(TagPositions.Seat seat, Class<?> entityType, CompoundTag tag) {
-        return TABLE.seatedIn(seat, entityType, tag);
+    public static boolean carriesPositions(TagPositions.Subject entity) {
+        return TABLE.carriesPositions(entity);
+    }
+
+    public static CompoundTag seatedIn(TagPositions.Seat seat, TagPositions.Subject entity, CompoundTag tag) {
+        return TABLE.seatedIn(seat, entity, tag);
     }
 
     private SpawnBufferFold() {

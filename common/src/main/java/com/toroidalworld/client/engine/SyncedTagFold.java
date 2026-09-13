@@ -1,10 +1,15 @@
 package com.toroidalworld.client.engine;
 
+import java.util.List;
+import java.util.Map;
+
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.engine.net.TagPositions;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
@@ -38,18 +43,24 @@ public final class SyncedTagFold {
         TABLE.registerInEach(blockEntityType, container, shape, keys);
     }
 
+    public static void declare(Map<Identifier, List<TagPositions.TagPosition>> rows) {
+        TABLE.declare(rows);
+    }
+
     public static CompoundTag inFrameOf(BlockEntity blockEntity, CompoundTag tag) {
         Level level = blockEntity.getLevel();
         if (level == null || !level.isClientSide() || !ClientFrame.isClientLevel(level)) {
             return tag;
         }
 
-        return TABLE.seatedIn(VIEWER_SEAT, blockEntity.getClass(), tag);
+        TagPositions.Subject subject = new TagPositions.Subject(blockEntity.getClass(),
+                BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(blockEntity.getType()));
+        return TABLE.seatedIn(VIEWER_SEAT, subject, tag);
     }
 
     static CompoundTag seatedIn(TagPositions.Table table, WorldFold fold, BlockPos anchor,
-            Class<?> blockEntityType, CompoundTag tag) {
-        return table.seatedIn(around(fold, anchor), blockEntityType, tag);
+            TagPositions.Subject blockEntity, CompoundTag tag) {
+        return table.seatedIn(around(fold, anchor), blockEntity, tag);
     }
 
     private static TagPositions.Seat around(WorldFold fold, BlockPos anchor) {
