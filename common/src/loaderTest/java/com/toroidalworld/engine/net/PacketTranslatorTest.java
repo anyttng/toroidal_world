@@ -1181,7 +1181,7 @@ class PacketTranslatorTest {
         @Test
         void registeredPayloadMovesToTheClientFrame() {
             ClientboundCustomPayloadPacket translated = (ClientboundCustomPayloadPacket) PacketTranslator.toClient(
-                    new ClientboundCustomPayloadPacket(new SeamProbePayload(SERVER_BLOCK)), context());
+                    new ClientboundCustomPayloadPacket(new SeamProbePayload(SERVER_BLOCK)), productionContext());
 
             assertEquals(CLIENT_BLOCK, ((SeamProbePayload) translated.payload()).pos());
         }
@@ -1191,7 +1191,7 @@ class PacketTranslatorTest {
             ClientboundCustomPayloadPacket packet =
                     new ClientboundCustomPayloadPacket(new UnregisteredProbePayload(SERVER_BLOCK));
 
-            assertSame(packet, PacketTranslator.toClient(packet, context()));
+            assertSame(packet, PacketTranslator.toClient(packet, productionContext()));
         }
     }
 }
