@@ -215,6 +215,7 @@
     "StructureTemplateMixin",
     "SulfurCubeMixin",
     "SurfaceSystemMixin",
+    "TargetGoalMixin",
     "TemptGoalForNonPathfindersMixin",
     "TheEndBiomeSourceMixin",
     "TheEndGatewayBlockEntityMixin",
