@@ -4,6 +4,14 @@ public final class InjectionTargets {
     public static final String AABB_INTERSECTS =
             "Lnet/minecraft/world/phys/AABB;intersects(Lnet/minecraft/world/phys/AABB;)Z";
 
+    public static final String BLOCK_ENTITY_HANDLE_UPDATE_TAG =
+            "Lnet/minecraft/world/level/block/entity/BlockEntity;handleUpdateTag(Lnet/minecraft/nbt/CompoundTag;"
+                    + "Lnet/minecraft/core/HolderLookup$Provider;)V";
+
+    public static final String BLOCK_ENTITY_LOAD_WITH_COMPONENTS =
+            "Lnet/minecraft/world/level/block/entity/BlockEntity;loadWithComponents(Lnet/minecraft/nbt/CompoundTag;"
+                    + "Lnet/minecraft/core/HolderLookup$Provider;)V";
+
     public static final String BLOCK_POS_CLOSER_THAN =
             "Lnet/minecraft/core/BlockPos;closerThan(Lnet/minecraft/core/Vec3i;D)Z";
 
@@ -80,11 +88,6 @@ public final class InjectionTargets {
 
     public static final String STREAM_SORTED =
             "Ljava/util/stream/Stream;sorted(Ljava/util/Comparator;)Ljava/util/stream/Stream;";
-
-    public static final String TAG_VALUE_INPUT_CREATE =
-            "Lnet/minecraft/world/level/storage/TagValueInput;create(Lnet/minecraft/util/ProblemReporter;"
-                    + "Lnet/minecraft/core/HolderLookup$Provider;Lnet/minecraft/nbt/CompoundTag;)"
-                    + "Lnet/minecraft/world/level/storage/ValueInput;";
 
     public static final String VEC3_ADD =
             "Lnet/minecraft/world/phys/Vec3;add(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;";

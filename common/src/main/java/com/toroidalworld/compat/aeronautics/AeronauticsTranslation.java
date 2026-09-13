@@ -5,7 +5,7 @@ import java.util.Map;
 import org.joml.Vector3d;
 import org.jspecify.annotations.Nullable;
 
-import com.toroidalworld.compat.SyncedTagFold;
+import com.toroidalworld.client.engine.SyncedTagFold;
 import com.toroidalworld.compat.aeronautics.mixin.MultiMiningSyncAccessor;
 import com.toroidalworld.compat.aeronautics.mixin.PhysicsStaffBeamPacketAccessor;
 import com.toroidalworld.engine.fold.FoldedCopies;

@@ -17,16 +17,13 @@ import com.toroidalworld.core.WorldLoopAttachments;
 import com.toroidalworld.engine.fold.ChunkSeat;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.Local;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.storage.ValueInput;
 
 @Mixin(LevelChunk.class)
 public class LevelChunkMixin {
@@ -77,11 +74,13 @@ public class LevelChunkMixin {
     }
 
     @WrapOperation(
-            method = "lambda$replaceWithPacketData$0",
-            at = @At(value = "INVOKE", target = InjectionTargets.TAG_VALUE_INPUT_CREATE))
-    private ValueInput toroidal$seatSyncedPositions(ProblemReporter reporter, HolderLookup.Provider registries,
-            CompoundTag tag, Operation<ValueInput> original, @Local BlockEntity blockEntity) {
-        return original.call(reporter, registries, SyncedTagFold.inFrameOf(blockEntity, tag));
+            method = {"lambda$replaceWithPacketData$3", "method_31716"},
+            at = {
+                    @At(value = "INVOKE", target = InjectionTargets.BLOCK_ENTITY_HANDLE_UPDATE_TAG),
+                    @At(value = "INVOKE", target = InjectionTargets.BLOCK_ENTITY_LOAD_WITH_COMPONENTS)})
+    private void toroidal$seatSyncedPositions(BlockEntity blockEntity, CompoundTag tag,
+            HolderLookup.Provider registries, Operation<Void> original) {
+        original.call(blockEntity, SyncedTagFold.inFrameOf(blockEntity, tag), registries);
     }
 
     @Unique

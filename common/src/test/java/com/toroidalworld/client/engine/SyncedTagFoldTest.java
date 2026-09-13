@@ -19,6 +19,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.DoubleTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.phys.Vec3;
 
 class SyncedTagFoldTest {
@@ -78,13 +80,13 @@ class SyncedTagFoldTest {
 
     private static CompoundTag cannonTag(BlockPos anchor, BlockPos... targets) {
         CompoundTag printer = new CompoundTag();
-        printer.store(ANCHOR_KEY, BlockPos.CODEC, anchor);
-        printer.store(CURRENT_POS_KEY, BlockPos.CODEC, SCHEMATIC_CURSOR);
+        printer.put(ANCHOR_KEY, NbtUtils.writeBlockPos(anchor));
+        printer.put(CURRENT_POS_KEY, NbtUtils.writeBlockPos(SCHEMATIC_CURSOR));
 
         ListTag flying = new ListTag();
         for (BlockPos target : targets) {
             CompoundTag launched = new CompoundTag();
-            launched.store(TARGET_KEY, BlockPos.CODEC, target);
+            launched.put(TARGET_KEY, NbtUtils.writeBlockPos(target));
             flying.add(launched);
         }
 
@@ -95,11 +97,11 @@ class SyncedTagFoldTest {
     }
 
     private static BlockPos blockPosIn(CompoundTag tag, String key) {
-        return tag.read(key, BlockPos.CODEC).orElseThrow();
+        return NbtUtils.readBlockPos(tag, key).orElseThrow();
     }
 
     private static BlockPos targetIn(CompoundTag tag, int index) {
-        return blockPosIn(tag.getListOrEmpty(FLYING_BLOCKS_KEY).getCompoundOrEmpty(index), TARGET_KEY);
+        return blockPosIn(tag.getList(FLYING_BLOCKS_KEY, Tag.TAG_COMPOUND).getCompound(index), TARGET_KEY);
     }
 
     private static ListTag doubleList(double x, double y, double z) {
@@ -111,9 +113,8 @@ class SyncedTagFoldTest {
     }
 
     private static Vec3 vec3In(CompoundTag tag, String key) {
-        ListTag list = tag.getListOrEmpty(key);
-        return new Vec3(list.getDoubleOr(0, Double.NaN), list.getDoubleOr(1, Double.NaN),
-                list.getDoubleOr(2, Double.NaN));
+        ListTag list = tag.getList(key, Tag.TAG_DOUBLE);
+        return new Vec3(list.getDouble(0), list.getDouble(1), list.getDouble(2));
     }
 
     @Test
@@ -125,7 +126,7 @@ class SyncedTagFoldTest {
         for (WorldFold fold : FOLDS) {
             CompoundTag seated = SyncedTagFold.seatedIn(TABLE, fold, worldPosition, CannonSubject.class, tag);
 
-            assertEquals(new BlockPos(15, 102, 0), blockPosIn(seated.getCompoundOrEmpty(PRINTER_KEY), ANCHOR_KEY),
+            assertEquals(new BlockPos(15, 102, 0), blockPosIn(seated.getCompound(PRINTER_KEY), ANCHOR_KEY),
                     "in " + fold);
             assertEquals(new BlockPos(16, 102, 0), targetIn(seated, 0), "in " + fold);
             assertEquals(new BlockPos(17, 102, 0), targetIn(seated, 1), "in " + fold);
@@ -140,7 +141,7 @@ class SyncedTagFoldTest {
         for (WorldFold fold : FOLDS) {
             CompoundTag seated = SyncedTagFold.seatedIn(TABLE, fold, worldPosition, CannonSubject.class, tag);
 
-            assertEquals(SCHEMATIC_CURSOR, blockPosIn(seated.getCompoundOrEmpty(PRINTER_KEY), CURRENT_POS_KEY),
+            assertEquals(SCHEMATIC_CURSOR, blockPosIn(seated.getCompound(PRINTER_KEY), CURRENT_POS_KEY),
                     "in " + fold);
         }
     }
@@ -154,7 +155,7 @@ class SyncedTagFoldTest {
         for (WorldFold fold : FOLDS) {
             CompoundTag seated = SyncedTagFold.seatedIn(TABLE, fold, worldPosition, PackedSubject.class, tag);
 
-            assertEquals(new BlockPos(3, 102, 0), BlockPos.of(seated.getLong(PACKED_KEY).orElseThrow()),
+            assertEquals(new BlockPos(3, 102, 0), BlockPos.of(seated.getLong(PACKED_KEY)),
                     "in " + fold);
         }
     }
@@ -163,7 +164,7 @@ class SyncedTagFoldTest {
     void aBlockPosControllerAWorldAwayComesBackBesideTheBlockEntity() {
         BlockPos worldPosition = new BlockPos(6, 102, 0);
         CompoundTag tag = new CompoundTag();
-        tag.store(BLOCK_POS_KEY, BlockPos.CODEC, new BlockPos(7 + WORLD_BLOCKS, 102, 0));
+        tag.put(BLOCK_POS_KEY, NbtUtils.writeBlockPos(new BlockPos(7 + WORLD_BLOCKS, 102, 0)));
 
         for (WorldFold fold : FOLDS) {
             CompoundTag seated = SyncedTagFold.seatedIn(TABLE, fold, worldPosition, BlockPosSubject.class, tag);
@@ -194,14 +195,14 @@ class SyncedTagFoldTest {
 
         CompoundTag seated = SyncedTagFold.seatedIn(TABLE, PER_AXIS, worldPosition, PackedSubject.class, tag);
 
-        assertEquals(UNRELATED_VALUE, seated.getDoubleOr(UNRELATED_KEY, Double.NaN));
+        assertEquals(UNRELATED_VALUE, seated.getDouble(UNRELATED_KEY));
     }
 
     @Test
     void aSubtypeInheritsTheKeysRegisteredOnItsSupertype() {
         BlockPos worldPosition = new BlockPos(6, 102, 0);
         CompoundTag tag = new CompoundTag();
-        tag.store(BLOCK_POS_KEY, BlockPos.CODEC, new BlockPos(7 + WORLD_BLOCKS, 102, 0));
+        tag.put(BLOCK_POS_KEY, NbtUtils.writeBlockPos(new BlockPos(7 + WORLD_BLOCKS, 102, 0)));
 
         CompoundTag seated = SyncedTagFold.seatedIn(TABLE, PER_AXIS, worldPosition, BlockPosSubject.class, tag);
 
@@ -228,7 +229,7 @@ class SyncedTagFoldTest {
     @Test
     void aValueOfAnotherShapeUnderTheRegisteredKeyIsLeftAlone() {
         CompoundTag tag = new CompoundTag();
-        tag.store(VEC3_KEY, BlockPos.CODEC, new BlockPos(WORLD_BLOCKS, 0, 0));
+        tag.put(VEC3_KEY, NbtUtils.writeBlockPos(new BlockPos(WORLD_BLOCKS, 0, 0)));
 
         assertSame(tag, SyncedTagFold.seatedIn(TABLE, PER_AXIS, new BlockPos(10, 102, 0), Vec3Subject.class, tag));
     }
