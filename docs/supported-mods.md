@@ -35,7 +35,7 @@ Toroidal World ships for Minecraft 26.2, 26.1.2 and 1.21.1, on NeoForge and Fabr
 | --- | --- | --- | --- | --- |
 | [Create](https://modrinth.com/mod/create) | 1.21.1 | NeoForge | Supported | |
 | [Sable](https://modrinth.com/mod/sable) | 1.21.1 | NeoForge, Fabric | Supported | |
-| [Create Aeronautics](https://modrinth.com/mod/create-aeronautics) | 1.21.1 | NeoForge | Partially supported | A spring's coil and a honey glue landed past the world's edge. |
+| [Create Aeronautics](https://modrinth.com/mod/create-aeronautics) | 1.21.1 | NeoForge | Supported | |
 | Create Electroenergetics | — | — | No seam support | |
 | Mekanism | 1.21.1 | NeoForge | No seam support | |
 | Astikor Carts | — | — | No seam support | |
