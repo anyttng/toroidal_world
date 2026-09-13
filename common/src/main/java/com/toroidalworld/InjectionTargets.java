@@ -67,6 +67,11 @@ public final class InjectionTargets {
     public static final String STREAM_SORTED =
             "Ljava/util/stream/Stream;sorted(Ljava/util/Comparator;)Ljava/util/stream/Stream;";
 
+    public static final String TAG_VALUE_INPUT_CREATE =
+            "Lnet/minecraft/world/level/storage/TagValueInput;create(Lnet/minecraft/util/ProblemReporter;"
+                    + "Lnet/minecraft/core/HolderLookup$Provider;Lnet/minecraft/nbt/CompoundTag;)"
+                    + "Lnet/minecraft/world/level/storage/ValueInput;";
+
     public static final String VEC3_AT_CENTER_OF =
             "Lnet/minecraft/world/phys/Vec3;atCenterOf(Lnet/minecraft/core/Vec3i;)Lnet/minecraft/world/phys/Vec3;";
 
