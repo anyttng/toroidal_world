@@ -19,7 +19,7 @@ import net.minecraft.nbt.DoubleTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 
 class TagPositionsTest {
@@ -27,8 +27,8 @@ class TagPositionsTest {
 
     private static final String SUBJECT = "Test positions";
 
-    private static final Identifier DECLARED_ID = Identifier.fromNamespaceAndPath("cject", "holder");
-    private static final Identifier OTHER_ID = Identifier.fromNamespaceAndPath("cject", "relay");
+    private static final ResourceLocation DECLARED_ID = ResourceLocation.fromNamespaceAndPath("cject", "holder");
+    private static final ResourceLocation OTHER_ID = ResourceLocation.fromNamespaceAndPath("cject", "relay");
 
     private static final String PACKED_KEY = "Goal";
     private static final String BLOCK_POS_KEY = "ControllerPos";
@@ -146,7 +146,7 @@ class TagPositionsTest {
         return new TagPositions.Subject(type, null);
     }
 
-    private static Map<Identifier, List<TagPositions.TagPosition>> blockPosDeclaredFor(Identifier id) {
+    private static Map<ResourceLocation, List<TagPositions.TagPosition>> blockPosDeclaredFor(ResourceLocation id) {
         return Map.of(id, List.of(new TagPositions.TagPosition(BLOCK_POS_KEY, TagPositions.PositionShape.BLOCK_POS)));
     }
 
@@ -488,7 +488,7 @@ class TagPositionsTest {
             CompoundTag seated = table.seatedIn(new HomeLap(), declared, blockPosAt(new BlockPos(7 + LAP_BLOCKS, 102, 0)));
 
             assertTrue(table.carriesPositions(declared));
-            assertEquals(new BlockPos(7, 102, 0), blockPosIn(seated, BLOCK_POS_KEY));
+            assertEquals(new BlockPos(7, 102, 0), NbtUtils.readBlockPos(seated, BLOCK_POS_KEY).orElseThrow());
         }
 
         @Test
@@ -528,8 +528,8 @@ class TagPositionsTest {
 
             CompoundTag seated = table.seatedIn(seat, new TagPositions.Subject(PackedSubject.class, DECLARED_ID), tag);
 
-            assertEquals(new BlockPos(7, 102, 0), blockPosIn(seated, BLOCK_POS_KEY));
-            assertEquals(new BlockPos(3, 102, 0), packedIn(seated));
+            assertEquals(new BlockPos(7, 102, 0), NbtUtils.readBlockPos(seated, BLOCK_POS_KEY).orElseThrow());
+            assertEquals(new BlockPos(3, 102, 0), BlockPos.of(seated.getLong(PACKED_KEY)));
             assertEquals(List.of("BlockPos", "BlockPos"), seat.overloads);
         }
     }

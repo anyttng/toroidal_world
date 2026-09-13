@@ -8,8 +8,8 @@ import com.toroidalworld.core.FlatShape;
 import com.toroidalworld.engine.net.TagPositions;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -45,7 +45,7 @@ public final class LoaderlessPlatform implements Platform {
 
     @Override
     public void sendBlockEntityPositions(ServerPlayer player,
-            Map<Identifier, List<TagPositions.TagPosition>> blockEntities) {
+            Map<ResourceLocation, List<TagPositions.TagPosition>> blockEntities) {
         throw new UnsupportedOperationException(NO_LOADER);
     }
 

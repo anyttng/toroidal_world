@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public final class SpawnBufferFold {
     private static final TagPositions.Table TABLE = new TagPositions.Table("Spawn buffer positions");
@@ -13,7 +13,7 @@ public final class SpawnBufferFold {
         TABLE.register(entityType, shape, keys);
     }
 
-    static void declare(Map<Identifier, List<TagPositions.TagPosition>> rows) {
+    static void declare(Map<ResourceLocation, List<TagPositions.TagPosition>> rows) {
         TABLE.declare(rows);
     }
 

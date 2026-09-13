@@ -15,11 +15,11 @@ import com.toroidalworld.engine.net.TagPositions.TagPosition;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 class BlockEntityPositionsPayloadTest {
-    private static final Identifier HOLDER_ID = Identifier.fromNamespaceAndPath("cject", "holder");
-    private static final Identifier RELAY_ID = Identifier.fromNamespaceAndPath("pack", "relay");
+    private static final ResourceLocation HOLDER_ID = ResourceLocation.fromNamespaceAndPath("cject", "holder");
+    private static final ResourceLocation RELAY_ID = ResourceLocation.fromNamespaceAndPath("pack", "relay");
 
     private static final List<TagPosition> HOLDER_POSITIONS = List.of(
             new TagPosition("Goal", PositionShape.PACKED_LONG),

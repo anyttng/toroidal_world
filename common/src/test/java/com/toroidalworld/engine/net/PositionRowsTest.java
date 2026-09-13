@@ -16,14 +16,14 @@ import com.toroidalworld.engine.net.TagPositions.Nesting;
 import com.toroidalworld.engine.net.TagPositions.PositionShape;
 import com.toroidalworld.engine.net.TagPositions.TagPosition;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 class PositionRowsTest {
-    private static final Identifier HOLDER_ID = Identifier.fromNamespaceAndPath("cject", "holder");
-    private static final Identifier MISSING_ID = Identifier.fromNamespaceAndPath("cject", "missing");
+    private static final ResourceLocation HOLDER_ID = ResourceLocation.fromNamespaceAndPath("cject", "holder");
+    private static final ResourceLocation MISSING_ID = ResourceLocation.fromNamespaceAndPath("cject", "missing");
 
-    private static final Identifier CJECT_FILE = Identifier.fromNamespaceAndPath("cject", PositionRows.FILE_NAME);
-    private static final Identifier PACK_FILE = Identifier.fromNamespaceAndPath("pack", PositionRows.FILE_NAME);
+    private static final ResourceLocation CJECT_FILE = ResourceLocation.fromNamespaceAndPath("cject", PositionRows.FILE_NAME);
+    private static final ResourceLocation PACK_FILE = ResourceLocation.fromNamespaceAndPath("pack", PositionRows.FILE_NAME);
 
     private static final String EVERY_FORM = """
             {

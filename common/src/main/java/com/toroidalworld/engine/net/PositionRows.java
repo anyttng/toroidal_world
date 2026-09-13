@@ -19,9 +19,9 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
-public record PositionRows(Map<Identifier, List<TagPosition>> blockEntities, Map<Identifier, List<TagPosition>> entities) {
+public record PositionRows(Map<ResourceLocation, List<TagPosition>> blockEntities, Map<ResourceLocation, List<TagPosition>> entities) {
     public static final String DIRECTORY = ToroidalWorld.MODID;
     public static final String FILE_NAME = "positions";
 
@@ -50,18 +50,18 @@ public record PositionRows(Map<Identifier, List<TagPosition>> blockEntities, Map
             Codec.unboundedMap(Codec.STRING, Codec.either(SHAPE_CODEC, CONTAINER_CODEC))
                     .xmap(PositionRows::positionsAt, PositionRows::addressesOf);
 
-    public static final Codec<Map<Identifier, List<TagPosition>>> SUBJECTS_CODEC =
-            Codec.unboundedMap(Identifier.CODEC, SUBJECT_CODEC);
+    public static final Codec<Map<ResourceLocation, List<TagPosition>>> SUBJECTS_CODEC =
+            Codec.unboundedMap(ResourceLocation.CODEC, SUBJECT_CODEC);
 
     public static final Codec<PositionRows> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                     SUBJECTS_CODEC.optionalFieldOf(BLOCK_ENTITIES_KEY, Map.of()).forGetter(PositionRows::blockEntities),
                     SUBJECTS_CODEC.optionalFieldOf(ENTITIES_KEY, Map.of()).forGetter(PositionRows::entities))
             .apply(instance, PositionRows::new));
 
-    public static PositionRows merge(Map<Identifier, PositionRows> files, Predicate<Identifier> blockEntityTypeKnown,
-            Predicate<Identifier> entityTypeKnown) {
-        Map<Identifier, List<TagPosition>> blockEntities = new LinkedHashMap<>();
-        Map<Identifier, List<TagPosition>> entities = new LinkedHashMap<>();
+    public static PositionRows merge(Map<ResourceLocation, PositionRows> files, Predicate<ResourceLocation> blockEntityTypeKnown,
+            Predicate<ResourceLocation> entityTypeKnown) {
+        Map<ResourceLocation, List<TagPosition>> blockEntities = new LinkedHashMap<>();
+        Map<ResourceLocation, List<TagPosition>> entities = new LinkedHashMap<>();
         files.forEach((file, rows) -> {
             mergeInto(blockEntities, file, BLOCK_ENTITIES_KEY, rows.blockEntities(), blockEntityTypeKnown);
             mergeInto(entities, file, ENTITIES_KEY, rows.entities(), entityTypeKnown);
@@ -70,8 +70,8 @@ public record PositionRows(Map<Identifier, List<TagPosition>> blockEntities, Map
         return new PositionRows(Map.copyOf(blockEntities), Map.copyOf(entities));
     }
 
-    private static void mergeInto(Map<Identifier, List<TagPosition>> merged, Identifier file, String section,
-            Map<Identifier, List<TagPosition>> rows, Predicate<Identifier> known) {
+    private static void mergeInto(Map<ResourceLocation, List<TagPosition>> merged, ResourceLocation file, String section,
+            Map<ResourceLocation, List<TagPosition>> rows, Predicate<ResourceLocation> known) {
         rows.forEach((id, positions) -> {
             if (!known.test(id)) {
                 LOGGER.warn("The {} file of namespace {} names {} under {}, which no mod registers; its rows are skipped",
@@ -100,11 +100,11 @@ public record PositionRows(Map<Identifier, List<TagPosition>> blockEntities, Map
         Map<String, Map<String, PositionShape>> lists = new LinkedHashMap<>();
         for (TagPosition position : positions) {
             if (position.nesting() == Nesting.TOP) {
-                addresses.put(position.key(), Either.left(position.shape()));
+                addresses.put(position.keys().getFirst(), Either.left(position.shape()));
             } else {
                 (position.nesting() == Nesting.COMPOUND ? compounds : lists)
                         .computeIfAbsent(position.container(), container -> new LinkedHashMap<>())
-                        .put(position.key(), position.shape());
+                        .put(position.keys().getFirst(), position.shape());
             }
         }
 
@@ -123,7 +123,7 @@ public record PositionRows(Map<Identifier, List<TagPosition>> blockEntities, Map
 
     private static DataResult<PositionShape> shapeNamed(String name) {
         for (PositionShape shape : PositionShape.values()) {
-            if (nameOf(shape).equals(name)) {
+            if (shape.keyCount() == 1 && nameOf(shape).equals(name)) {
                 return DataResult.success(shape);
             }
         }

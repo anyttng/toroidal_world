@@ -10,12 +10,12 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
-public record BlockEntityPositionsPayload(Map<Identifier, List<TagPositions.TagPosition>> blockEntities)
+public record BlockEntityPositionsPayload(Map<ResourceLocation, List<TagPositions.TagPosition>> blockEntities)
         implements CustomPacketPayload {
     public static final Type<BlockEntityPositionsPayload> TYPE =
-            new Type<>(Identifier.fromNamespaceAndPath(ToroidalWorld.MODID, "block_entity_positions"));
+            new Type<>(ResourceLocation.fromNamespaceAndPath(ToroidalWorld.MODID, "block_entity_positions"));
 
     public static final StreamCodec<ByteBuf, BlockEntityPositionsPayload> STREAM_CODEC =
             ByteBufCodecs.fromCodec(PositionRows.SUBJECTS_CODEC)

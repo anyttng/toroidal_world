@@ -20,7 +20,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 
 public final class TagPositions {
@@ -166,6 +166,14 @@ public final class TagPositions {
             this(Nesting.TOP, null, keys, shape);
         }
 
+        public TagPosition(String key, PositionShape shape) {
+            this(List.of(key), shape);
+        }
+
+        public TagPosition(Nesting nesting, String container, String key, PositionShape shape) {
+            this(nesting, container, List.of(key), shape);
+        }
+
         public TagPosition {
             keys = List.copyOf(keys);
             if (keys.size() != shape.keyCount()) {
@@ -179,17 +187,17 @@ public final class TagPositions {
         }
 
         boolean sharesAddressWith(TagPosition other) {
-            return nesting == other.nesting && Objects.equals(container, other.container) && key.equals(other.key);
+            return nesting == other.nesting && Objects.equals(container, other.container) && keys.equals(other.keys);
         }
     }
 
-    public record Subject(Class<?> type, @Nullable Identifier id) {
+    public record Subject(Class<?> type, @Nullable ResourceLocation id) {
     }
 
     public static final class Table {
         private final String label;
         private final StartupRegistry<Class<?>, List<TagPosition>> registered;
-        private volatile Map<Identifier, List<TagPosition>> declared = Map.of();
+        private volatile Map<ResourceLocation, List<TagPosition>> declared = Map.of();
         private volatile Map<Subject, List<TagPosition>> resolved = new ConcurrentHashMap<>();
 
         public Table(String subject) {
@@ -227,7 +235,7 @@ public final class TagPositions {
             resolved = new ConcurrentHashMap<>();
         }
 
-        public synchronized void declare(Map<Identifier, List<TagPosition>> rows) {
+        public synchronized void declare(Map<ResourceLocation, List<TagPosition>> rows) {
             declared = Map.copyOf(rows);
             resolved = new ConcurrentHashMap<>();
         }

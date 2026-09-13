@@ -17,8 +17,8 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -61,7 +61,7 @@ public final class FabricPlatform implements Platform {
 
     @Override
     public void sendBlockEntityPositions(ServerPlayer player,
-            Map<Identifier, List<TagPositions.TagPosition>> blockEntities) {
+            Map<ResourceLocation, List<TagPositions.TagPosition>> blockEntities) {
         if (ServerPlayNetworking.canSend(player, BlockEntityPositionsPayload.TYPE)) {
             ServerPlayNetworking.send(player, new BlockEntityPositionsPayload(blockEntities));
         }

@@ -20,7 +20,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.decoration.Painting;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.phys.Vec3;
@@ -37,10 +37,10 @@ class SpawnBufferTranslationTest {
 
     private static final byte TAIL_BYTE = 7;
 
-    private static final Identifier OAK_BOAT_ID = Identifier.withDefaultNamespace("oak_boat");
+    private static final ResourceLocation OAK_BOAT_ID = ResourceLocation.withDefaultNamespace("oak_boat");
 
     private static final TagPositions.Subject BLOCK_ATTACHED_TYPE =
-            new TagPositions.Subject(Painting.class, Identifier.withDefaultNamespace("painting"));
+            new TagPositions.Subject(Painting.class, ResourceLocation.withDefaultNamespace("painting"));
     private static final TagPositions.Subject UNREGISTERED_TYPE = new TagPositions.Subject(Boat.class, OAK_BOAT_ID);
 
     private static TranslationContext contextHolding(TagPositions.Subject entity) {
@@ -147,13 +147,15 @@ class SpawnBufferTranslationTest {
 
     @Test
     void aRowADataFileDeclaresForTheEntityTypeSeatsItsKey() {
-        SpawnBufferFold.declare(Map.of(OAK_BOAT_ID,
-                List.of(new TagPositions.TagPosition(BLOCK_POS_KEY, TagPositions.PositionShape.BLOCK_POS))));
+        SpawnBufferFold.declare(Map.of(OAK_BOAT_ID, List.of(new TagPositions.TagPosition(
+                List.of(TILE_X_KEY, TILE_Y_KEY, TILE_Z_KEY), TagPositions.PositionShape.BLOCK_INT_TRIPLE))));
         try {
             CustomPacketPayload seated = SpawnBufferTranslation.seated(
                     payloadOf(ENTITY_ID, attachmentData(SERVER_BLOCK), false), contextHolding(UNREGISTERED_TYPE));
 
-            assertEquals(CLIENT_BLOCK, bufferOf(seated).readNbt().read(BLOCK_POS_KEY, BlockPos.CODEC).orElseThrow());
+            CompoundTag tag = bufferOf(seated).readNbt();
+            assertEquals(CLIENT_BLOCK,
+                    new BlockPos(tag.getInt(TILE_X_KEY), tag.getInt(TILE_Y_KEY), tag.getInt(TILE_Z_KEY)));
         } finally {
             SpawnBufferFold.declare(Map.of());
         }

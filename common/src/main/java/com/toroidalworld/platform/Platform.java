@@ -8,8 +8,8 @@ import com.toroidalworld.core.FlatShape;
 import com.toroidalworld.engine.net.TagPositions;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -26,7 +26,7 @@ public interface Platform {
 
     void sendWorldShape(ServerPlayer player, ResourceKey<Level> dimension, FlatShape shape);
 
-    void sendBlockEntityPositions(ServerPlayer player, Map<Identifier, List<TagPositions.TagPosition>> blockEntities);
+    void sendBlockEntityPositions(ServerPlayer player, Map<ResourceLocation, List<TagPositions.TagPosition>> blockEntities);
 
     IntFunction<RegistryFriendlyByteBuf> packetBuffers(ServerPlayer player);
 

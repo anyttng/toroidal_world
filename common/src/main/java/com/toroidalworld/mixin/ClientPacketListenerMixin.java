@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.toroidalworld.client.engine.PublishedShapes;
+import com.toroidalworld.client.engine.SyncedTagFold;
 
 import net.minecraft.client.multiplayer.ClientPacketListener;
 

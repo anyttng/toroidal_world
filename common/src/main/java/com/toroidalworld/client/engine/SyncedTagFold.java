@@ -9,7 +9,7 @@ import com.toroidalworld.engine.net.TagPositions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
@@ -43,7 +43,7 @@ public final class SyncedTagFold {
         TABLE.registerInEach(blockEntityType, container, shape, keys);
     }
 
-    public static void declare(Map<Identifier, List<TagPositions.TagPosition>> rows) {
+    public static void declare(Map<ResourceLocation, List<TagPositions.TagPosition>> rows) {
         TABLE.declare(rows);
     }
 

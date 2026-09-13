@@ -8,8 +8,8 @@ import com.toroidalworld.engine.gen.LoopedChunkGenerator;
 import com.toroidalworld.engine.gen.LoopedFlatChunkGenerator;
 import com.toroidalworld.engine.gen.WorldLoopGenerators;
 import com.toroidalworld.engine.net.BlockEntityPositionsPayload;
+import com.toroidalworld.engine.net.FabricPositionRowsReloadListener;
 import com.toroidalworld.engine.net.OpenMenuTranslation;
-import com.toroidalworld.engine.net.PositionRowsReloadListener;
 import com.toroidalworld.engine.net.PositionRowsSync;
 import com.toroidalworld.engine.net.WrappingSettingsPayload;
 import com.toroidalworld.engine.seam.circumnavigation.WorldLoopCriteria;
@@ -22,7 +22,7 @@ import com.toroidalworld.shape.WorldShapeSetup;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
-import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -55,8 +55,7 @@ public class ToroidalWorldFabric implements ModInitializer {
         PayloadTypeRegistry.playS2C().register(BlockEntityPositionsPayload.TYPE,
                 BlockEntityPositionsPayload.STREAM_CODEC);
 
-        ResourceLoader.get(PackType.SERVER_DATA).registerReloadListener(PositionRowsReloadListener.ID,
-                new PositionRowsReloadListener());
+        ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new FabricPositionRowsReloadListener());
         ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register((player, joined) -> PositionRowsSync.sendTo(player));
 
         OpenMenuTranslation.register();
