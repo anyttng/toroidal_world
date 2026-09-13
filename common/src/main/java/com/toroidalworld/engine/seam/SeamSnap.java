@@ -7,6 +7,7 @@ import com.toroidalworld.core.SeamTransform;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.decoration.BlockAttachedEntity;
 import net.minecraft.world.phys.Vec3;
 
 public final class SeamSnap {
@@ -14,7 +15,12 @@ public final class SeamSnap {
         SeamTransform applied = lap.blocks();
         Vec3 from = entity.position();
         Vec3 to = lap.apply(from);
-        entity.setPos(to.x, to.y, to.z);
+        if (entity instanceof BlockAttachedEntity attached) {
+            attached.setPos(Vec3.atCenterOf(lap.apply(attached.getPos())));
+        } else {
+            entity.setPos(to.x, to.y, to.z);
+        }
+
         entity.xo = applied.applyX(entity.xo);
         entity.zo = applied.applyZ(entity.zo);
         entity.xOld = applied.applyX(entity.xOld);
