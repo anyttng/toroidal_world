@@ -23,9 +23,9 @@ public class LevelPartEntityMixin {
     }
 
     @WrapOperation(
-            method = "hasEntities(Lnet/minecraft/world/level/entity/EntityTypeTest;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;)Z",
+            method = "getEntities(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;)Ljava/util/List;",
             at = @At(value = "INVOKE", target = InjectionTargets.AABB_INTERSECTS))
-    private boolean toroidal$hasPartBoxTowardQuery(AABB part, AABB query, Operation<Boolean> original) {
+    private boolean toroidal$partBoxTowardQuery(AABB part, AABB query, Operation<Boolean> original) {
         return original.call(toroidal$seatTowardQuery(part, query), query);
     }
 
