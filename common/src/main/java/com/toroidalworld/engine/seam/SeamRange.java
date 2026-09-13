@@ -55,6 +55,15 @@ public final class SeamRange {
         return sqr(transformerOf(levelSource), from, to);
     }
 
+    public static double sqr(Entity levelSource, Vec3 from, double toX, double toY, double toZ) {
+        WorldFold fold = transformerOf(levelSource);
+        if (fold == null) {
+            return from.distanceToSqr(toX, toY, toZ);
+        }
+
+        return fold.sqrDistance(from.x, from.y, from.z, toX, toY, toZ);
+    }
+
     public static double sqr(Level levelSource, Vec3 from, Position to) {
         return sqr(WorldLoopAttachments.wrappedTransformerOf(levelSource), from, to);
     }

@@ -17,6 +17,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Position;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.phys.Vec3;
 
 @Mixin(EnderDragon.class)
@@ -38,6 +39,14 @@ public class EnderDragonMixin {
     private double toroidal$eggDistanceThroughSeam(BlockPos eggPos, Position dragonPosition,
             Operation<Double> original) {
         return SeamRange.sqr((EnderDragon) (Object) this, Vec3.atCenterOf(eggPos), dragonPosition);
+    }
+
+    @WrapOperation(
+            method = "findClosestNode(DDD)I",
+            at = @At(value = "INVOKE",
+                    target = "Lnet/minecraft/world/level/pathfinder/Node;distanceToSqr(Lnet/minecraft/world/level/pathfinder/Node;)F"))
+    private float toroidal$nodeDistanceThroughSeam(Node node, Node point, Operation<Float> original) {
+        return (float) SeamRange.sqr((EnderDragon) (Object) this, node.asBlockPos(), point.asBlockPos());
     }
 
     @WrapOperation(

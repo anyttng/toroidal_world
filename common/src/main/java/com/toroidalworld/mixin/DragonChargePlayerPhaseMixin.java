@@ -8,22 +8,11 @@ import com.toroidalworld.engine.seam.SeamRange;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Position;
-import net.minecraft.world.entity.boss.enderdragon.phases.DragonHoldingPatternPhase;
+import net.minecraft.world.entity.boss.enderdragon.phases.DragonChargePlayerPhase;
 import net.minecraft.world.phys.Vec3;
 
-@Mixin(DragonHoldingPatternPhase.class)
-public class DragonHoldingPatternPhaseMixin {
-    @WrapOperation(
-            method = "findNewTarget",
-            at = @At(value = "INVOKE",
-                    target = InjectionTargets.BLOCK_POS_DIST_TO_CENTER_SQR))
-    private double toroidal$eggDistanceThroughSeam(BlockPos eggPos, Position playerPosition,
-            Operation<Double> original) {
-        return SeamRange.sqr(((DragonPhaseAccessor) this).toroidal$dragon(), Vec3.atCenterOf(eggPos), playerPosition);
-    }
-
+@Mixin(DragonChargePlayerPhase.class)
+public class DragonChargePlayerPhaseMixin {
     @WrapOperation(
             method = "doServerTick",
             at = @At(value = "INVOKE", target = InjectionTargets.VEC3_DISTANCE_TO_SQR_XYZ))
