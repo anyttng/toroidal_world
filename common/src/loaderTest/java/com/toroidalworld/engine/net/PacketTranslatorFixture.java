@@ -68,11 +68,11 @@ final class PacketTranslatorFixture {
     }
 
     static TranslationContext context(IntPredicate ownVehicle, IntFunction<Vec3> entityPosition,
-            IntFunction<Class<?>> entityClass) {
+            IntFunction<TagPositions.Subject> entity) {
         ClientPosition mirror = new ClientPosition();
         mirror.rebase(MIRROR_X, MIRROR_Z, Level.OVERWORLD, TRANSFORMER);
         return new TranslationContext(TRANSFORMER, mirror, BUFFERS, Level.OVERWORLD,
-                VIEW_DISTANCE, VIEW_DISTANCE, ownVehicle, entityPosition, entityClass, () -> {});
+                VIEW_DISTANCE, VIEW_DISTANCE, ownVehicle, entityPosition, entity, () -> {});
     }
 
     private PacketTranslatorFixture() {

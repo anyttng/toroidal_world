@@ -29,8 +29,8 @@ public final class SpawnBufferTranslation {
     }
 
     static CustomPacketPayload seated(AdvancedAddEntityPayload payload, TranslationContext context) {
-        Class<?> entityClass = context.entityClass().apply(payload.entityId());
-        if (entityClass == null || !SpawnBufferFold.carriesPositions(entityClass)) {
+        TagPositions.Subject entity = context.entity().apply(payload.entityId());
+        if (entity == null || !SpawnBufferFold.carriesPositions(entity)) {
             return payload;
         }
 
@@ -39,7 +39,7 @@ public final class SpawnBufferTranslation {
         try {
             spawnData = buffer.readNbt();
         } catch (RuntimeException malformed) {
-            warnBufferDoesNotOpenWithACompound(entityClass, malformed);
+            warnBufferDoesNotOpenWithACompound(entity.type(), malformed);
             return payload;
         }
 
@@ -47,7 +47,7 @@ public final class SpawnBufferTranslation {
             return payload;
         }
 
-        CompoundTag seated = SpawnBufferFold.seatedIn(seatIn(context), entityClass, spawnData);
+        CompoundTag seated = SpawnBufferFold.seatedIn(seatIn(context), entity, spawnData);
         if (seated == spawnData) {
             return payload;
         }
