@@ -25,6 +25,8 @@ A toroidal preset loops both horizontal axes at the given width. A cylinder pres
 
 If the id has a typo, vanilla logs a warning (`Failed to parse level-type …, defaulting to minecraft:normal`) and silently creates an ordinary infinite world — check the first lines of the log if the world comes out non-toroidal.
 
+WorldWeaver, the library behind BetterEnd and BetterNether, replaces `level-type` with its own default preset, and the log says nothing. Set `force_default_world_preset` to `false` in `config/wover/main.json` (the file is written on the first start), then create the world again from a fresh `world` folder.
+
 ## Custom sizes
 
 Two ready packs sit next to this page: [`datapacks/torus/`](datapacks/torus) loops both axes, [`datapacks/cylinder/`](datapacks/cylinder) loops X alone. Both carry a 192-chunk (3072-block) overworld, a 24-chunk (384-block) nether at 1:8 and a 256-chunk (4096-block) End; the toroidal one also states `climate_compression` in its `custom` form. Copy the folder into `world/datapacks/` **before the first server start**, point `server.properties` at `my_pack\:torus` or `my_pack\:cylinder`, and edit the numbers to the size you want. Change the overworld and the nether has to follow it — [Nether width](#nether-width) carries the arithmetic.

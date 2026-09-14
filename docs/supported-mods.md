@@ -54,3 +54,4 @@ Toroidal World ships for Minecraft 26.2, 26.1.2 and 1.21.1, on NeoForge and Fabr
 | [Old Continents](https://www.curseforge.com/minecraft/mc-mods/old-continents) | 26.2 | NeoForge | Supported | |
 | Tectonic | — | — | Not tested | |
 | One Dimension | — | — | Not tested | |
+| BetterEnd and BetterNether | — | — | Not tested | |
