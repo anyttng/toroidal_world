@@ -2,7 +2,7 @@ package com.toroidalworld.shape.torus;
 
 import static com.toroidalworld.engine.noise.DensityFunctionFixture.CLIMATE_AMPLITUDES;
 import static com.toroidalworld.engine.noise.DensityFunctionFixture.CLIMATE_FIRST_OCTAVE;
-import static com.toroidalworld.engine.noise.DensityFunctionFixture.CLIMATE_NOISE;
+import static com.toroidalworld.engine.noise.DensityFunctionFixture.CLIMATE_NOISE_DATA;
 import static com.toroidalworld.engine.noise.DensityFunctionFixture.CLIMATE_XZ_SCALE;
 import static com.toroidalworld.engine.noise.DensityFunctionFixture.SQUARE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,6 +22,6 @@ class ClimateWarpDivisorTest {
 
         assertTrue(factor > 1.0, "the fixture sits outside the compressed regime, so the case proves nothing");
         assertEquals(CLIMATE_XZ_SCALE * factor,
-                ClimateCompression.warpDivisor(CLIMATE_NOISE, SQUARE, CLIMATE_XZ_SCALE, HORIZONTAL_SHARE));
+                ClimateCompression.warpDivisor(CLIMATE_NOISE_DATA, SQUARE, CLIMATE_XZ_SCALE, HORIZONTAL_SHARE));
     }
 }

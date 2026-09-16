@@ -49,7 +49,7 @@ public final class ClimateScanFixture {
                     MultiNoiseBiomeSourceParameterLists.NETHER, true, false));
 
     private static HolderLookup.Provider holders;
-    private static HolderGetter<NormalNoise.NoiseParameters> noises;
+    private static HolderGetter<NormalNoise> noises;
 
     public static void bootstrapVanilla() {
         if (holders != null) {
@@ -60,7 +60,7 @@ public final class ClimateScanFixture {
         Bootstrap.bootStrap();
         WorldOptionSetup.registerAll(false);
         GenerationHookSetup.registerAll();
-        holders = VanillaRegistries.createLookup();
+        holders = VanillaRegistries.createWorldLookup();
         noises = holders.lookupOrThrow(Registries.NOISE);
     }
 
@@ -94,12 +94,16 @@ public final class ClimateScanFixture {
         return WorldFolds.of(FlatShape.cylinder(WorldLoopBounds.ofWidth(Direction.Axis.X, widthBlocks / 16)));
     }
 
-    public static NormalNoise.NoiseParameters noiseParameters(ResourceKey<NormalNoise.NoiseParameters> key) {
+    public static NormalNoise noiseParameters(ResourceKey<NormalNoise> key) {
         return noises.getOrThrow(key).value();
     }
 
     public static NoiseGeneratorSettings settingsOf(WorldType type) {
-        return holders.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(type.settings()).value();
+        return settingsOf(type.settings());
+    }
+
+    public static NoiseGeneratorSettings settingsOf(ResourceKey<NoiseGeneratorSettings> key) {
+        return holders.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(key).value();
     }
 
     public static RandomState randomState(WorldType type, WorldFold fold, long seed) {
@@ -108,7 +112,7 @@ public final class ClimateScanFixture {
 
     public static RandomState randomState(NoiseGeneratorSettings settings, WorldFold fold, long seed) {
         return GenerationTransformerContext.withRouterBuild(fold.isWrapped() ? fold : null,
-                () -> RandomState.create(settings, noises, seed));
+                () -> RandomState.create(noises, seed, settings));
     }
 
     private ClimateScanFixture() {

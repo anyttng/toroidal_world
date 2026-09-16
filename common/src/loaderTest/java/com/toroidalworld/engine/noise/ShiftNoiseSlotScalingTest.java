@@ -1,122 +1,71 @@
 package com.toroidalworld.engine.noise;
 
+import static com.toroidalworld.engine.noise.DensityFunctionFixture.NOISE_DATA;
+import static com.toroidalworld.engine.noise.DensityFunctionFixture.SEED;
+import static com.toroidalworld.engine.noise.DensityFunctionFixture.SQUARE;
+import static com.toroidalworld.engine.noise.DensityFunctionFixture.compile;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Random;
 
 import org.junit.jupiter.api.Test;
 
-import com.toroidalworld.core.FlatShape;
-import com.toroidalworld.core.WorldFold;
-import com.toroidalworld.core.WorldFolds;
-import com.toroidalworld.core.WorldLoopBounds;
-import com.toroidalworld.engine.noise.GenerationTransformerContext.Context;
-
-import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
-import net.minecraft.core.Holder;
-import net.minecraft.world.level.levelgen.DensityFunction;
-import net.minecraft.world.level.levelgen.DensityFunctions;
 import net.minecraft.world.level.levelgen.LegacyRandomSource;
-import net.minecraft.world.level.levelgen.synth.NormalNoise;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunctions;
+import net.minecraft.world.level.levelgen.densityfunction.DensitySampler;
+import net.minecraft.world.level.levelgen.synth.NoiseStack;
 
 class ShiftNoiseSlotScalingTest {
-    private static final long SEED = 0x510753CA1EL;
     private static final int SAMPLES = 16;
-    private static final double COORDINATE_SPAN = 512.0;
+    private static final int COORDINATE_SPAN = 512;
+    private static final double FLAT_SLOT = 0.0;
 
-    private static final NormalNoise.NoiseParameters PARAMETERS =
-            new NormalNoise.NoiseParameters(-6, DoubleArrayList.of(1.0, 1.0, 1.0));
+    private static final NoiseStack STACK =
+            FoldedSamplers.stackOf(NOISE_DATA.value().create(new LegacyRandomSource(SEED)));
 
-    private static final Holder<NormalNoise.NoiseParameters> NOISE_DATA = Holder.direct(PARAMETERS);
+    private static final DensitySampler SHIFT = compile(DensityFunctions.shift(NOISE_DATA), SQUARE);
 
-    private static final DensityFunction.NoiseHolder NOISE = new DensityFunction.NoiseHolder(
-            NOISE_DATA, NormalNoise.create(new LegacyRandomSource(SEED), PARAMETERS));
-
-    private static final WorldFold SQUARE =
-            WorldFolds.of(FlatShape.torus(new WorldLoopBounds(-16, 16, -16, 16)));
-
-    private static final SlotAxes NONE_X = new SlotAxes(SlotAxis.NONE, SlotAxis.X, SlotAxis.Z);
-
-    private static final DensityFunctions.ShiftB SHIFT_NOISE =
-            (DensityFunctions.ShiftB) withLiveNoise(DensityFunctions.shiftB(NOISE_DATA));
+    private static final DensitySampler SHIFT_B = compile(DensityFunctions.shiftB(NOISE_DATA), SQUARE);
 
     @Test
-    void noneXSlotArrivesAtTheNoiseScaled() {
+    void shiftNoneYSlotArrivesAtTheNoiseScaled() {
         Random random = new Random(SEED);
         for (int i = 0; i < SAMPLES; i++) {
-            double x = coordinate(random);
-            double y = coordinate(random);
-            double z = coordinate(random);
-            assertEquals(reference(NONE_X, x * NoiseConstants.SHIFT_SCALE, y, z),
-                    folded(NONE_X, x, y, z),
-                    at("x", x, y, z));
-        }
-    }
-
-    @Test
-    void noneYSlotArrivesAtTheNoiseScaled() {
-        Random random = new Random(SEED);
-        for (int i = 0; i < SAMPLES; i++) {
-            double x = coordinate(random);
-            double y = coordinate(random);
-            double z = coordinate(random);
+            int x = coordinate(random);
+            int y = coordinate(random);
+            int z = coordinate(random);
             assertEquals(reference(SlotAxes.DEFAULT, x, y * NoiseConstants.SHIFT_SCALE, z),
-                    folded(SlotAxes.DEFAULT, x, y, z),
-                    at("y", x, y, z));
+                    DensityFunctionFixture.sample(SHIFT, x, y, z),
+                    at("shift y", x, y, z));
         }
     }
 
     @Test
-    void noneZSlotArrivesAtTheNoiseScaled() {
+    void shiftBSamplesZAndXInItsLoopedSlotsAndAFlatThirdSlot() {
         Random random = new Random(SEED);
         for (int i = 0; i < SAMPLES; i++) {
-            double x = coordinate(random);
-            double y = coordinate(random);
-            double z = coordinate(random);
-            assertEquals(reference(DensityFunctionSlotAxes.SHIFT_B, x, y, z * NoiseConstants.SHIFT_SCALE),
-                    folded(DensityFunctionSlotAxes.SHIFT_B, x, y, z),
-                    at("z", x, y, z));
+            int x = coordinate(random);
+            int y = coordinate(random);
+            int z = coordinate(random);
+            assertEquals(reference(DensityFunctionSlotAxes.SHIFT_B, z, x, FLAT_SLOT),
+                    DensityFunctionFixture.sample(SHIFT_B, x, y, z),
+                    at("shift_b", x, y, z));
         }
     }
 
-    private static double folded(SlotAxes axes, double x, double y, double z) {
-        Context generation = GenerationTransformerContext.context();
-
-        try (Context.BindingScope _ = generation.bind(SQUARE, axes, generation.horizontalScale(),
-                GenerationTransformerContext.UNDECLARED_VERTICAL_SHARE)) {
-            return SHIFT_NOISE.compute(x, y, z);
-        }
+    private static float reference(SlotAxes axes, double first, double second, double third) {
+        NoiseFrame frame = new NoiseFrame(axes, NoiseConstants.UNDIVIDED, NoiseConstants.UNDIVIDED,
+                GenerationTransformerContext.UNDECLARED_VERTICAL_SHARE);
+        float value = PeriodicOctaveSampler.sample(SQUARE, frame, NoiseConstants.SHIFT_SCALE, STACK,
+                first, second, third);
+        return value * (float) NoiseConstants.SHIFT_AMPLITUDE;
     }
 
-    private static double reference(SlotAxes axes, double x, double y, double z) {
-        Context generation = GenerationTransformerContext.context();
-
-        try (Context.BindingScope _ = generation.bind(SQUARE, axes, generation.horizontalScale(),
-                GenerationTransformerContext.UNDECLARED_VERTICAL_SHARE)) {
-            return ContextScaledNoise.sample(generation, NOISE, x, y, z, NoiseConstants.SHIFT_SCALE)
-                    * NoiseConstants.SHIFT_AMPLITUDE;
-        }
+    private static int coordinate(Random random) {
+        return random.nextInt(COORDINATE_SPAN) - COORDINATE_SPAN / 2;
     }
 
-    private static double coordinate(Random random) {
-        return (random.nextDouble() - 0.5) * COORDINATE_SPAN;
-    }
-
-    private static String at(String slot, double x, double y, double z) {
-        return slot + " slot at (" + x + ", " + y + ", " + z + ")";
-    }
-
-    private static DensityFunction withLiveNoise(DensityFunction function) {
-        return function.mapAll(new DensityFunction.Visitor() {
-            @Override
-            public DensityFunction apply(DensityFunction input) {
-                return input;
-            }
-
-            @Override
-            public DensityFunction.NoiseHolder visitNoise(DensityFunction.NoiseHolder noise) {
-                return NOISE;
-            }
-        });
+    private static String at(String slot, int x, int y, int z) {
+        return slot + " at (" + x + ", " + y + ", " + z + ")";
     }
 }

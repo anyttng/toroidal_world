@@ -80,7 +80,7 @@ public final class ClimateCompression {
                 : fitted;
     }
 
-    private static DoubleList octaveAmplitudes(NormalNoise.Parameters parameters) {
+    public static DoubleList octaveAmplitudes(NormalNoise.Parameters parameters) {
         return parameters.amplitudeModifiers().isEmpty()
                 ? new DoubleArrayList(Collections.nCopies(parameters.octaveCount(), UNMODIFIED_AMPLITUDE))
                 : parameters.amplitudeModifiers();

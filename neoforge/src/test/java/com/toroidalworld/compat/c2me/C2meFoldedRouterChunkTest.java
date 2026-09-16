@@ -61,7 +61,7 @@ class C2meFoldedRouterChunkTest {
         Bootstrap.bootStrap();
         WorldOptionSetup.registerAll(false);
         GenerationHookSetup.registerAll();
-        holders = VanillaRegistries.createLookup();
+        holders = VanillaRegistries.createWorldLookup();
         noises = holders.lookupOrThrow(Registries.NOISE);
         overworld = holders.lookupOrThrow(Registries.NOISE_SETTINGS)
                 .getOrThrow(NoiseGeneratorSettings.OVERWORLD).value();

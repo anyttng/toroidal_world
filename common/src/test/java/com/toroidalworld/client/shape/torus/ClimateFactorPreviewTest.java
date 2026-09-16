@@ -15,10 +15,10 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.Bootstrap;
-import net.minecraft.world.level.levelgen.DensityFunction;
-import net.minecraft.world.level.levelgen.DensityFunction.NoiseHolder;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.Noises;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunction;
+import net.minecraft.world.level.levelgen.densityfunction.generator.NoiseFunction;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
 
 class ClimateFactorPreviewTest {
@@ -28,7 +28,7 @@ class ClimateFactorPreviewTest {
     static void bootstrapVanilla() {
         SharedConstants.tryDetectVersion();
         Bootstrap.bootStrap();
-        worldgen = VanillaRegistries.createLookup();
+        worldgen = VanillaRegistries.createWorldLookup();
     }
 
     private static DensityFunction temperatureOf(ResourceKey<NoiseGeneratorSettings> settings) {
@@ -36,10 +36,10 @@ class ClimateFactorPreviewTest {
                 .noiseRouter().temperature();
     }
 
-    private static ResourceKey<NormalNoise.NoiseParameters> foundIn(ResourceKey<NoiseGeneratorSettings> settings) {
-        NoiseHolder found = ClimateFactorPreview.climateNoiseOf(temperatureOf(settings));
+    private static ResourceKey<NormalNoise> foundIn(ResourceKey<NoiseGeneratorSettings> settings) {
+        NoiseFunction found = ClimateFactorPreview.climateNoiseOf(temperatureOf(settings));
         assertNotNull(found, settings.identifier() + ": the router carries no climate noise to find");
-        return found.noiseData().unwrapKey().orElseThrow();
+        return found.noise().unwrapKey().orElseThrow();
     }
 
     @Test

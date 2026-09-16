@@ -3,6 +3,7 @@ package com.toroidalworld.engine.gen;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -38,6 +39,7 @@ import net.minecraft.world.level.NoiseColumn;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
+import net.minecraft.world.level.biome.BiomeResolver;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.biome.Climate;
@@ -52,6 +54,7 @@ import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.WorldDimensions;
 import net.minecraft.world.level.levelgen.blending.Blender;
+import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
 
 final class BakeStampFixture {
     static final String TEST_NAMESPACE = "toroidal_world_test";
@@ -175,18 +178,6 @@ final class BakeStampFixture {
         }
 
         @Override
-        public void applyCarvers(WorldGenRegion region, long seed, RandomState randomState, BiomeManager biomeManager,
-                StructureManager structureManager, ChunkAccess chunk) {
-            throw new UnsupportedOperationException(UNUSED_IN_THIS_HARNESS);
-        }
-
-        @Override
-        public void buildSurface(WorldGenRegion region, StructureManager structureManager, RandomState randomState,
-                ChunkAccess chunk) {
-            throw new UnsupportedOperationException(UNUSED_IN_THIS_HARNESS);
-        }
-
-        @Override
         public void spawnOriginalMobs(WorldGenRegion worldGenRegion) {
             throw new UnsupportedOperationException(UNUSED_IN_THIS_HARNESS);
         }
@@ -197,8 +188,9 @@ final class BakeStampFixture {
         }
 
         @Override
-        public CompletableFuture<ChunkAccess> fillFromNoise(Blender blender, RandomState randomState,
-                StructureManager structureManager, ChunkAccess chunk) {
+        public CompletableFuture<ChunkAccess> buildTerrain(ChunkAccess chunk, Blender blender, RandomState randomState,
+                StructureManager structureManager, BiomeManager biomeManager, @Nullable WorldGenRegion carverBiomeRegion,
+                Set<Holder<Biome>> possibleBiomes) {
             throw new UnsupportedOperationException(UNUSED_IN_THIS_HARNESS);
         }
 
@@ -224,7 +216,8 @@ final class BakeStampFixture {
         }
 
         @Override
-        public void addDebugScreenInfo(List<String> result, RandomState randomState, BlockPos feetPos) {
+        public void addDebugScreenInfo(List<String> result, RandomState randomState, BlockPos feetPos,
+                SamplerContext samplerContext) {
         }
     }
 
@@ -259,7 +252,7 @@ final class BakeStampFixture {
         }
 
         @Override
-        public Holder<Biome> getNoiseBiome(int quartX, int quartY, int quartZ, Climate.Sampler sampler) {
+        public BiomeResolver createResolver(Climate.Sampler sampler) {
             throw new UnsupportedOperationException(UNUSED_IN_THIS_HARNESS);
         }
     }

@@ -54,7 +54,7 @@ class ShapeRegistrationBoundaryTest {
     private static final RegistryAccess.Frozen REGISTRIES =
             RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY);
 
-    private static final HolderLookup.Provider WORLDGEN = VanillaRegistries.createLookup();
+    private static final HolderLookup.Provider WORLDGEN = VanillaRegistries.createWorldLookup();
 
     private static final Identifier CYLINDER_ID =
             Identifier.fromNamespaceAndPath(ToroidalWorld.MODID, "boundary_test_cylinder");

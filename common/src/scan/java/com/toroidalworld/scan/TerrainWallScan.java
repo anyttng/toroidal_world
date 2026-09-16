@@ -33,11 +33,13 @@ import it.unimi.dsi.fastutil.doubles.DoubleList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.levelgen.DensityFunction;
 import net.minecraft.world.level.levelgen.NoiseRouter;
 import net.minecraft.world.level.levelgen.NoiseSettings;
 import net.minecraft.world.level.levelgen.Noises;
 import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunction;
+import net.minecraft.world.level.levelgen.densityfunction.DensitySampler;
+import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
 
 class TerrainWallScan {
@@ -93,7 +95,7 @@ class TerrainWallScan {
 
     private static final double HORIZONTAL_SHARE = 0.0;
 
-    private static final List<ResourceKey<NormalNoise.NoiseParameters>> TERRAIN_FIELDS = List.of(
+    private static final List<ResourceKey<NormalNoise>> TERRAIN_FIELDS = List.of(
             Noises.CONTINENTALNESS, Noises.EROSION, Noises.RIDGE, Noises.TEMPERATURE, Noises.VEGETATION);
 
     private record Site(int blockX, int blockY, int blockZ, double thickness, double density,
@@ -249,7 +251,7 @@ class TerrainWallScan {
                 .append(" no terrain, so it gates nothing.")
                 .append(System.lineSeparator()).append(System.lineSeparator());
 
-        for (ResourceKey<NormalNoise.NoiseParameters> key : TERRAIN_FIELDS) {
+        for (ResourceKey<NormalNoise> key : TERRAIN_FIELDS) {
             appendField(report, key, xDomain, zDomain, fold);
         }
 
@@ -421,13 +423,13 @@ class TerrainWallScan {
 
     private static Needles quadrants(WorldType type, NoiseSettings noiseSettings, WorldFold fold,
             int widthBlocks, long seed, String lap, List<Spike> sites, IntArrayList steps) {
-        NoiseRouter router = randomState(type, fold, seed).router();
+        RandomState state = randomState(type, fold, seed);
         Needles[] total = {new Needles(0, 0, 0)};
 
         GenerationTransformerContext.runWithTransformer(fold, () -> {
             for (int quadrantX = 0; quadrantX < 2; quadrantX++) {
                 for (int quadrantZ = 0; quadrantZ < 2; quadrantZ++) {
-                    total[0] = total[0].plus(window(router, noiseSettings,
+                    total[0] = total[0].plus(window(state, noiseSettings,
                             quadrantX * widthBlocks / 2, quadrantZ * widthBlocks / 2, lap, seed, sites, steps));
                 }
             }
@@ -436,9 +438,9 @@ class TerrainWallScan {
         return total[0];
     }
 
-    private static Needles window(NoiseRouter router, NoiseSettings noiseSettings, int originX, int originZ,
+    private static Needles window(RandomState state, NoiseSettings noiseSettings, int originX, int originZ,
             String lap, long seed, List<Spike> sites, IntArrayList steps) {
-        DensityFunction density = router.finalDensity();
+        DensitySampler density = state.getSampler(state.router.finalDensity());
         int span = NEEDLE_WINDOW_BLOCKS + 2;
         int[] heights = new int[span * span];
 
@@ -469,13 +471,13 @@ class TerrainWallScan {
                 if (rise >= NEEDLE_DROP_BLOCKS) {
                     needles++;
                     worstDrop = Math.max(worstDrop, rise);
-                    sites.add(spike(router, lap, seed, originX + dx - 1, here, originZ + dz - 1,
+                    sites.add(spike(state, lap, seed, originX + dx - 1, here, originZ + dz - 1,
                             NEEDLE_KIND, rise));
                 }
 
                 if (fall >= NEEDLE_DROP_BLOCKS) {
                     pits++;
-                    sites.add(spike(router, lap, seed, originX + dx - 1, here, originZ + dz - 1, PIT_KIND, fall));
+                    sites.add(spike(state, lap, seed, originX + dx - 1, here, originZ + dz - 1, PIT_KIND, fall));
                 }
             }
         }
@@ -483,29 +485,31 @@ class TerrainWallScan {
         return new Needles(needles, worstDrop, pits);
     }
 
-    private static Spike spike(NoiseRouter router, String lap, long seed, int blockX, int blockY, int blockZ,
+    private static Spike spike(RandomState state, String lap, long seed, int blockX, int blockY, int blockZ,
             String kind, int drop) {
-        DensityFunction.SinglePointContext point = new DensityFunction.SinglePointContext(blockX, blockY, blockZ);
+        NoiseRouter router = state.router;
         return new Spike(lap, seed, blockX, blockY, blockZ, kind, drop,
-                router.continents().compute(point), router.erosion().compute(point),
-                router.ridges().compute(point), router.depth().compute(point));
+                valueAt(state, router.continents(), blockX, blockY, blockZ),
+                valueAt(state, router.erosion(), blockX, blockY, blockZ),
+                valueAt(state, router.ridges(), blockX, blockY, blockZ),
+                valueAt(state, router.depth(), blockX, blockY, blockZ));
     }
 
     private static int height(int found, NoiseSettings noiseSettings) {
         return found == NO_COLUMN ? noiseSettings.minY() : found;
     }
 
-    private static int surfaceHeight(DensityFunction density, NoiseSettings noiseSettings, int blockX, int blockZ) {
+    private static int surfaceHeight(DensitySampler density, NoiseSettings noiseSettings, int blockX, int blockZ) {
         int bottom = noiseSettings.minY();
         int top = bottom + noiseSettings.height() - 1;
 
         for (int y = top; y >= bottom; y -= COARSE_STEP_BLOCKS) {
-            if (density.compute(new DensityFunction.SinglePointContext(blockX, y, blockZ)) <= 0.0) {
+            if (density.sampleValue(SamplerContext.EMPTY_UNCACHED, blockX, y, blockZ) <= 0.0F) {
                 continue;
             }
 
             for (int fine = Math.min(top, y + COARSE_STEP_BLOCKS - 1); fine > y; fine--) {
-                if (density.compute(new DensityFunction.SinglePointContext(blockX, fine, blockZ)) > 0.0) {
+                if (density.sampleValue(SamplerContext.EMPTY_UNCACHED, blockX, fine, blockZ) > 0.0F) {
                     return fine;
                 }
             }
@@ -516,17 +520,17 @@ class TerrainWallScan {
         return NO_COLUMN;
     }
 
-    private static void appendField(StringBuilder report, ResourceKey<NormalNoise.NoiseParameters> key,
+    private static void appendField(StringBuilder report, ResourceKey<NormalNoise> key,
             WrapDomain xDomain, WrapDomain zDomain, WorldFold fold) {
-        NormalNoise.NoiseParameters parameters = noiseParameters(key);
-        DoubleList amplitudes = parameters.amplitudes();
-        double lowestFreqInputFactor = Math.pow(2.0, parameters.firstOctave());
+        NormalNoise.Parameters parameters = noiseParameters(key).parameters;
+        DoubleList amplitudes = ClimateCompression.octaveAmplitudes(parameters);
+        double lowestFreqInputFactor = Math.pow(2.0, parameters.baseOctave());
         double compression = ClimateCompression.factor(fold, ClimateFields.isClimate(key), amplitudes,
                 lowestFreqInputFactor, CLIMATE_XZ_SCALE, HORIZONTAL_SHARE);
 
         report.append("  ").append(key.identifier().getPath())
                 .append(String.format(Locale.ROOT, ", first octave %d, compression %.3f%n",
-                        parameters.firstOctave(), compression));
+                        parameters.baseOctave(), compression));
         report.append(String.format(Locale.ROOT, "    %-7s %10s %9s %8s %7s %7s%n",
                 "octave", "amplitude", "cells", "period", "damp", "gain"));
 
@@ -576,7 +580,7 @@ class TerrainWallScan {
 
     private static Pass pass(String name, WorldType type, WorldFold fold, long seed) {
         RandomState randomState = randomState(type, fold, seed);
-        NoiseRouter router = randomState.router();
+        NoiseRouter router = randomState.router;
         int seaLevel = settingsOf(type).seaLevel();
         int corners = WIDTH_BLOCKS / CELL_WIDTH;
         List<Site> blades = new ArrayList<>();
@@ -585,19 +589,19 @@ class TerrainWallScan {
         int[] perLevel = new int[LEVELS_BELOW_SEA + LEVELS_ABOVE_SEA + 1];
 
         GenerationTransformerContext.runWithTransformer(fold, () -> {
-            double[] sea = grid(router.finalDensity(), corners, seaLevel);
+            double[] sea = grid(randomState, router.finalDensity(), corners, seaLevel);
             fields.add(field("final density", sea, corners));
-            fields.add(field("continents", grid(router.continents(), corners, seaLevel), corners));
-            fields.add(field("erosion", grid(router.erosion(), corners, seaLevel), corners));
-            fields.add(field("ridges", grid(router.ridges(), corners, seaLevel), corners));
-            fields.add(field("depth", grid(router.depth(), corners, seaLevel), corners));
+            fields.add(field("continents", grid(randomState, router.continents(), corners, seaLevel), corners));
+            fields.add(field("erosion", grid(randomState, router.erosion(), corners, seaLevel), corners));
+            fields.add(field("ridges", grid(randomState, router.ridges(), corners, seaLevel), corners));
+            fields.add(field("depth", grid(randomState, router.depth(), corners, seaLevel), corners));
             land[0] = solidShare(sea);
 
             for (int level = -LEVELS_BELOW_SEA; level <= LEVELS_ABOVE_SEA; level++) {
                 int blockY = seaLevel + level * CELL_HEIGHT;
-                double[] density = level == 0 ? sea : grid(router.finalDensity(), corners, blockY);
+                double[] density = level == 0 ? sea : grid(randomState, router.finalDensity(), corners, blockY);
                 int before = blades.size();
-                collectBlades(blades, router, density, corners, blockY);
+                collectBlades(blades, randomState, density, corners, blockY);
                 perLevel[level + LEVELS_BELOW_SEA] = blades.size() - before;
             }
         });
@@ -615,7 +619,7 @@ class TerrainWallScan {
         return counts.toString();
     }
 
-    private static void collectBlades(List<Site> blades, NoiseRouter router, double[] density, int corners,
+    private static void collectBlades(List<Site> blades, RandomState state, double[] density, int corners,
             int blockY) {
         for (int ix = 0; ix < corners; ix++) {
             for (int iz = 0; iz < corners; iz++) {
@@ -633,12 +637,13 @@ class TerrainWallScan {
 
                 int blockX = ix * CELL_WIDTH;
                 int blockZ = iz * CELL_WIDTH;
-                DensityFunction.SinglePointContext point =
-                        new DensityFunction.SinglePointContext(blockX, blockY, blockZ);
+                NoiseRouter router = state.router;
                 blades.add(new Site(blockX, blockY, blockZ, Math.min(acrossX, acrossZ),
                         at(density, corners, ix, iz),
-                        router.continents().compute(point), router.erosion().compute(point),
-                        router.ridges().compute(point), router.depth().compute(point)));
+                        valueAt(state, router.continents(), blockX, blockY, blockZ),
+                        valueAt(state, router.erosion(), blockX, blockY, blockZ),
+                        valueAt(state, router.ridges(), blockX, blockY, blockZ),
+                        valueAt(state, router.depth(), blockX, blockY, blockZ)));
             }
         }
     }
@@ -678,17 +683,23 @@ class TerrainWallScan {
         return run;
     }
 
-    private static double[] grid(DensityFunction function, int corners, int blockY) {
+    private static double[] grid(RandomState state, DensityFunction function, int corners, int blockY) {
+        DensitySampler sampler = state.getSampler(function);
         double[] values = new double[corners * corners];
 
         for (int ix = 0; ix < corners; ix++) {
             for (int iz = 0; iz < corners; iz++) {
-                values[ix * corners + iz] = function.compute(
-                        new DensityFunction.SinglePointContext(ix * CELL_WIDTH, blockY, iz * CELL_WIDTH));
+                values[ix * corners + iz] = sampler.sampleValue(SamplerContext.EMPTY_UNCACHED, ix * CELL_WIDTH, blockY,
+                        iz * CELL_WIDTH);
             }
         }
 
         return values;
+    }
+
+    private static double valueAt(RandomState state, DensityFunction function, int blockX, int blockY,
+            int blockZ) {
+        return state.getSampler(function).sampleValue(SamplerContext.EMPTY_UNCACHED, blockX, blockY, blockZ);
     }
 
     private static Field field(String name, double[] values, int corners) {

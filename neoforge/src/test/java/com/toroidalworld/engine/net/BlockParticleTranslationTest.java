@@ -33,7 +33,7 @@ class BlockParticleTranslationTest {
                         SERVER_X, 64.0, SERVER_Z, 0.0F, 0.0F, 0.0F, 0.0F, 1),
                 context());
 
-        BlockParticleOption block = (BlockParticleOption) translated.getParticle();
+        BlockParticleOption block = (BlockParticleOption) translated.particle();
         assertEquals(CLIENT_BLOCK, block.getPos());
         assertSame(state, block.getState());
     }
@@ -47,7 +47,7 @@ class BlockParticleTranslationTest {
         ClientboundExplodePacket translated = (ClientboundExplodePacket) PacketTranslator.toClient(
                 new ClientboundExplodePacket(
                         new Vec3(SERVER_X, 70.0, SERVER_Z), 3.0F, 4, Optional.empty(),
-                        ParticleTypes.EXPLOSION, SoundEvents.GENERIC_EXPLODE, blockParticles),
+                        ParticleTypes.EXPLOSION, SoundEvents.GENERIC_EXPLODE, blockParticles, true),
                 context());
 
         ExplosionParticleInfo info = translated.blockParticles().unwrap().getFirst().value();

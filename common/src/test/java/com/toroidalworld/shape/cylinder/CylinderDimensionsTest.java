@@ -31,7 +31,7 @@ import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.WorldDimensions;
 
 class CylinderDimensionsTest {
-    private static final HolderLookup.Provider WORLDGEN = VanillaRegistries.createLookup();
+    private static final HolderLookup.Provider WORLDGEN = VanillaRegistries.createWorldLookup();
 
     private static final CylinderSettings X_32 = new CylinderSettings(
             LoopSpans.ofWidth(Direction.Axis.X, 32), 2, LoopSpans.ofWidth(Direction.Axis.X, 256));

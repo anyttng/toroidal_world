@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import net.minecraft.core.QuartPos;
 import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.biome.MultiNoiseBiomeSource;
+import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
 
 class ClimateSamplerPeriodicityTest {
     private static final int SAMPLES = 64;
@@ -38,7 +39,7 @@ class ClimateSamplerPeriodicityTest {
         MultiNoiseBiomeSource source = biomeSource(type);
         int width = WorldLoopPresets.TINY.blockWidth();
         WorldFold fold = torusOfWidth(width);
-        Climate.Sampler sampler = randomState(type, fold, SEED_BASE).sampler();
+        Climate.Sampler sampler = randomState(type, fold, SEED_BASE).createClimateSampler(SamplerContext.EMPTY_UNCACHED);
         int quartY = QuartPos.fromBlock(SCAN_Y_BLOCKS);
         Map<String, Integer> broken = new HashMap<>();
 
@@ -55,7 +56,7 @@ class ClimateSamplerPeriodicityTest {
                 collect(broken, "erosion", here.erosion(), lapAway.erosion());
                 collect(broken, "depth", here.depth(), lapAway.depth());
                 collect(broken, "weirdness", here.weirdness(), lapAway.weirdness());
-                source.getNoiseBiome(QuartPos.fromBlock(x), quartY, QuartPos.fromBlock(z), sampler);
+                source.getNoiseBiome(sampler.sample(QuartPos.fromBlock(x), quartY, QuartPos.fromBlock(z)));
             }
         });
 
@@ -68,7 +69,7 @@ class ClimateSamplerPeriodicityTest {
         WorldType type = TYPES.getFirst();
         int width = WorldLoopPresets.TINY.blockWidth();
         WorldFold fold = cylinderOfWidth(width);
-        Climate.Sampler sampler = randomState(type, fold, SEED_BASE).sampler();
+        Climate.Sampler sampler = randomState(type, fold, SEED_BASE).createClimateSampler(SamplerContext.EMPTY_UNCACHED);
         int quartY = QuartPos.fromBlock(SCAN_Y_BLOCKS);
         Map<String, Integer> broken = new HashMap<>();
         Map<String, Integer> varyingAcross = new HashMap<>();

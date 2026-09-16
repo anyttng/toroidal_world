@@ -20,7 +20,7 @@ import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WrapDomain;
 
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.levelgen.DensityFunction;
+import net.minecraft.world.level.levelgen.densityfunction.DensitySampler;
 
 class EndIslandDensityPeriodicityTest {
     private static final int SAMPLES = 256;
@@ -59,10 +59,9 @@ class EndIslandDensityPeriodicityTest {
     }
 
     private static double sample(WorldFold fold, Direction.Axis axis, int along, int y, int across) {
-        DensityFunction.FunctionContext at = axis == Direction.Axis.X
-                ? new DensityFunction.SinglePointContext(along, y, across)
-                : new DensityFunction.SinglePointContext(across, y, along);
-
-        return GenerationTransformerContext.withTransformer(fold, () -> END_ISLANDS.compute(at));
+        DensitySampler islands = DensityFunctionFixture.compile(END_ISLANDS, fold);
+        return axis == Direction.Axis.X
+                ? DensityFunctionFixture.sample(islands, along, y, across)
+                : DensityFunctionFixture.sample(islands, across, y, along);
     }
 }

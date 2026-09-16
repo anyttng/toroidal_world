@@ -33,11 +33,12 @@ import net.minecraft.world.level.NoiseColumn;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.biome.FixedBiomeSource;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.DensityFunction;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.NoiseSettings;
 import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.densityfunction.DensitySampler;
+import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
 
 class NetherColumnProbeTest {
     private static final int CHUNK_BLOCKS = 16;
@@ -68,7 +69,7 @@ class NetherColumnProbeTest {
         Bootstrap.bootStrap();
         WorldOptionSetup.registerAll(false);
         GenerationHookSetup.registerAll();
-        holders = VanillaRegistries.createLookup();
+        holders = VanillaRegistries.createWorldLookup();
         Holder<NoiseGeneratorSettings> settingsHolder =
                 holders.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.NETHER);
         netherSettings = settingsHolder.value();
@@ -124,11 +125,9 @@ class NetherColumnProbeTest {
     void measuresNetherColumnsThroughTheRealChain() {
         StringBuilder report = new StringBuilder();
         report.append("Nether column probe — vanilla NoiseBasedChunkGenerator.getBaseColumn over")
-                .append(" NoiseGeneratorSettings.NETHER: full router, postProcess, cell interpolation (")
-                .append(netherSettings.noiseSettings().getCellWidth()).append(" blocks wide x ")
-                .append(netherSettings.noiseSettings().getCellHeight()).append(" tall), aquifer and fluid picker.\n")
+                .append(" NoiseGeneratorSettings.NETHER: full router, postProcess, cell interpolation, aquifer and fluid picker.\n")
                 .append("chain = getBaseColumn, solid is the default block; density = router finalDensity > 0, no cells and no aquifer.\n")
-                .append("Folded and control runs are the same code — the control binds WorldFolds.NOOP.\n\n");
+                .append("Folded and control runs are the same code — the control compiles its RandomState without the fold and binds WorldFolds.NOOP, the folded run compiles it with the fold.\n\n");
 
         for (Lap lap : LAPS) {
             WorldFold fold = lap.fold();
@@ -143,20 +142,22 @@ class NetherColumnProbeTest {
             double densityFoldedTop1Sum = 0.0;
             for (int s = 0; s < SEEDS; s++) {
                 long seed = SEED_BASE + s * SEED_STEP;
-                RandomState randomState = RandomState.create(netherSettings,
-                        holders.lookupOrThrow(Registries.NOISE), seed);
+                RandomState controlState = RandomState.create(holders.lookupOrThrow(Registries.NOISE), seed,
+                        netherSettings);
+                RandomState foldedState = GenerationTransformerContext.withRouterBuild(fold,
+                        () -> RandomState.create(holders.lookupOrThrow(Registries.NOISE), seed, netherSettings));
                 int windowX = (int) (windows.nextDouble() * VANILLA_WINDOW_SPAN);
                 int windowZ = (int) (windows.nextDouble() * VANILLA_WINDOW_SPAN);
 
                 int foldedX = -lap.spanX() / 2;
                 int foldedZ = -lap.spanZ() / 2;
-                Relief control = measureRelief(randomState, WorldFolds.NOOP, windowX, windowZ,
+                Relief control = measureRelief(controlState, WorldFolds.NOOP, windowX, windowZ,
                         stepX, stepZ, this::chainColumn);
-                Relief folded = measureRelief(randomState, fold, foldedX, foldedZ,
+                Relief folded = measureRelief(foldedState, fold, foldedX, foldedZ,
                         stepX, stepZ, this::chainColumn);
-                Relief densityControl = measureRelief(randomState, WorldFolds.NOOP, windowX, windowZ,
+                Relief densityControl = measureRelief(controlState, WorldFolds.NOOP, windowX, windowZ,
                         stepX, stepZ, this::densityColumn);
-                Relief densityFolded = measureRelief(randomState, fold, foldedX, foldedZ,
+                Relief densityFolded = measureRelief(foldedState, fold, foldedX, foldedZ,
                         stepX, stepZ, this::densityColumn);
                 vanillaTop1Sum += control.floorTop1Share();
                 foldedTop1Sum += folded.floorTop1Share();
@@ -279,11 +280,11 @@ class NetherColumnProbeTest {
     }
 
     private boolean[] densityColumn(RandomState randomState, int blockX, int blockZ) {
-        DensityFunction density = randomState.router().finalDensity();
+        DensitySampler density = randomState.getSampler(randomState.router.finalDensity());
         int minY = heightAccessor.getMinY();
         boolean[] solid = new boolean[heightAccessor.getHeight()];
         for (int i = 0; i < solid.length; i++) {
-            solid[i] = density.compute(new DensityFunction.SinglePointContext(blockX, minY + i, blockZ)) > 0.0;
+            solid[i] = density.sampleValue(SamplerContext.EMPTY_UNCACHED, blockX, minY + i, blockZ) > 0.0F;
         }
 
         return solid;

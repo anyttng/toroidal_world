@@ -20,9 +20,9 @@ import org.junit.jupiter.api.Test;
 
 
 import net.minecraft.core.Direction;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.LegacyRandomSource;
-import net.minecraft.world.level.levelgen.synth.ImprovedNoise;
+import net.minecraft.world.level.levelgen.synth.PerlinNoise;
+import net.minecraft.world.level.levelgen.synth.SmearedPerlinNoise;
 
 class PeriodicNoiseSamplerTest {
     private static final long SEED = 0x0153EL;
@@ -36,7 +36,12 @@ class PeriodicNoiseSamplerTest {
 
     private static final double[] PARITY_SCALES = {0.25, 1.0, 100.0};
 
-    private static final double[][] Y_PARAMS = {{0.0, 0.0}, {1.0, 2.0}};
+    private static final double NO_FUDGE = 0.0;
+
+    private static final double[] FUDGE_SCALES = {NO_FUDGE, 1.0};
+
+    private static final NoiseFrame FRAME = new NoiseFrame(SlotAxes.DEFAULT, NoiseConstants.UNDIVIDED,
+            NoiseConstants.UNDIVIDED, GenerationTransformerContext.UNDECLARED_VERTICAL_SHARE);
 
     private static final WorldFold EVEN = torus(SQUARE);
     private static final WorldFold ODD = torus(ODD_BOUNDS);
@@ -50,45 +55,27 @@ class PeriodicNoiseSamplerTest {
         return WorldFolds.of(FlatShape.torus(bounds));
     }
 
-    private record NoiseInstance(ImprovedNoise vanilla, byte[] permutations, double xo, double yo, double zo) {
+    private record NoiseInstance(long worldSeed, PerlinNoise vanilla, byte[] permutations,
+            double xo, double yo, double zo) {
         static NoiseInstance of(long worldSeed) {
-            ImprovedNoise vanilla = new ImprovedNoise(new LegacyRandomSource(worldSeed));
-            RandomSource random = new LegacyRandomSource(worldSeed);
-            double xo = random.nextDouble() * 256.0;
-            double yo = random.nextDouble() * 256.0;
-            double zo = random.nextDouble() * 256.0;
-            byte[] permutations = new byte[256];
-            for (int i = 0; i < 256; i++) {
-                permutations[i] = (byte) i;
-            }
-
-            for (int i = 0; i < 256; i++) {
-                int offset = random.nextInt(256 - i);
-                byte tmp = permutations[i];
-                permutations[i] = permutations[i + offset];
-                permutations[i + offset] = tmp;
-            }
-
-            assertEquals(vanilla.xo, xo);
-            assertEquals(vanilla.yo, yo);
-            assertEquals(vanilla.zo, zo);
-            return new NoiseInstance(vanilla, permutations, xo, yo, zo);
+            PerlinNoise vanilla = new PerlinNoise(new LegacyRandomSource(worldSeed));
+            return new NoiseInstance(worldSeed, vanilla, vanilla.perms, vanilla.offsetX, vanilla.offsetY,
+                    vanilla.offsetZ);
         }
 
-        double sample(WorldFold transformer, double scale,
-                double x, double y, double z, double yScale, double yFudge) {
-            return sample(transformer, SlotAxes.DEFAULT, scale, x, y, z, yScale, yFudge);
+        double sample(WorldFold transformer, double scale, double x, double y, double z, double fudgeYScale) {
+            return fudgeYScale == NO_FUDGE
+                    ? PeriodicNoiseSampler.sample(permutations, xo, yo, zo, transformer, FRAME, scale, x, y, z)
+                    : PeriodicNoiseSampler.sampleSmeared(permutations, xo, yo, zo, transformer, FRAME, scale,
+                            x, y, z, y, fudgeYScale);
         }
 
-        double sample(WorldFold transformer, SlotAxes axes, double scale,
-                double x, double y, double z, double yScale, double yFudge) {
-            GenerationTransformerContext.Context context = GenerationTransformerContext.context();
-
-            try (GenerationTransformerContext.Context.BindingScope _ = context.bind(transformer, axes, scale,
-                    GenerationTransformerContext.UNDECLARED_VERTICAL_SHARE)) {
-                return PeriodicNoiseSampler.sample(permutations, xo, yo, zo, transformer, context,
-                        x, y, z, yScale, yFudge);
-            }
+        @SuppressWarnings("deprecation")
+        double vanilla(double scale, double x, double y, double z, double fudgeYScale) {
+            return fudgeYScale == NO_FUDGE
+                    ? this.vanilla.get(x * scale, y, z * scale)
+                    : new SmearedPerlinNoise(new LegacyRandomSource(this.worldSeed), fudgeYScale)
+                            .get(x * scale, y, z * scale);
         }
     }
 
@@ -154,14 +141,14 @@ class PeriodicNoiseSamplerTest {
                 for (long worldSeed : WORLD_SEEDS) {
                     NoiseInstance noise = NoiseInstance.of(worldSeed);
                     for (double scale : SCALES) {
-                        for (double[] yParams : Y_PARAMS) {
+                        for (double fudge : FUDGE_SCALES) {
                             for (int i = 0; i < LINE_SAMPLES; i++) {
                                 double x = blockInDomain(random, transformer.blockDomain(Direction.Axis.X));
                                 double y = sampleY(random);
                                 double z = lineCoord(random, transformer.blockDomain(Direction.Axis.Z), i);
 
-                                double base = noise.sample(transformer, scale, x, y, z, yParams[0], yParams[1]);
-                                double lap = noise.sample(transformer, scale, x + period, y, z, yParams[0], yParams[1]);
+                                double base = noise.sample(transformer, scale, x, y, z, fudge);
+                                double lap = noise.sample(transformer, scale, x + period, y, z, fudge);
                                 assertEquals(base, lap,
                                         () -> "sample(" + x + ", " + y + ", " + z + ") vs one X lap "
                                                 + at(transformer, worldSeed, scale));
@@ -183,14 +170,14 @@ class PeriodicNoiseSamplerTest {
                 for (long worldSeed : WORLD_SEEDS) {
                     NoiseInstance noise = NoiseInstance.of(worldSeed);
                     for (double scale : SCALES) {
-                        for (double[] yParams : Y_PARAMS) {
+                        for (double fudge : FUDGE_SCALES) {
                             for (int i = 0; i < LINE_SAMPLES; i++) {
                                 double x = lineCoord(random, transformer.blockDomain(Direction.Axis.X), i);
                                 double y = sampleY(random);
                                 double z = blockInDomain(random, transformer.blockDomain(Direction.Axis.Z));
 
-                                double base = noise.sample(transformer, scale, x, y, z, yParams[0], yParams[1]);
-                                double lap = noise.sample(transformer, scale, x, y, z + period, yParams[0], yParams[1]);
+                                double base = noise.sample(transformer, scale, x, y, z, fudge);
+                                double lap = noise.sample(transformer, scale, x, y, z + period, fudge);
                                 assertEquals(base, lap,
                                         () -> "sample(" + x + ", " + y + ", " + z + ") vs one Z lap "
                                                 + at(transformer, worldSeed, scale));
@@ -213,15 +200,15 @@ class PeriodicNoiseSamplerTest {
                 for (long worldSeed : WORLD_SEEDS) {
                     NoiseInstance noise = NoiseInstance.of(worldSeed);
                     for (double scale : SCALES) {
-                        for (double[] yParams : Y_PARAMS) {
+                        for (double fudge : FUDGE_SCALES) {
                             for (int i = 0; i < LINE_SAMPLES; i++) {
                                 double x = blockInDomain(random, transformer.blockDomain(Direction.Axis.X));
                                 double y = sampleY(random);
                                 double z = blockInDomain(random, transformer.blockDomain(Direction.Axis.Z));
 
-                                double base = noise.sample(transformer, scale, x, y, z, yParams[0], yParams[1]);
+                                double base = noise.sample(transformer, scale, x, y, z, fudge);
                                 double corner = noise.sample(transformer, scale,
-                                        x + xPeriod, y, z + zPeriod, yParams[0], yParams[1]);
+                                        x + xPeriod, y, z + zPeriod, fudge);
                                 assertEquals(base, corner,
                                         () -> "sample(" + x + ", " + y + ", " + z + ") vs the corner lap "
                                                 + at(transformer, worldSeed, scale));
@@ -236,21 +223,20 @@ class PeriodicNoiseSamplerTest {
     @Nested
     class VanillaParity {
         @Test
-        @SuppressWarnings("deprecation")
         void reproducesVanillaBitForBitWhenThePeriodIsAMultipleOf256() {
             Random random = new Random(SEED);
             for (WorldFold transformer : List.of(EVEN, X_ONLY)) {
                 for (long worldSeed : WORLD_SEEDS) {
                     NoiseInstance noise = NoiseInstance.of(worldSeed);
                     for (double scale : PARITY_SCALES) {
-                        for (double[] yParams : Y_PARAMS) {
+                        for (double fudge : FUDGE_SCALES) {
                             for (int i = 0; i < LINE_SAMPLES; i++) {
                                 double x = blockInDomain(random, transformer.blockDomain(Direction.Axis.X));
                                 double y = sampleY(random);
                                 double z = lineCoord(random, transformer.blockDomain(Direction.Axis.Z), i);
 
-                                double periodic = noise.sample(transformer, scale, x, y, z, yParams[0], yParams[1]);
-                                double vanilla = noise.vanilla().noise(x * scale, y, z * scale, yParams[0], yParams[1]);
+                                double periodic = noise.sample(transformer, scale, x, y, z, fudge);
+                                double vanilla = noise.vanilla(scale, x, y, z, fudge);
                                 assertEquals(vanilla, periodic,
                                         () -> "sample(" + x + ", " + y + ", " + z + ") vs vanilla "
                                                 + at(transformer, worldSeed, scale));
@@ -277,8 +263,8 @@ class PeriodicNoiseSamplerTest {
                     double y = sampleY(random);
                     double z = blockInDomain(random, EVEN.blockDomain(Direction.Axis.Z));
 
-                    double base = noise.sample(EVEN, TINY_SCALE, x, y, z, 0.0, 0.0);
-                    double lap = noise.sample(EVEN, TINY_SCALE, x + period, y, z, 0.0, 0.0);
+                    double base = noise.sample(EVEN, TINY_SCALE, x, y, z, NO_FUDGE);
+                    double lap = noise.sample(EVEN, TINY_SCALE, x + period, y, z, NO_FUDGE);
                     assertTrue(Double.isFinite(base),
                             () -> "sample(" + x + ", " + y + ", " + z + ") is not finite at period 1");
                     assertEquals(base, lap,
@@ -307,8 +293,8 @@ class PeriodicNoiseSamplerTest {
                     double x = blockInDomain(random, ring);
                     double elsewhere = blockInDomain(random, ring);
 
-                    double base = noise.sample(X_ONLY, STARVED_SCALE, x, y, z, 0.0, 0.0);
-                    double around = noise.sample(X_ONLY, STARVED_SCALE, elsewhere, y, z, 0.0, 0.0);
+                    double base = noise.sample(X_ONLY, STARVED_SCALE, x, y, z, NO_FUDGE);
+                    double around = noise.sample(X_ONLY, STARVED_SCALE, elsewhere, y, z, NO_FUDGE);
                     assertEquals(base, around,
                             () -> "a starved octave varies around the ring between x=" + x + " and x=" + elsewhere
                                     + " at z=" + z + " with seed " + worldSeed);
@@ -355,7 +341,7 @@ class PeriodicNoiseSamplerTest {
                 WrapDomain xDomain = transformer.blockDomain(Direction.Axis.X);
                 double x = alongSeam ? xDomain.lowerBound : lineCoord(random, xDomain, i);
                 double z = alongSeam ? lineCoord(random, transformer.blockDomain(Direction.Axis.Z), i) : 5.0;
-                double value = noise.sample(transformer, scale, x, y, z, 0.0, 0.0);
+                double value = noise.sample(transformer, scale, x, y, z, NO_FUDGE);
                 min = Math.min(min, value);
                 max = Math.max(max, value);
             }
