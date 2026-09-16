@@ -13,10 +13,10 @@ import org.joml.Matrix4f;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.renderpearl.api.textures.GpuTextureView;
 import com.toroidalworld.compat.AxisCopies;
 import com.toroidalworld.compat.xaero.XaeroInjectionTargets;
 import com.toroidalworld.compat.xaero.XaeroWorldMapFold;
@@ -314,7 +314,7 @@ public abstract class GuiMapMixin {
             method = "extractRenderState",
             at = @At(
                     value = "INVOKE",
-                    target = "Lxaero/map/gui/GuiMap;renderTexturedModalRectWithLighting3(Lorg/joml/Matrix4f;FFFFLcom/mojang/blaze3d/textures/GpuTextureView;ZLxaero/map/graphics/renderer/multitexture/MultiTextureRenderTypeRenderer;)V"))
+                    target = "Lxaero/map/gui/GuiMap;renderTexturedModalRectWithLighting3(Lorg/joml/Matrix4f;FFFFLcom/mojang/renderpearl/api/textures/GpuTextureView;ZLxaero/map/graphics/renderer/multitexture/MultiTextureRenderTypeRenderer;)V"))
     private void toroidal$drawClippedPeriodCopies(
             Matrix4f matrix, float x, float y, float width, float height,
             GpuTextureView texture, boolean hasLight, MultiTextureRenderTypeRenderer renderer, Operation<Void> original) {

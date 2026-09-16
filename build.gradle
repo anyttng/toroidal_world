@@ -8,6 +8,6 @@ plugins {
 // C2meAquifer stays in: the core mixin plugin reads it, and it names no C2ME type.
 ext.unportedCompat = { FileTreeElement file ->
     def path = file.relativePath.pathString
-    path.matches('com/toroidalworld/compat/(c2me|distanthorizons|xaero)/.*')
+    path.matches('com/toroidalworld/compat/(c2me|distanthorizons)/.*')
             && !path.matches('com/toroidalworld/compat/c2me/C2meAquifer(Test)?\\.java')
 }
