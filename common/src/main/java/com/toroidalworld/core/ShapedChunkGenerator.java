@@ -9,6 +9,8 @@ import com.mojang.serialization.MapCodec;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
+import net.minecraft.world.level.levelgen.FlatLevelSource;
+import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 
 public interface ShapedChunkGenerator {
     String SETTINGS_KEY = "settings";
@@ -35,6 +37,12 @@ public interface ShapedChunkGenerator {
         }
 
         return generator instanceof ShapeStamp stamp ? wrapped(stamp.toroidal$carriedShape()) : null;
+    }
+
+    static boolean tilesAtSeam(ChunkGenerator generator) {
+        return generator instanceof ShapedChunkGenerator
+                || generator instanceof NoiseBasedChunkGenerator
+                || generator.getClass() == FlatLevelSource.class;
     }
 
     static @Nullable CarriedShape carriedShapeOf(ServerLevel level) {
