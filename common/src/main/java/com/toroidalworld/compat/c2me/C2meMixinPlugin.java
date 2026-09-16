@@ -8,17 +8,9 @@ import com.toroidalworld.MixinGatePlugin;
 public class C2meMixinPlugin extends MixinGatePlugin {
     private static final String AQUIFER_MIXIN = "AquiferSeamMixin";
 
-    private static final String OCTAVE_NOISE_MIXIN = "PerlinNoiseMixin";
-
     private static final String[] NO_TICK_VD_MIXINS = {
             "PlayerNoTickLoaderMixin",
             "ServerAccessibleChunkSendingMixin"
-    };
-
-    private static final String[] DFC_MIXINS = {
-            "McToAstMixin",
-            "BytecodeGenRegistryMixin",
-            "DotGenRegistryMixin"
     };
 
     @Override
@@ -33,19 +25,9 @@ public class C2meMixinPlugin extends MixinGatePlugin {
             return C2meAquifer.optimizesAquifer();
         }
 
-        if (mixinClassName.endsWith(OCTAVE_NOISE_MIXIN)) {
-            return C2meOctaveNoise.present();
-        }
-
         for (String noTickVdMixin : NO_TICK_VD_MIXINS) {
             if (mixinClassName.endsWith(noTickVdMixin)) {
                 return C2meNoTickVd.present();
-            }
-        }
-
-        for (String dfcMixin : DFC_MIXINS) {
-            if (mixinClassName.endsWith(dfcMixin)) {
-                return C2meDfc.present();
             }
         }
 

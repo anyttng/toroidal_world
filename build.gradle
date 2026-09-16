@@ -5,9 +5,6 @@ plugins {
 }
 
 // Compat not yet ported to 26.3, left out of every source set that compiles it; the sources stay in the tree.
-// C2meAquifer stays in: the core mixin plugin reads it, and it names no C2ME type.
 ext.unportedCompat = { FileTreeElement file ->
-    def path = file.relativePath.pathString
-    path.matches('com/toroidalworld/compat/(c2me|distanthorizons)/.*')
-            && !path.matches('com/toroidalworld/compat/c2me/C2meAquifer(Test)?\\.java')
+    file.relativePath.pathString.matches('com/toroidalworld/compat/distanthorizons/.*')
 }
