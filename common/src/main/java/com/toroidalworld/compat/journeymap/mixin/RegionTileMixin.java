@@ -9,8 +9,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.toroidalworld.compat.journeymap.JourneyMapFold;
 
 import journeymap.api.v2.common.Context.UI;
