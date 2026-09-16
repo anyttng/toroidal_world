@@ -47,6 +47,7 @@ class ClientPositionTest {
     private static final double PLOT_X = 20_481_032.0;
     private static final double PLOT_Z = 20_481_032.0;
     private static final double PLOT_Y = 128.0;
+    private static final double EMPTY_PLOT_X = PLOT_X + 4096.0;
     private static final double SHIP_X = 300.5;
     private static final double SHIP_Z = -40.25;
     private static final double MIRROR_X = 100.5;
@@ -76,8 +77,8 @@ class ClientPositionTest {
     void aClientAuthoredWriteAWholeLapAwayStaysOnTheClientsCopy() {
         ClientPosition mirror = seeded(TORUS);
 
-        mirror.setX(MIRROR_X + WIDTH_BLOCKS, MirrorWriter.PLAYER_MOVE);
-        mirror.setZ(MIRROR_Z - WIDTH_BLOCKS, MirrorWriter.VEHICLE_MOVE);
+        mirror.set(new Vec3(MIRROR_X + WIDTH_BLOCKS, PLOT_Y, MIRROR_Z), MirrorWriter.PLAYER_MOVE);
+        mirror.set(new Vec3(MIRROR_X, PLOT_Y, MIRROR_Z - WIDTH_BLOCKS), MirrorWriter.VEHICLE_MOVE);
 
         assertEquals(MIRROR_X, mirror.x());
         assertEquals(MIRROR_Z, mirror.z());
@@ -100,10 +101,10 @@ class ClientPositionTest {
     void aClientAuthoredWriteWithinHalfAWorldIsTakenAsIs() {
         ClientPosition mirror = seeded(TORUS);
 
-        mirror.setX(MIRROR_X + 200.0, MirrorWriter.PLAYER_MOVE);
+        mirror.set(new Vec3(MIRROR_X + 200.0, PLOT_Y, MIRROR_Z), MirrorWriter.PLAYER_MOVE);
         assertEquals(MIRROR_X + 200.0, mirror.x());
 
-        mirror.setX(MIRROR_X + 200.0 - 255.0, MirrorWriter.PLAYER_MOVE);
+        mirror.set(new Vec3(MIRROR_X + 200.0 - 255.0, PLOT_Y, MIRROR_Z), MirrorWriter.PLAYER_MOVE);
         assertEquals(MIRROR_X + 200.0 - 255.0, mirror.x());
         assertEquals(List.of(), warnings);
     }
@@ -112,10 +113,11 @@ class ClientPositionTest {
     void aClientAuthoredWriteExactlyHalfAWorldAwayIsTakenAsIsAndDoesNotWarn() {
         ClientPosition mirror = seeded(TORUS);
 
-        mirror.setX(MIRROR_X + WIDTH_BLOCKS / 2, MirrorWriter.PLAYER_MOVE);
+        mirror.set(new Vec3(MIRROR_X + WIDTH_BLOCKS / 2, PLOT_Y, MIRROR_Z), MirrorWriter.PLAYER_MOVE);
         assertEquals(MIRROR_X + WIDTH_BLOCKS / 2, mirror.x());
 
-        mirror.setZ(MIRROR_Z - WIDTH_BLOCKS / 2, MirrorWriter.VEHICLE_MOVE);
+        mirror.set(new Vec3(MIRROR_X + WIDTH_BLOCKS / 2, PLOT_Y, MIRROR_Z - WIDTH_BLOCKS / 2),
+                MirrorWriter.VEHICLE_MOVE);
         assertEquals(MIRROR_Z - WIDTH_BLOCKS / 2, mirror.z());
         assertEquals(List.of(), warnings);
     }
@@ -150,10 +152,10 @@ class ClientPositionTest {
     void theEndlessAxisOfACylinderTakesAnyStep() {
         ClientPosition mirror = seeded(CYLINDER_X);
 
-        mirror.setZ(MIRROR_Z + WIDTH_BLOCKS, MirrorWriter.PLAYER_MOVE);
+        mirror.set(new Vec3(MIRROR_X, PLOT_Y, MIRROR_Z + WIDTH_BLOCKS), MirrorWriter.PLAYER_MOVE);
         assertEquals(MIRROR_Z + WIDTH_BLOCKS, mirror.z());
 
-        mirror.setX(MIRROR_X + WIDTH_BLOCKS, MirrorWriter.PLAYER_MOVE);
+        mirror.set(new Vec3(MIRROR_X + WIDTH_BLOCKS, PLOT_Y, MIRROR_Z + WIDTH_BLOCKS), MirrorWriter.PLAYER_MOVE);
         assertEquals(MIRROR_X, mirror.x());
         assertEquals(List.of(), warnings);
     }
@@ -162,7 +164,7 @@ class ClientPositionTest {
     void anUnseededMirrorAcceptsAClientAuthoredWrite() {
         ClientPosition mirror = new ClientPosition();
 
-        assertDoesNotThrow(() -> mirror.setX(WIDTH_BLOCKS, MirrorWriter.PLAYER_MOVE));
+        assertDoesNotThrow(() -> mirror.set(new Vec3(WIDTH_BLOCKS, PLOT_Y, 0.0), MirrorWriter.PLAYER_MOVE));
         assertEquals(List.of(), warnings);
     }
 
@@ -213,6 +215,50 @@ class ClientPositionTest {
     }
 
     @Test
+    void aPlayerMovePlotCoordinateBecomesAWorldCoordinate() {
+        ClientPosition mirror = seeded(FRAMED);
+
+        mirror.set(new Vec3(PLOT_X, PLOT_Y, PLOT_Z), MirrorWriter.PLAYER_MOVE);
+
+        assertEquals(SHIP_X, mirror.x());
+        assertEquals(SHIP_Z, mirror.z());
+        assertEquals(List.of(), warnings);
+    }
+
+    @Test
+    void aVehicleMovePlotCoordinateBecomesAWorldCoordinate() {
+        ClientPosition mirror = seeded(FRAMED);
+
+        mirror.set(new Vec3(PLOT_X, PLOT_Y, PLOT_Z), MirrorWriter.VEHICLE_MOVE);
+
+        assertEquals(SHIP_X, mirror.x());
+        assertEquals(SHIP_Z, mirror.z());
+        assertEquals(List.of(), warnings);
+    }
+
+    @Test
+    void aPositionPacketIntoAPlotWithNoSubLevelLeavesTheMirror() {
+        ClientPosition mirror = seeded(FRAMED);
+
+        mirror.set(new Vec3(EMPTY_PLOT_X, PLOT_Y, PLOT_Z), MirrorWriter.POSITION_PACKET);
+
+        assertEquals(MIRROR_X, mirror.x());
+        assertEquals(MIRROR_Z, mirror.z());
+        assertEquals(List.of(), warnings);
+    }
+
+    @Test
+    void aPlayerMoveIntoAPlotWithNoSubLevelLeavesTheMirror() {
+        ClientPosition mirror = seeded(FRAMED);
+
+        mirror.set(new Vec3(EMPTY_PLOT_X, PLOT_Y, PLOT_Z), MirrorWriter.PLAYER_MOVE);
+
+        assertEquals(MIRROR_X, mirror.x());
+        assertEquals(MIRROR_Z, mirror.z());
+        assertEquals(List.of(), warnings);
+    }
+
+    @Test
     void anUnseededMirrorAcceptsAPositionPacket() {
         ClientPosition mirror = new ClientPosition();
 
@@ -239,7 +285,7 @@ class ClientPositionTest {
 
         @Override
         public Vec3 seatInWorld(@Nullable Level level, Vec3 stored) {
-            if (!PLOT_BLOCKS.contains(stored.x) || !PLOT_BLOCKS.contains(stored.z)) {
+            if (!PLOT_BLOCKS.contains(stored.x) || !PLOT_BLOCKS.contains(stored.z) || stored.x >= EMPTY_PLOT_X) {
                 return stored;
             }
 

@@ -74,26 +74,14 @@ public final class ClientPosition {
         return currMirror;
     }
 
-    public void setX(double x, MirrorWriter writer) {
-        Mirror currMirror = this.mirror;
-        double seatedX = clientCopy(writer, false, Direction.Axis.X, currMirror, x);
-        checkStep(writer, Direction.Axis.X, currMirror, seatedX);
-        this.mirror = new Mirror(seatedX, currMirror.z(), currMirror.space(), currMirror.level(),
-                currMirror.transformer());
-    }
-
-    public void setZ(double z, MirrorWriter writer) {
-        Mirror currMirror = this.mirror;
-        double seatedZ = clientCopy(writer, false, Direction.Axis.Z, currMirror, z);
-        checkStep(writer, Direction.Axis.Z, currMirror, seatedZ);
-        this.mirror = new Mirror(currMirror.x(), seatedZ, currMirror.space(), currMirror.level(),
-                currMirror.transformer());
-    }
-
     public void set(Vec3 reported, MirrorWriter writer) {
         Mirror currMirror = this.mirror;
-        boolean foreign = isForeign(currMirror, reported);
+        boolean foreign = isForeign(currMirror.transformer(), reported);
         Vec3 world = foreign ? ForeignFrames.seatInWorld(currMirror.level(), reported) : reported;
+        if (foreign && isForeign(currMirror.transformer(), world)) {
+            return;
+        }
+
         double seatedX = clientCopy(writer, foreign, Direction.Axis.X, currMirror, world.x);
         double seatedZ = clientCopy(writer, foreign, Direction.Axis.Z, currMirror, world.z);
         checkStep(writer, Direction.Axis.X, currMirror, seatedX);
@@ -111,7 +99,9 @@ public final class ClientPosition {
         }
 
         WorldFold transformer = WorldLoopAttachments.transformerOf(player.level());
-        Vec3 folded = transformer.fold(player.position());
+        Vec3 position = player.position();
+        Vec3 world = isForeign(transformer, position) ? ForeignFrames.seatInWorld(player.level(), position) : position;
+        Vec3 folded = transformer.fold(world);
         of(player).rebase(folded.x, folded.z, player.level().dimension(), player.level(), transformer);
     }
 
@@ -166,9 +156,9 @@ public final class ClientPosition {
     }
 
     // The sub-level pose carries a rotation, so the world X of a foreign value depends on all three of its axes.
-    private static boolean isForeign(Mirror currMirror, Vec3 reported) {
-        return currMirror.transformer().blockDomain(Direction.Axis.X).isForeign(reported.x)
-                || currMirror.transformer().blockDomain(Direction.Axis.Z).isForeign(reported.z);
+    private static boolean isForeign(WorldFold transformer, Vec3 position) {
+        return transformer.blockDomain(Direction.Axis.X).isForeign(position.x)
+                || transformer.blockDomain(Direction.Axis.Z).isForeign(position.z);
     }
 
     // destinationOf unwraps a server value already, but it bails on a foreign one, so a seated value arrives raw.
