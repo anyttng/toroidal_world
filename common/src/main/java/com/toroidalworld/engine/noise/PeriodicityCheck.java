@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 
+import com.toroidalworld.core.ShapedChunkGenerator;
 import com.toroidalworld.core.WorldFold;
 import com.mojang.logging.LogUtils;
 
@@ -40,6 +41,12 @@ public final class PeriodicityCheck {
         }
 
         ChunkGenerator generator = level.getChunkSource().getGenerator();
+        if (!ShapedChunkGenerator.tilesAtSeam(generator)) {
+            LOGGER.info("[world-loop] periodicity_skipped level={} generator={}",
+                    levelName, generator.getClass().getSimpleName());
+            return;
+        }
+
         RandomState randomState = level.getChunkSource().randomState();
         Direction.Axis lapAxis = transformer.bounds().loops(Direction.Axis.X) ? Direction.Axis.X : Direction.Axis.Z;
         int widthBlocks = transformer.blockDomain(lapAxis).domainLength;

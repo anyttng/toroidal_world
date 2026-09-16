@@ -19,7 +19,6 @@ import com.toroidalworld.platform.Platforms;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -30,6 +29,7 @@ public final class WorldShapeReport {
     private static final String STAMP_SOURCE = "stamp";
     private static final String RESTORED_SOURCE = "restored";
     private static final String STORED_SOURCE = "stored";
+    private static final String NOT_PERIODIC_NOTE = ", stamped, terrain not periodic";
 
     public record Line(boolean broken, String text) {
     }
@@ -39,14 +39,9 @@ public final class WorldShapeReport {
     }
 
     public static List<Line> lines(MinecraftServer server) {
-        ServerLevel overworld = server.overworld();
-        FlatShape overworldShape = shapeOf(overworld);
+        FlatShape overworldShape = shapeOf(server.overworld());
         if (overworldShape == null) {
-            String note = overworld == null
-                    ? null
-                    : unshapedOverworldNote(overworld.dimension().identifier(),
-                            overworld.getChunkSource().getGenerator());
-            return note == null ? List.of() : List.of(new Line(false, note + tail()));
+            return List.of();
         }
 
         List<Line> lines = new ArrayList<>();
@@ -62,27 +57,19 @@ public final class WorldShapeReport {
         return lines;
     }
 
-    static @Nullable String unshapedOverworldNote(Identifier dimension, ChunkGenerator generator) {
-        if (ShapedDimensions.canTakeShape(generator)) {
-            return null;
-        }
-
-        return "World shape: " + dimension + " not wrapped"
-                + " generator=" + generatorId(generator)
-                + ", its world type brings a generator of its own that takes no world shape";
-    }
-
     private static Line wrappedLine(MinecraftServer server, ServerLevel level, FlatShape shape) {
         WorldLoopBounds bounds = shape.bounds();
         StemOverride override = overrideOf(level);
+        ChunkGenerator generator = level.getChunkSource().getGenerator();
         Note netherScale = netherScale(server, level, bounds);
         Note endWidth = endWidth(level, bounds);
         return new Line(netherScale.broken() || endWidth.broken(), "World shape: " + level.dimension().identifier()
-                + " generator=" + generatorId(level.getChunkSource().getGenerator())
+                + " generator=" + generatorId(generator)
                 + " shape=" + shapeSource(level, override)
                 + " identification=" + shape.identification()
                 + " x=" + bounds.x().spanText() + " z=" + bounds.z().spanText() + " chunks"
                 + ", " + widths(bounds)
+                + seamTerrain(generator)
                 + netherScale.text()
                 + endWidth.text()
                 + datapackOverride(override)
@@ -101,6 +88,10 @@ public final class WorldShapeReport {
                 + " generator=" + generatorId(level.getChunkSource().getGenerator())
                 + ", " + reason
                 + tail();
+    }
+
+    private static String seamTerrain(ChunkGenerator generator) {
+        return ShapedChunkGenerator.tilesAtSeam(generator) ? "" : NOT_PERIODIC_NOTE;
     }
 
     private static String shapeSource(ServerLevel level, @Nullable StemOverride override) {
