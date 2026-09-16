@@ -63,7 +63,17 @@ public final class SableConstraintGraph {
         }
 
         List<PhysicsPipelineBody> group = groups.get(start);
-        return group == null ? List.of(start) : group;
+        return group == null ? List.of(start) : live(group);
+    }
+
+    private static List<PhysicsPipelineBody> live(List<PhysicsPipelineBody> group) {
+        for (PhysicsPipelineBody member : group) {
+            if (member.isRemoved()) {
+                return group.stream().filter(body -> !body.isRemoved()).toList();
+            }
+        }
+
+        return group;
     }
 
     private Map<PhysicsPipelineBody, List<PhysicsPipelineBody>> walkGroups() {

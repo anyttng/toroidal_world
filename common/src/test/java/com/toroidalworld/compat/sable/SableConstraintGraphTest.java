@@ -15,6 +15,8 @@ import dev.ryanhcode.sable.api.physics.mass.MassData;
 
 class SableConstraintGraphTest {
     private static final class Body implements PhysicsPipelineBody {
+        private boolean removed;
+
         @Override
         public int getRuntimeId() {
             return NULL_RUNTIME_ID;
@@ -27,7 +29,7 @@ class SableConstraintGraphTest {
 
         @Override
         public boolean isRemoved() {
-            return false;
+            return this.removed;
         }
     }
 
@@ -163,6 +165,38 @@ class SableConstraintGraphTest {
 
         assertEquals(List.of(head), graph.groupOf(head));
         assertEquals(Set.of(third, tail), Set.copyOf(graph.groupOf(third)));
+    }
+
+    @Test
+    void aMemberMarkedRemovedLeavesTheGroupWhileItsEdgesStand() {
+        SableConstraintGraph graph = new SableConstraintGraph();
+        Body head = new Body();
+        Body marked = new Body();
+        Body tail = new Body();
+        graph.record(head, marked);
+        graph.record(marked, tail);
+        assertEquals(3, graph.groupOf(head).size());
+
+        marked.removed = true;
+
+        assertEquals(2, graph.size());
+        assertEquals(Set.of(head, tail), Set.copyOf(graph.groupOf(head)));
+        assertEquals(2, graph.groupOf(tail).size());
+
+        marked.removed = false;
+
+        assertEquals(3, graph.groupOf(head).size());
+    }
+
+    @Test
+    void aGroupWithAMemberMarkedRemovedCannotBeWritten() {
+        SableConstraintGraph graph = new SableConstraintGraph();
+        Body lead = new Body();
+        Body marked = new Body();
+        graph.record(lead, marked);
+        marked.removed = true;
+
+        assertThrows(UnsupportedOperationException.class, () -> graph.groupOf(lead).add(new Body()));
     }
 
     @Test
