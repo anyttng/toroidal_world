@@ -8,7 +8,6 @@ import com.toroidalworld.core.WorldFold;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 
-import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.WorldGenLevel;
@@ -34,7 +33,6 @@ public class ChunkGeneratorReferencesMixin {
         ChunkPos centerPos = centerChunk.getPos();
         int centerChunkX = centerPos.x();
         int centerChunkZ = centerPos.z();
-        SectionPos centerSection = SectionPos.bottomOf(centerChunk);
 
         for (int sourceX = centerChunkX - toroidal$REFERENCE_RANGE; sourceX <= centerChunkX + toroidal$REFERENCE_RANGE; sourceX++) {
             for (int sourceZ = centerChunkZ - toroidal$REFERENCE_RANGE; sourceZ <= centerChunkZ + toroidal$REFERENCE_RANGE; sourceZ++) {
@@ -56,7 +54,7 @@ public class ChunkGeneratorReferencesMixin {
                             foldedCenter.getMaxBlockX(),
                             foldedCenter.getMaxBlockZ())) {
                         structureManager.addReferenceForStructure(
-                                centerSection, start.getStructure(), referenceKey, centerChunk);
+                                start.getStructure(), referenceKey, centerChunk);
                     }
                 }
             }

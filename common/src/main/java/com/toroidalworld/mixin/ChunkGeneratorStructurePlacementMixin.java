@@ -13,7 +13,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 
-import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.WorldGenLevel;
@@ -27,21 +26,22 @@ public class ChunkGeneratorStructurePlacementMixin {
             method = "applyBiomeDecoration",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/StructureManager;startsForStructure(Lnet/minecraft/core/SectionPos;Lnet/minecraft/world/level/levelgen/structure/Structure;)Ljava/util/List;"))
+                    target = "Lnet/minecraft/world/level/StructureManager;startsForStructure(IILnet/minecraft/world/level/levelgen/structure/Structure;)Ljava/util/List;"))
     private List<StructureStart> toroidal$startsInTheChunksOwnFrame(
             StructureManager structureManager,
-            SectionPos sectionPos,
+            int chunkX,
+            int chunkZ,
             Structure structure,
             Operation<List<StructureStart>> original,
             @Local(argsOnly = true) WorldGenLevel level) {
-        List<StructureStart> starts = original.call(structureManager, sectionPos, structure);
+        List<StructureStart> starts = original.call(structureManager, chunkX, chunkZ, structure);
 
         WorldFold transformer = ShapedChunkGenerator.wrappedTransformerOf((ChunkGenerator) (Object) this);
         if (transformer == null || starts.isEmpty()) {
             return starts;
         }
 
-        ChunkPos centerPos = sectionPos.chunk();
+        ChunkPos centerPos = new ChunkPos(chunkX, chunkZ);
         List<StructureStart> framed = new ArrayList<>(starts.size());
         for (StructureStart start : starts) {
             StructureStart inFrame = ((FramedStructureStart) (Object) start)

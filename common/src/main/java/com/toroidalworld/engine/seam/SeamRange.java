@@ -21,8 +21,8 @@ public final class SeamRange {
             return from.distManhattan(to);
         }
 
-        BlockPos anchor = new BlockPos(from);
-        return anchor.distManhattan(transformer.nearestCopy(anchor, new BlockPos(to)));
+        BlockPos anchor = BlockPos.ZERO.offset(from);
+        return anchor.distManhattan(transformer.nearestCopy(anchor, BlockPos.ZERO.offset(to)));
     }
 
     public static double sqr(@Nullable WorldFold fold, Vec3i from, Vec3i to) {

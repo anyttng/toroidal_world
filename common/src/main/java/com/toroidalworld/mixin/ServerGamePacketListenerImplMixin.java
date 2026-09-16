@@ -32,7 +32,6 @@ import java.util.Set;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.network.Connection;
-import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundMoveVehiclePacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -46,6 +45,17 @@ import net.minecraft.world.phys.Vec3;
 
 @Mixin(ServerGamePacketListenerImpl.class)
 public class ServerGamePacketListenerImplMixin implements ClientPositionHolder {
+    @Unique
+    private static final String toroidal$CLAMP_HORIZONTAL =
+            "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;clampHorizontal(D)D";
+
+    @Unique
+    private static final String toroidal$HANDLE_PLAYER_POSITION_CHANGE = "handlePlayerPositionChange(DDDFFZZ)V";
+
+    @Unique
+    private static final String toroidal$TELEPORT =
+            "teleport(Lnet/minecraft/world/entity/PositionMoveRotation;Ljava/util/Set;)V";
+
     @Shadow
     public ServerPlayer player;
 
@@ -65,7 +75,7 @@ public class ServerGamePacketListenerImplMixin implements ClientPositionHolder {
     }
 
     @ModifyVariable(
-            method = "teleport(Lnet/minecraft/world/entity/PositionMoveRotation;Ljava/util/Set;)V",
+            method = toroidal$TELEPORT,
             at = @At("HEAD"),
             argsOnly = true)
     private PositionMoveRotation toroidal$wrapTeleportDestination(PositionMoveRotation destination,
@@ -91,7 +101,7 @@ public class ServerGamePacketListenerImplMixin implements ClientPositionHolder {
                 destination.deltaMovement(), destination.yRot(), destination.xRot());
     }
 
-    @Inject(method = "teleport(Lnet/minecraft/world/entity/PositionMoveRotation;Ljava/util/Set;)V", at = @At("HEAD"))
+    @Inject(method = toroidal$TELEPORT, at = @At("HEAD"))
     private void toroidal$dropChunksBeforeTeleport(PositionMoveRotation destination, Set<Relative> relatives, CallbackInfo ci,
             @Share("stormWholeView") LocalBooleanRef stormWholeView,
             @Share("flippedChunks") LocalRef<List<ChunkPos>> flippedChunks) {
@@ -114,7 +124,7 @@ public class ServerGamePacketListenerImplMixin implements ClientPositionHolder {
         }
     }
 
-    @Inject(method = "teleport(Lnet/minecraft/world/entity/PositionMoveRotation;Ljava/util/Set;)V", at = @At("TAIL"))
+    @Inject(method = toroidal$TELEPORT, at = @At("TAIL"))
     private void toroidal$resendChunksAfterTeleport(PositionMoveRotation destination, Set<Relative> relatives, CallbackInfo ci,
             @Share("stormWholeView") LocalBooleanRef stormWholeView,
             @Share("flippedChunks") LocalRef<List<ChunkPos>> flippedChunks) {
@@ -196,16 +206,15 @@ public class ServerGamePacketListenerImplMixin implements ClientPositionHolder {
     private double vehicleLastGoodZ;
 
     @WrapOperation(
-            method = "handleMovePlayer",
+            method = toroidal$HANDLE_PLAYER_POSITION_CHANGE,
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;clampHorizontal(D)D",
+                    target = toroidal$CLAMP_HORIZONTAL,
                     ordinal = 0))
-    private double toroidal$continuousX(double clientX, Operation<Double> original,
-            @Local(argsOnly = true) ServerboundMovePlayerPacket packet) {
+    private double toroidal$continuousX(double clientX, Operation<Double> original) {
         double clamped = original.call(clientX);
         WorldFold transformer = WorldLoopAttachments.wrappedTransformerOf(this.player.level());
-        if (transformer == null || !packet.hasPosition()) {
+        if (transformer == null) {
             return clamped;
         }
 
@@ -219,16 +228,15 @@ public class ServerGamePacketListenerImplMixin implements ClientPositionHolder {
     }
 
     @WrapOperation(
-            method = "handleMovePlayer",
+            method = toroidal$HANDLE_PLAYER_POSITION_CHANGE,
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;clampHorizontal(D)D",
+                    target = toroidal$CLAMP_HORIZONTAL,
                     ordinal = 1))
-    private double toroidal$continuousZ(double clientZ, Operation<Double> original,
-            @Local(argsOnly = true) ServerboundMovePlayerPacket packet) {
+    private double toroidal$continuousZ(double clientZ, Operation<Double> original) {
         double clamped = original.call(clientZ);
         WorldFold transformer = WorldLoopAttachments.wrappedTransformerOf(this.player.level());
-        if (transformer == null || !packet.hasPosition()) {
+        if (transformer == null) {
             return clamped;
         }
 
@@ -241,8 +249,8 @@ public class ServerGamePacketListenerImplMixin implements ClientPositionHolder {
         return unwrapped;
     }
 
-    @Inject(method = "handleMovePlayer", at = @At("RETURN"))
-    private void toroidal$wrapIntoBounds(ServerboundMovePlayerPacket packet, CallbackInfo ci) {
+    @Inject(method = toroidal$HANDLE_PLAYER_POSITION_CHANGE, at = @At("RETURN"))
+    private void toroidal$wrapIntoBounds(CallbackInfo ci) {
         WorldFold transformer = WorldLoopAttachments.wrappedTransformerOf(this.player.level());
         if (transformer == null) {
             return;
@@ -265,7 +273,7 @@ public class ServerGamePacketListenerImplMixin implements ClientPositionHolder {
             method = "handleMoveVehicle",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;clampHorizontal(D)D",
+                    target = toroidal$CLAMP_HORIZONTAL,
                     ordinal = 0))
     private double toroidal$vehicleContinuousX(double clientX, Operation<Double> original) {
         double clamped = original.call(clientX);
@@ -282,7 +290,7 @@ public class ServerGamePacketListenerImplMixin implements ClientPositionHolder {
             method = "handleMoveVehicle",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;clampHorizontal(D)D",
+                    target = toroidal$CLAMP_HORIZONTAL,
                     ordinal = 1))
     private double toroidal$vehicleContinuousZ(double clientZ, Operation<Double> original) {
         double clamped = original.call(clientZ);

@@ -30,6 +30,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 // mixin sources. 26.x Minecraft ships unobfuscated — no mappings line, no remapping, no refmap.
 sourceSets.main.java.srcDir '../common/src/main/java'
 sourceSets.main.resources.srcDir '../common/src/main/resources'
+sourceSets.main.java.exclude(rootProject.unportedCompat)
 
 sourceSets.main.resources {
     // Exclude common development only resources from finalized outputs

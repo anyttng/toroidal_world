@@ -22,14 +22,17 @@ import net.minecraft.core.QuartPos;
 import net.minecraft.server.commands.FillBiomeCommand;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.biome.BiomeResolver;
-import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 @Mixin(FillBiomeCommand.class)
 public class FillBiomeCommandMixin {
+    @Unique
+    private static final String toroidal$FILL =
+            "fill(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Holder;Ljava/util/function/Predicate;Ljava/util/function/Consumer;)Lcom/mojang/datafixers/util/Either;";
+
     @Inject(
-            method = "fill(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Holder;Ljava/util/function/Predicate;Ljava/util/function/Consumer;)Lcom/mojang/datafixers/util/Either;",
+            method = toroidal$FILL,
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/level/levelgen/structure/BoundingBox;getXSpan()I",
@@ -49,35 +52,34 @@ public class FillBiomeCommandMixin {
     }
 
     @WrapOperation(
-            method = "fill(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/Holder;Ljava/util/function/Predicate;Ljava/util/function/Consumer;)Lcom/mojang/datafixers/util/Either;",
+            method = toroidal$FILL,
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/chunk/ChunkAccess;fillBiomesFromNoise(Lnet/minecraft/world/level/biome/BiomeResolver;Lnet/minecraft/world/level/biome/Climate$Sampler;)V"))
+                    target = "Lnet/minecraft/world/level/chunk/ChunkAccess;fillBiomesFromNoise(Lnet/minecraft/world/level/biome/BiomeResolver;)V"))
     private static void toroidal$fillInTheRegionsFrame(ChunkAccess chunk, BiomeResolver resolver,
-            Climate.Sampler sampler, Operation<Void> original,
+            Operation<Void> original,
             @Local(argsOnly = true) ServerLevel level, @Local BoundingBox region) {
         WorldFold transformer = WorldLoopAttachments.wrappedTransformerOf(level);
         if (transformer == null) {
-            original.call(chunk, resolver, sampler);
+            original.call(chunk, resolver);
             return;
         }
 
         boolean foldX = toroidal$leavesTheWorld(transformer.bounds().x(), region.minX(), region.maxX());
         boolean foldZ = toroidal$leavesTheWorld(transformer.bounds().z(), region.minZ(), region.maxZ());
         if (!foldX && !foldZ) {
-            original.call(chunk, resolver, sampler);
+            original.call(chunk, resolver);
             return;
         }
 
         int regionMinX = region.minX();
         int regionMinZ = region.minZ();
-        BiomeResolver inFrame = (quartX, quartY, quartZ, resolverSampler) -> resolver.getNoiseBiome(
+        BiomeResolver inFrame = (quartX, quartY, quartZ) -> resolver.getNoiseBiome(
                 foldX ? toroidal$quartInRegionsFrame(transformer.blockDomain(Direction.Axis.X), regionMinX, quartX) : quartX,
                 quartY,
-                foldZ ? toroidal$quartInRegionsFrame(transformer.blockDomain(Direction.Axis.Z), regionMinZ, quartZ) : quartZ,
-                resolverSampler);
+                foldZ ? toroidal$quartInRegionsFrame(transformer.blockDomain(Direction.Axis.Z), regionMinZ, quartZ) : quartZ);
 
-        original.call(chunk, inFrame, sampler);
+        original.call(chunk, inFrame);
     }
 
     @Unique

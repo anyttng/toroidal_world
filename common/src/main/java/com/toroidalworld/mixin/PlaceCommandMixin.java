@@ -21,6 +21,8 @@ import net.minecraft.server.commands.PlaceCommand;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
@@ -51,14 +53,16 @@ public class PlaceCommandMixin {
 
         Structure structure = structureHolder.value();
         ChunkGenerator generator = level.getChunkSource().getGenerator();
+        RandomState randomState = level.getChunkSource().randomState();
         StructureStart start = structure.generate(
                 structureHolder,
                 level.dimension(),
                 source.registryAccess(),
                 generator,
                 generator.getBiomeSource(),
-                level.getChunkSource().randomState(),
-                level.getStructureManager(),
+                randomState.createClimateSampler(SamplerContext.EMPTY_UNCACHED),
+                randomState,
+                level.getStructureTemplateManager(),
                 level.getSeed(),
                 ChunkPos.containing(pos),
                 0,
