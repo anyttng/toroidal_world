@@ -26,14 +26,15 @@ final class ClimateFactorPreview {
 
     private static final double HORIZONTAL_SHARE = 0.0;
 
-    static OptionalDouble temperatureFactor(Screen parent, GenerationOptions generationOptions, int chunkWidth) {
+    static OptionalDouble temperatureFactor(Screen parent, GenerationOptions generationOptions, int xChunkWidth,
+            int zChunkWidth) {
         NoiseFunction temperature = temperatureNoise(parent);
         if (temperature == null) {
             return OptionalDouble.empty();
         }
 
         return OptionalDouble.of(ClimateCompression.factor(
-                WorldFolds.of(FlatShape.torus(WorldLoopBounds.ofWidth(chunkWidth)), generationOptions),
+                WorldFolds.of(FlatShape.torus(WorldLoopBounds.ofWidths(xChunkWidth, zChunkWidth)), generationOptions),
                 temperature.noise(),
                 CLIMATE_XZ_SCALE,
                 HORIZONTAL_SHARE));

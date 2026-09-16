@@ -112,6 +112,44 @@ class NetherScalesTest {
     }
 
     @Nested
+    class TwoWidths {
+        @Test
+        void equalWidthsAgreeWithTheSingleWidthForm() {
+            for (int width : WIDTHS) {
+                assertEquals(NetherScales.allowedFor(width), NetherScales.allowedFor(width, width),
+                        () -> "width " + width);
+            }
+        }
+
+        @Test
+        void matchTheExhaustiveReferenceOfBothAxes() {
+            for (int xWidth : WIDTHS) {
+                for (int zWidth : WIDTHS) {
+                    List<Integer> expected = new ArrayList<>(allowedNaive(xWidth));
+                    expected.retainAll(allowedNaive(zWidth));
+                    assertEquals(expected, NetherScales.allowedFor(xWidth, zWidth),
+                            () -> "widths " + xWidth + " x " + zWidth);
+                    assertEquals(expected, NetherScales.allowedFor(zWidth, xWidth),
+                            () -> "widths " + zWidth + " x " + xWidth);
+                }
+            }
+        }
+
+        @Test
+        void theNarrowerAxisCapsTheScale() {
+            assertEquals(List.of(1, 2), NetherScales.allowedFor(32, 1024));
+            assertEquals(2, NetherScales.normalize(NetherScales.DEFAULT, 32, 1024));
+        }
+
+        @Test
+        void aScaleMustDivideBothWidths() {
+            assertEquals(List.of(1, 2, 4), NetherScales.allowedFor(128, 100));
+            assertEquals(4, NetherScales.normalize(NetherScales.DEFAULT, 128, 100));
+            assertEquals(1, NetherScales.next(4, 128, 100));
+        }
+    }
+
+    @Nested
     class Cycling {
         @Test
         void nextWalksTheWholeListInOrderAndWrapsAround() {

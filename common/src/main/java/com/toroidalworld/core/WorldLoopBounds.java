@@ -207,6 +207,10 @@ public record WorldLoopBounds(AxisBounds x, AxisBounds z) {
         return new WorldLoopBounds(looped, looped);
     }
 
+    public static WorldLoopBounds ofWidths(int xChunkWidth, int zChunkWidth) {
+        return new WorldLoopBounds(AxisBounds.Looped.ofWidth(xChunkWidth), AxisBounds.Looped.ofWidth(zChunkWidth));
+    }
+
     public static WorldLoopBounds ofWidth(Direction.Axis axis, int chunkWidth) {
         return UNBOUNDED.with(axis, AxisBounds.Looped.ofWidth(chunkWidth));
     }
