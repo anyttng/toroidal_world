@@ -10,6 +10,7 @@ import com.toroidalworld.api.v1.ToroidalWorldClientApi;
 import com.toroidalworld.compat.AxisCopies;
 import com.toroidalworld.compat.ClientShapes;
 import com.toroidalworld.compat.FullscreenZoomFloor;
+import com.toroidalworld.compat.MapCopies;
 import com.toroidalworld.core.CoordinateConstants;
 import com.toroidalworld.engine.seam.MapSurfaceCopies.Copies;
 
@@ -152,9 +153,30 @@ public final class XaeroWorldMapFold {
         return shape == null ? AxisCopies.UNBOUNDED : AxisCopies.ofChunks(shape, axis);
     }
 
-    public static double zoomFloorScale(double scaleMultiplier) {
+    public static int[] drawnLaps(AxisCopies copies, int spanMin, int spanMax, MapCopies mapCopies) {
+        int[] laps = copies.laps(spanMin, spanMax);
+        if (mapCopies != MapCopies.SINGLE) {
+            return laps;
+        }
+
+        for (int lap : laps) {
+            if (lap == 0) {
+                return new int[] {0};
+            }
+        }
+
+        return new int[0];
+    }
+
+    public static double zoomFloorScale(double scaleMultiplier, MapCopies mapCopies, int windowWidth, int windowHeight) {
         ToroidalShape shape = browsedShape();
-        return shape == null ? 0.0 : FullscreenZoomFloor.xaeroScale(shape, scaleMultiplier);
+        if (shape == null) {
+            return 0.0;
+        }
+
+        return mapCopies == MapCopies.SINGLE
+                ? FullscreenZoomFloor.xaeroCoverScale(shape, scaleMultiplier, windowWidth, windowHeight)
+                : FullscreenZoomFloor.xaeroScale(shape, scaleMultiplier);
     }
 
     public static int[] viewSpan(double camera, int windowPixels, double scale, int margin) {

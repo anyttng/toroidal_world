@@ -55,5 +55,10 @@
 
   "gui.toroidal_world.cylinder_settings.title": "Réglages du monde cylindrique",
   "gui.toroidal_world.cylinder_settings.axis": "Axe de bouclage",
-  "gui.toroidal_world.cylinder_settings.axis_hint": "Le monde se referme sur lui-même le long de cet axe et continue à l'infini le long de l'autre."
+  "gui.toroidal_world.cylinder_settings.axis_hint": "Le monde se referme sur lui-même le long de cet axe et continue à l'infini le long de l'autre.",
+
+  "toroidal_world.configuration.mapCopies": "Copies du monde sur la carte plein écran",
+  "toroidal_world.configuration.mapCopies.tooltip": "Comment les mods de carte affichent en plein écran un monde refermé sur lui-même : « Répété » remplit la fenêtre de ses copies, « Unique » montre le monde une seule fois et empêche de déplacer ou de dézoomer la carte au-delà de ses bords. Les minicartes le répètent toujours.",
+  "toroidal_world.configuration.mapCopies.repeated": "Répété",
+  "toroidal_world.configuration.mapCopies.single": "Unique"
 }

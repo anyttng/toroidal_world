@@ -17,6 +17,7 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.toroidalworld.compat.AxisCopies;
+import com.toroidalworld.compat.MapCopies;
 import com.toroidalworld.compat.xaero.XaeroInjectionTargets;
 import com.toroidalworld.compat.xaero.XaeroWorldMapFold;
 import com.toroidalworld.core.CoordinateConstants;
@@ -58,6 +59,12 @@ public abstract class GuiMapMixin {
     @Unique
     private static final float CHANNEL_MAX = 255.0F;
 
+    @Unique
+    private static final String LEVELED_REGION_GET_TEXTURE =
+            "Lxaero/map/region/LeveledRegion;getTexture(II)Lxaero/map/region/texture/RegionTexture;";
+
+    @Unique
+    private MapCopies toroidal$mapCopies = MapCopies.REPEATED;
     @Unique
     private MapProcessor toroidal$processor;
     @Unique
@@ -114,12 +121,15 @@ public abstract class GuiMapMixin {
     @Unique
     private void toroidal$floorZoomOut() {
         Window window = Minecraft.getInstance().getWindow();
+        this.toroidal$mapCopies = MapCopies.current();
         double floor = XaeroWorldMapFold.zoomFloorScale(
-                this.getScaleMultiplier(Math.min(window.getWidth(), window.getHeight())));
+                this.getScaleMultiplier(Math.min(window.getWidth(), window.getHeight())),
+                this.toroidal$mapCopies, window.getWidth(), window.getHeight());
         if (floor > 0.0 && destScale < floor) {
             destScale = floor;
         }
     }
+
     @WrapOperation(
             method = {"render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", "method_25394(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"},
             at = @At(
@@ -136,6 +146,22 @@ public abstract class GuiMapMixin {
                     target = "Lxaero/map/entity/util/EntityUtil;getEntityZ(Lnet/minecraft/world/entity/Entity;F)D"))
     private double toroidal$foldCameraZ(Entity entity, float partialTicks, Operation<Double> original) {
         return XaeroWorldMapFold.foldCoord(Direction.Axis.Z, original.call(entity, partialTicks));
+    }
+
+    @Inject(
+            method = {"render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", "method_25394(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"},
+            at = @At(
+                    value = "INVOKE",
+                    target = XaeroInjectionTargets.MAP_PROCESSOR_GET_MAP_SAVE_LOAD,
+                    ordinal = 1))
+    private void toroidal$stopCameraAtTheEdge(CallbackInfo ci) {
+        if (this.toroidal$mapCopies != MapCopies.SINGLE || !XaeroWorldMapFold.active()) {
+            return;
+        }
+
+        Window window = Minecraft.getInstance().getWindow();
+        this.cameraX = XaeroWorldMapFold.copies(Direction.Axis.X).clampView(this.cameraX, window.getWidth() / 2.0 / this.scale);
+        this.cameraZ = XaeroWorldMapFold.copies(Direction.Axis.Z).clampView(this.cameraZ, window.getHeight() / 2.0 / this.scale);
     }
 
     @Inject(
@@ -239,7 +265,7 @@ public abstract class GuiMapMixin {
             method = {"render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", "method_25394(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"},
             at = @At(
                     value = "INVOKE",
-                    target = "Lxaero/map/region/LeveledRegion;getTexture(II)Lxaero/map/region/texture/RegionTexture;",
+                    target = LEVELED_REGION_GET_TEXTURE,
                     ordinal = 0))
     private @Nullable RegionTexture<?> toroidal$foldHoverTexture(LeveledRegion<?> region, int textureX, int textureZ,
             Operation<RegionTexture<?>> original) {
@@ -254,7 +280,7 @@ public abstract class GuiMapMixin {
             method = {"render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", "method_25394(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"},
             at = @At(
                     value = "INVOKE",
-                    target = "Lxaero/map/region/LeveledRegion;getTexture(II)Lxaero/map/region/texture/RegionTexture;",
+                    target = LEVELED_REGION_GET_TEXTURE,
                     ordinal = 1))
     private @Nullable RegionTexture<?> toroidal$foldLeafTexture(LeveledRegion<?> region, int slotX, int slotZ,
             Operation<RegionTexture<?>> original) {
@@ -278,7 +304,8 @@ public abstract class GuiMapMixin {
         }
 
         this.toroidal$slotFolded = true;
-        return toroidal$canonicalRegionTexture(foldedBlockX, foldedBlockZ);
+        return this.toroidal$mapCopies == MapCopies.SINGLE
+                ? null : toroidal$canonicalRegionTexture(foldedBlockX, foldedBlockZ);
     }
 
     @Unique
@@ -302,7 +329,7 @@ public abstract class GuiMapMixin {
             method = {"render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", "method_25394(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"},
             at = @At(
                     value = "INVOKE",
-                    target = "Lxaero/map/region/LeveledRegion;getTexture(II)Lxaero/map/region/texture/RegionTexture;",
+                    target = LEVELED_REGION_GET_TEXTURE,
                     ordinal = 2))
     private @Nullable RegionTexture<?> toroidal$suppressFoldedRootTexture(LeveledRegion<?> region, int textureX, int textureZ,
             Operation<RegionTexture<?>> original) {
@@ -332,8 +359,8 @@ public abstract class GuiMapMixin {
         Window window = Minecraft.getInstance().getWindow();
         int[] spanX = XaeroWorldMapFold.viewSpan(this.cameraX, window.getWidth(), this.scale, slotSize);
         int[] spanZ = XaeroWorldMapFold.viewSpan(this.cameraZ, window.getHeight(), this.scale, slotSize);
-        int[] lapsX = copiesX.laps(spanX[0], spanX[1]);
-        int[] lapsZ = copiesZ.laps(spanZ[0], spanZ[1]);
+        int[] lapsX = XaeroWorldMapFold.drawnLaps(copiesX, spanX[0], spanX[1], this.toroidal$mapCopies);
+        int[] lapsZ = XaeroWorldMapFold.drawnLaps(copiesZ, spanZ[0], spanZ[1], this.toroidal$mapCopies);
         int slotMinX = this.toroidal$slotViewBlockX;
         int slotMinZ = this.toroidal$slotViewBlockZ;
         int clippedMinX = copiesX.clipMin(slotMinX);
@@ -388,6 +415,9 @@ public abstract class GuiMapMixin {
         original.call(matrixStack, overlayBuffer, flooredCameraX, flooredCameraZ,
                 leftX + lapX, rightX + lapX, topZ + lapZ, bottomZ + lapZ,
                 sideR, sideG, sideB, sideA, centerR, centerG, centerB, centerA);
+        if (this.toroidal$mapCopies == MapCopies.SINGLE) {
+            return;
+        }
 
         AxisCopies copiesX = XaeroWorldMapFold.copies(Direction.Axis.X);
         AxisCopies copiesZ = XaeroWorldMapFold.copies(Direction.Axis.Z);

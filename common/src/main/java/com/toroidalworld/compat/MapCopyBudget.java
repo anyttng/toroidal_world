@@ -48,7 +48,12 @@ public final class MapCopyBudget {
         };
     }
 
-    public static int copyRange(int loopedAxes, int tilesWithContent, double periodPixels, int viewportPixels) {
+    public static int copyRange(int loopedAxes, int tilesWithContent, double periodPixels, int viewportPixels,
+            MapCopies copies) {
+        if (copies == MapCopies.SINGLE) {
+            return 0;
+        }
+
         return Math.min(copiesToCover(periodPixels, viewportPixels), copyRangeCap(loopedAxes, tilesWithContent));
     }
 

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.IntFunction;
 
+import com.toroidalworld.compat.MapCopies;
 import com.toroidalworld.core.FlatShape;
 import com.toroidalworld.engine.net.TagPositions;
 
@@ -57,5 +58,10 @@ public final class LoaderlessPlatform implements Platform {
     @Override
     public LevelStem withGenerator(LevelStem stem, ChunkGenerator generator) {
         return new LevelStem(stem.type(), generator);
+    }
+
+    @Override
+    public MapCopies mapCopies() {
+        throw new UnsupportedOperationException(NO_LOADER);
     }
 }

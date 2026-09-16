@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.IntFunction;
 
+import com.toroidalworld.compat.MapCopies;
+import com.toroidalworld.config.WorldLoopConfig;
 import com.toroidalworld.core.FlatShape;
 import com.toroidalworld.engine.net.BlockEntityPositionsPayload;
 import com.toroidalworld.engine.net.TagPositions;
@@ -75,5 +77,10 @@ public final class NeoForgePlatform implements Platform {
     @Override
     public LevelStem withGenerator(LevelStem stem, ChunkGenerator generator) {
         return new LevelStem(stem.type(), generator);
+    }
+
+    @Override
+    public MapCopies mapCopies() {
+        return WorldLoopConfig.MAP_COPIES.get().copies();
     }
 }

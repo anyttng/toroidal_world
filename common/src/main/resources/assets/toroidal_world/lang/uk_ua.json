@@ -55,5 +55,10 @@
 
   "gui.toroidal_world.cylinder_settings.title": "Налаштування циліндричного світу",
   "gui.toroidal_world.cylinder_settings.axis": "Вісь зациклення",
-  "gui.toroidal_world.cylinder_settings.axis_hint": "Світ зациклюється вздовж цієї осі, а вздовж іншої триває нескінченно."
+  "gui.toroidal_world.cylinder_settings.axis_hint": "Світ зациклюється вздовж цієї осі, а вздовж іншої триває нескінченно.",
+
+  "toroidal_world.configuration.mapCopies": "Копії світу на повноекранній мапі",
+  "toroidal_world.configuration.mapCopies.tooltip": "Як моди мап показують зациклений світ на весь екран: «Повторювати» заповнює вікно його копіями, «Одна копія» показує світ один раз і не дає відсунути чи віддалити мапу за його краї. Мінімапи завжди повторюють світ.",
+  "toroidal_world.configuration.mapCopies.repeated": "Повторювати",
+  "toroidal_world.configuration.mapCopies.single": "Одна копія"
 }

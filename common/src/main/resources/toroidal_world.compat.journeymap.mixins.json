@@ -10,6 +10,7 @@
     "DisplayableMixin",
     "DrawPolygonStepMixin",
     "DrawQuadStepMixin",
+    "FullscreenMixin",
     "LayerDelegateMixin",
     "LocationFormatMixin",
     "MapRendererAccessor",

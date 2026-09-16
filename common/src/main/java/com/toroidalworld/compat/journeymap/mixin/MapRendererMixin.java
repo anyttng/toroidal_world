@@ -15,9 +15,11 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.platform.Window;
+import com.toroidalworld.compat.MapCopies;
 import com.toroidalworld.compat.MapCopyBudget;
 import com.toroidalworld.compat.journeymap.JourneyMapFold;
 
@@ -39,6 +41,19 @@ import net.minecraft.world.level.Level;
 
 @Mixin(targets = "journeymap.client.render.map.MapRenderer", remap = false)
 public abstract class MapRendererMixin {
+    @Unique
+    private static final String CENTER = "center(Ljava/io/File;Ljourneymap/client/model/map/MapType;DDI)Z";
+
+    @Unique
+    private static final String BLOCK_PIXEL_IN_GRID =
+            "getBlockPixelInGrid(Lnet/minecraft/core/BlockPos;)Ljava/awt/geom/Point2D$Double;";
+
+    @Unique
+    private static final String BLOCK_COORD_PIXEL_IN_GRID = "getBlockPixelInGrid(DD)Ljava/awt/geom/Point2D$Double;";
+
+    @Unique
+    private static final String MOVE = "move(DD)V";
+
     @Shadow(remap = false)
     protected double centerBlockX;
 
@@ -75,7 +90,7 @@ public abstract class MapRendererMixin {
     @Unique
     private File toroidal$lastWorldDir;
 
-    @Inject(method = "center(Ljava/io/File;Ljourneymap/client/model/map/MapType;DDI)Z", at = @At("HEAD"))
+    @Inject(method = CENTER, at = @At("HEAD"))
     private void toroidal$dropTilesOnWorldChange(File worldDir, MapType mapType, double blockX, double blockZ,
             int zoom, CallbackInfoReturnable<Boolean> cir) {
         ClientLevel level = Minecraft.getInstance().level;
@@ -116,44 +131,71 @@ public abstract class MapRendererMixin {
         return sets.stream().filter(set -> dir.equals(set.getRegionCoord().worldDir)).toList();
     }
 
+    @WrapMethod(method = CENTER)
+    private boolean toroidal$keepSingleViewOnTheMap(File worldDir, MapType mapType, double blockX, double blockZ, int zoom,
+            Operation<Boolean> original) {
+        if (JourneyMapFold.copiesOf(this.getUIState().ui) != MapCopies.SINGLE || !JourneyMapFold.active()) {
+            return original.call(worldDir, mapType, blockX, blockZ, zoom);
+        }
+
+        Window window = Minecraft.getInstance().getWindow();
+        int flooredZoom = Math.max(zoom, JourneyMapFold.fullscreenZoomFloor(window.getWidth(), window.getHeight()));
+        return original.call(worldDir, mapType,
+                JourneyMapFold.seatSingleCenter(Direction.Axis.X, blockX, flooredZoom, window.getWidth()),
+                JourneyMapFold.seatSingleCenter(Direction.Axis.Z, blockZ, flooredZoom, window.getHeight()),
+                flooredZoom);
+    }
+
     @ModifyVariable(
-            method = "center(Ljava/io/File;Ljourneymap/client/model/map/MapType;DDI)Z",
+            method = CENTER,
             at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private double toroidal$foldCenterX(double blockX) {
         return JourneyMapFold.foldCenterCoord(Direction.Axis.X, blockX);
     }
 
     @ModifyVariable(
-            method = "center(Ljava/io/File;Ljourneymap/client/model/map/MapType;DDI)Z",
+            method = CENTER,
             at = @At("HEAD"), ordinal = 1, argsOnly = true)
     private double toroidal$foldCenterZ(double blockZ) {
         return JourneyMapFold.foldCenterCoord(Direction.Axis.Z, blockZ);
     }
 
-    @Inject(method = "getBlockPixelInGrid(Lnet/minecraft/core/BlockPos;)Ljava/awt/geom/Point2D$Double;",
-            at = @At("HEAD"))
+    @Inject(method = BLOCK_PIXEL_IN_GRID, at = @At("HEAD"))
     private void toroidal$beginAnchorPass(CallbackInfoReturnable<Point2D.Double> cir) {
         toroidal$anchorPass = true;
     }
 
-    @Inject(method = "getBlockPixelInGrid(Lnet/minecraft/core/BlockPos;)Ljava/awt/geom/Point2D$Double;",
-            at = @At("RETURN"))
+    @Inject(method = BLOCK_PIXEL_IN_GRID, at = @At("RETURN"))
     private void toroidal$endAnchorPass(CallbackInfoReturnable<Point2D.Double> cir) {
         toroidal$anchorPass = false;
     }
 
-    @ModifyVariable(method = "getBlockPixelInGrid(DD)Ljava/awt/geom/Point2D$Double;",
-            at = @At("HEAD"), ordinal = 0, argsOnly = true)
+    @ModifyVariable(method = BLOCK_COORD_PIXEL_IN_GRID, at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private double toroidal$foldPixelX(double blockX) {
-        return toroidal$anchorPass ? blockX
-                : JourneyMapFold.nearestPixelCoord(Direction.Axis.X, this.centerBlockX, blockX);
+        return toroidal$anchorPass ? blockX : JourneyMapFold.seatPixelCoord(
+                Direction.Axis.X, this.centerBlockX, blockX, JourneyMapFold.copiesOf(this.getUIState().ui));
     }
 
-    @ModifyVariable(method = "getBlockPixelInGrid(DD)Ljava/awt/geom/Point2D$Double;",
-            at = @At("HEAD"), ordinal = 1, argsOnly = true)
+    @ModifyVariable(method = BLOCK_COORD_PIXEL_IN_GRID, at = @At("HEAD"), ordinal = 1, argsOnly = true)
     private double toroidal$foldPixelZ(double blockZ) {
-        return toroidal$anchorPass ? blockZ
-                : JourneyMapFold.nearestPixelCoord(Direction.Axis.Z, this.centerBlockZ, blockZ);
+        return toroidal$anchorPass ? blockZ : JourneyMapFold.seatPixelCoord(
+                Direction.Axis.Z, this.centerBlockZ, blockZ, JourneyMapFold.copiesOf(this.getUIState().ui));
+    }
+
+    @ModifyVariable(method = MOVE, at = @At("HEAD"), ordinal = 0, argsOnly = true)
+    private double toroidal$stopMoveXAtTheEdge(double deltaBlockX) {
+        return JourneyMapFold.copiesOf(this.getUIState().ui) == MapCopies.SINGLE
+                ? JourneyMapFold.clampedMove(Direction.Axis.X, this.centerBlockX, deltaBlockX, this.zoom,
+                        Minecraft.getInstance().getWindow().getWidth())
+                : deltaBlockX;
+    }
+
+    @ModifyVariable(method = MOVE, at = @At("HEAD"), ordinal = 1, argsOnly = true)
+    private double toroidal$stopMoveZAtTheEdge(double deltaBlockZ) {
+        return JourneyMapFold.copiesOf(this.getUIState().ui) == MapCopies.SINGLE
+                ? JourneyMapFold.clampedMove(Direction.Axis.Z, this.centerBlockZ, deltaBlockZ, this.zoom,
+                        Minecraft.getInstance().getWindow().getHeight())
+                : deltaBlockZ;
     }
 
     @ModifyReturnValue(method = "getCalculatedGridSize(I)I", at = @At("RETURN"))
@@ -163,7 +205,12 @@ public abstract class MapRendererMixin {
 
     @ModifyVariable(method = "setZoom(D)Z", at = @At("HEAD"), argsOnly = true)
     private double toroidal$floorFullscreenZoom(double zoom) {
-        return Context.UI.Fullscreen.equals(this.getUIState().ui) ? Math.max(zoom, JourneyMapFold.zoomFloor()) : zoom;
+        if (!Context.UI.Fullscreen.equals(this.getUIState().ui)) {
+            return zoom;
+        }
+
+        Window window = Minecraft.getInstance().getWindow();
+        return Math.max(zoom, JourneyMapFold.fullscreenZoomFloor(window.getWidth(), window.getHeight()));
     }
 
     @WrapOperation(
@@ -189,8 +236,9 @@ public abstract class MapRendererMixin {
         double periodZ = JourneyMapFold.worldPixelPeriod(Direction.Axis.Z, this.zoom);
         Window window = Minecraft.getInstance().getWindow();
         int tiles = JourneyMapFold.tilesWithContent(this.zoom, window.getWidth(), window.getHeight());
-        int rangeX = MapCopyBudget.copyRange(loopedAxes, tiles, periodX, window.getWidth());
-        int rangeZ = MapCopyBudget.copyRange(loopedAxes, tiles, periodZ, window.getHeight());
+        MapCopies copies = JourneyMapFold.copiesOf(this.contextUi);
+        int rangeX = MapCopyBudget.copyRange(loopedAxes, tiles, periodX, window.getWidth(), copies);
+        int rangeZ = MapCopyBudget.copyRange(loopedAxes, tiles, periodZ, window.getHeight(), copies);
         JourneyMapFold.recordCopyRange(this.contextUi, rangeX, rangeZ);
         if (rangeX == 0 && rangeZ == 0) {
             return;

@@ -22,20 +22,30 @@ class MapCopyBudgetTest {
 
     @Test
     void aViewportCoveredByThreeQuartersNeedsThatManyCopies() {
-        assertEquals(3, MapCopyBudget.copyRange(1, 1, 128.0, 512), "ceil(512 * 0.75 / 128) is 3");
-        assertEquals(3, MapCopyBudget.copyRange(2, 1, 128.0, 512), "the torus reads a different count under its cap");
+        assertEquals(3, MapCopyBudget.copyRange(1, 1, 128.0, 512, MapCopies.REPEATED), "ceil(512 * 0.75 / 128) is 3");
+        assertEquals(3, MapCopyBudget.copyRange(2, 1, 128.0, 512, MapCopies.REPEATED),
+                "the torus reads a different count under its cap");
     }
 
     @Test
     void theCapBindsWhenTheViewportAsksForMore() {
-        assertEquals(63, MapCopyBudget.copyRange(2, 1, 16.0, 1920), "ceil(1920 * 0.75 / 16) = 90 was not capped at 63");
-        assertEquals(90, MapCopyBudget.copyRange(1, 1, 16.0, 1920), "90 copies on a one-tile cylinder were capped");
-        assertEquals(15, MapCopyBudget.copyRange(2, 16, 16.0, 1920), "90 copies over 16 torus tiles were not capped at 15");
+        assertEquals(63, MapCopyBudget.copyRange(2, 1, 16.0, 1920, MapCopies.REPEATED),
+                "ceil(1920 * 0.75 / 16) = 90 was not capped at 63");
+        assertEquals(90, MapCopyBudget.copyRange(1, 1, 16.0, 1920, MapCopies.REPEATED),
+                "90 copies on a one-tile cylinder were capped");
+        assertEquals(15, MapCopyBudget.copyRange(2, 16, 16.0, 1920, MapCopies.REPEATED),
+                "90 copies over 16 torus tiles were not capped at 15");
     }
 
     @Test
     void anAxisWithNoPeriodDrawsNoCopies() {
-        assertEquals(0, MapCopyBudget.copyRange(1, 1, 0.0, 1920), "an unbounded axis got copies");
+        assertEquals(0, MapCopyBudget.copyRange(1, 1, 0.0, 1920, MapCopies.REPEATED), "an unbounded axis got copies");
+    }
+
+    @Test
+    void aSingleCopyMapDrawsNoCopyWhateverTheViewportAsks() {
+        assertEquals(0, MapCopyBudget.copyRange(2, 1, 16.0, 1920, MapCopies.SINGLE), "a torus under SINGLE got copies");
+        assertEquals(0, MapCopyBudget.copyRange(1, 1, 128.0, 512, MapCopies.SINGLE), "a cylinder under SINGLE got copies");
     }
 
     @Test
