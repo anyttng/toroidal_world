@@ -151,6 +151,7 @@
     "PathNavigationAccessor",
     "PathNavigationMixin",
     "PathNavigationRegionMixin",
+    "PathfinderMobMixin",
     "PerlinNoiseMixin",
     "PerlinSimplexNoiseMixin",
     "PhantomMoveControlMixin",
