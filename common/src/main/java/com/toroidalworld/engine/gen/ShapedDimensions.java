@@ -103,7 +103,9 @@ public final class ShapedDimensions {
                 continue;
             }
 
-            ChunkGenerator stamped = stampedGeneratorFor(datapackStem.generator(), carried);
+            ChunkGenerator stamped = isStampableOverStoredShape(datapackStem.generator())
+                    ? stampedGeneratorFor(datapackStem.generator(), carried)
+                    : null;
             restored.put(entry.key(),
                     stamped == null ? storedStem : Platforms.get().withGenerator(datapackStem, stamped));
             overrides.put(entry.key(), override(stamped == null ? Outcome.REFUSED : Outcome.STAMPED, datapackStem));
@@ -170,16 +172,6 @@ public final class ShapedDimensions {
         return carried == null ? null : carried.shape();
     }
 
-    public static boolean canTakeShape(WorldDimensions dimensions) {
-        LevelStem overworld = dimensions.get(LevelStem.OVERWORLD).orElse(null);
-        return overworld != null && canTakeShape(overworld.generator());
-    }
-
-    public static boolean canTakeShape(ChunkGenerator generator) {
-        ChunkGenerator base = baseOf(generator);
-        return isRebuildable(base) || isStampable(base);
-    }
-
     public static @Nullable FlatShape derivedShape(FlatShape worldShape, double overworldScale, double scale) {
         if (overworldScale <= 0.0 || scale <= 0.0) {
             return null;
@@ -215,11 +207,11 @@ public final class ShapedDimensions {
 
     private static @Nullable ChunkGenerator stampedGeneratorFor(ChunkGenerator generator, CarriedShape carried) {
         ChunkGenerator base = baseOf(generator);
-        if (!isStampable(base)) {
+        if (!(base instanceof ShapeStamp stamp)) {
             return null;
         }
 
-        ((ShapeStamp) base).toroidal$stamp(carried);
+        stamp.toroidal$stamp(carried);
         return base;
     }
 
@@ -236,8 +228,8 @@ public final class ShapedDimensions {
         return base.getClass() == NoiseBasedChunkGenerator.class || base.getClass() == FlatLevelSource.class;
     }
 
-    private static boolean isStampable(ChunkGenerator base) {
-        return base instanceof NoiseBasedChunkGenerator && base instanceof ShapeStamp;
+    private static boolean isStampableOverStoredShape(ChunkGenerator datapackGenerator) {
+        return datapackGenerator instanceof NoiseBasedChunkGenerator;
     }
 
     private ShapedDimensions() {
