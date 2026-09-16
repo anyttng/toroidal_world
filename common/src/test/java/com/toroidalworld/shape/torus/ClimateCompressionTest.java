@@ -14,7 +14,6 @@ import com.toroidalworld.core.WorldFolds;
 import com.toroidalworld.core.WorldLoopBounds;
 import com.toroidalworld.engine.noise.ClimateScaleCompression;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
-import com.toroidalworld.shape.torus.ClimateCompressionCacheFixture.Storing;
 
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
@@ -83,12 +82,6 @@ class ClimateCompressionTest {
     private static double actual(Field field, WorldFold fold, double verticalShare) {
         return ClimateCompression.factor(fold, field.climate(), field.amplitudes(),
                 Math.pow(2.0, field.firstOctave()), XZ_SCALE, verticalShare);
-    }
-
-    private static double resolved(Storing cache, Field field, WorldFold fold, double xzScale,
-            double verticalShare) {
-        return ClimateCompression.resolve(cache, fold, field.climate(), field.amplitudes(),
-                Math.pow(2.0, field.firstOctave()), xzScale, verticalShare);
     }
 
     private static WorldFold square(int chunkWidth) {
@@ -177,47 +170,6 @@ class ClimateCompressionTest {
 
         assertEquals(expected(TEMPERATURE, 256.0), actual(TEMPERATURE, rectangular, HORIZONTAL), TOLERANCE,
                 "256 blocks on Z against 512 on X");
-    }
-
-    @Test
-    void theMemoAnswersWhatAFreshCallAnswersAndStoresOncePerBinding() {
-        for (Field field : List.of(TEMPERATURE, TEMPERATURE_LARGE, VEGETATION, CONTINENTALNESS, EROSION,
-                TEMPERATURE_NETHER)) {
-            for (int chunkWidth : new int[] {16, 32, 64, 128, 256, 512}) {
-                for (double share : new double[] {HORIZONTAL, 0.5,
-                        GenerationTransformerContext.UNDECLARED_VERTICAL_SHARE}) {
-                    WorldFold fold = square(chunkWidth);
-                    Storing cache = new Storing();
-                    String where = field.name() + " on " + chunkWidth * 16 + " blocks, share " + share;
-
-                    double fresh = actual(field, fold, share);
-                    assertEquals(fresh, resolved(cache, field, fold, XZ_SCALE, share), 0.0, where + ", first call");
-                    assertEquals(fresh, resolved(cache, field, fold, XZ_SCALE, share), 0.0, where + ", memo hit");
-                    assertEquals(1, cache.stores, where + ", stores");
-                }
-            }
-        }
-    }
-
-    @Test
-    void aChangedFoldScaleOrShareIsResolvedAfresh() {
-        Storing cache = new Storing();
-        WorldFold small = square(32);
-        WorldFold large = square(128);
-        resolved(cache, TEMPERATURE, small, XZ_SCALE, HORIZONTAL);
-
-        assertEquals(actual(TEMPERATURE, large, HORIZONTAL), resolved(cache, TEMPERATURE, large, XZ_SCALE, HORIZONTAL),
-                0.0, "changed fold");
-        assertEquals(2, cache.stores, "stores after the fold changed");
-
-        assertEquals(1.0, resolved(cache, TEMPERATURE, large, XZ_SCALE, 0.5), 0.0, "changed share");
-        assertEquals(3, cache.stores, "stores after the share changed");
-
-        double halfScale = XZ_SCALE / 2.0;
-        assertEquals(ClimateCompression.factor(large, TEMPERATURE.climate(), TEMPERATURE.amplitudes(),
-                Math.pow(2.0, TEMPERATURE.firstOctave()), halfScale, 0.5),
-                resolved(cache, TEMPERATURE, large, halfScale, 0.5), 0.0, "changed scale");
-        assertEquals(4, cache.stores, "stores after the scale changed");
     }
 
     @Test

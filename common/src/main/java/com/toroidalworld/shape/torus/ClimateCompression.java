@@ -2,7 +2,6 @@ package com.toroidalworld.shape.torus;
 
 import java.util.Collections;
 
-import com.toroidalworld.accessors.ClimateCompressionCache;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.engine.noise.ClimateScaleCompression;
 
@@ -16,24 +15,6 @@ public final class ClimateCompression {
     private static final double UNMODIFIED_AMPLITUDE = 1.0;
 
     private static final double LN_2 = Math.log(2.0);
-
-    public record Resolved(WorldFold fold, double baseScale, double verticalShare, double factor) {
-        boolean covers(WorldFold fold, double baseScale, double verticalShare) {
-            return this.fold == fold && this.baseScale == baseScale && this.verticalShare == verticalShare;
-        }
-    }
-
-    public static double resolve(ClimateCompressionCache cache, WorldFold fold, boolean climateField,
-            DoubleList amplitudes, double lowestFreqInputFactor, double baseScale, double verticalShare) {
-        Resolved resolved = cache.toroidal$climateCompression();
-        if (resolved == null || !resolved.covers(fold, baseScale, verticalShare)) {
-            resolved = new Resolved(fold, baseScale, verticalShare,
-                    factor(fold, climateField, amplitudes, lowestFreqInputFactor, baseScale, verticalShare));
-            cache.toroidal$climateCompression(resolved);
-        }
-
-        return resolved.factor();
-    }
 
     public static double warpDivisor(Holder<NormalNoise> noise, WorldFold fold, double xzScale,
             double verticalShare) {
