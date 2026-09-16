@@ -39,6 +39,11 @@ public final class LoopSpans {
         return new LoopSpans(WorldLoopBounds.ofWidth(chunkWidth));
     }
 
+    /** X looping over {@code xChunkWidth} chunks and Z over {@code zChunkWidth}, both centred on the origin. */
+    public static LoopSpans ofWidths(int xChunkWidth, int zChunkWidth) {
+        return new LoopSpans(WorldLoopBounds.ofWidths(xChunkWidth, zChunkWidth));
+    }
+
     /** One axis looping over {@code chunkWidth} chunks, centred on the origin; the other stays unbounded. */
     public static LoopSpans ofWidth(Direction.Axis axis, int chunkWidth) {
         return new LoopSpans(WorldLoopBounds.ofWidth(axis, chunkWidth));

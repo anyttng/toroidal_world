@@ -21,16 +21,25 @@ public final class ShapeStems {
         return spans != null && ownGeometry.test(spans) ? spans : null;
     }
 
-    public static LoopSpans netherSpans(LoopSpans overworld, int netherScale, int chunkWidth) {
-        return overworld.scaledDown(NetherScales.normalize(netherScale, chunkWidth));
+    public static LoopSpans netherSpans(LoopSpans overworld, int netherScale) {
+        return overworld.scaledDown(normalizeNetherScale(netherScale, overworld));
     }
 
     public static int readNetherScale(WorldDimensions dimensions, Predicate<LoopSpans> ownGeometry,
-            Direction.Axis axis, int overworldChunkWidth) {
+            LoopSpans overworld, Direction.Axis axis) {
         LoopSpans nether = spansOf(dimensions, LevelStem.NETHER, ownGeometry);
-        return nether != null && nether.loops(axis)
-                ? overworldChunkWidth / nether.chunkWidth(axis)
+        int stored = nether != null && nether.loops(axis)
+                ? overworld.chunkWidth(axis) / nether.chunkWidth(axis)
                 : NetherScales.DEFAULT;
+        return normalizeNetherScale(stored, overworld);
+    }
+
+    private static int normalizeNetherScale(int netherScale, LoopSpans overworld) {
+        int xChunkWidth = overworld.loops(Direction.Axis.X)
+                ? overworld.chunkWidth(Direction.Axis.X)
+                : overworld.chunkWidth(Direction.Axis.Z);
+        int zChunkWidth = overworld.loops(Direction.Axis.Z) ? overworld.chunkWidth(Direction.Axis.Z) : xChunkWidth;
+        return NetherScales.normalize(netherScale, xChunkWidth, zChunkWidth);
     }
 
     private ShapeStems() {

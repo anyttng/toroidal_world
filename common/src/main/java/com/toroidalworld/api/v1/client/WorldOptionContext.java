@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 import com.toroidalworld.api.v1.option.GenerationOptions;
 
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.Direction;
 
 /**
  * All a {@link WorldOptionControl} may reach of the settings screen around it, so that no control holds the screen
@@ -15,8 +16,19 @@ public interface WorldOptionContext {
     /** The screen the control lives on — what a sub-screen it opens returns to. */
     Screen parent();
 
-    /** The loop width the screen currently states, in chunks, or {@code null} while it states none. */
+    /**
+     * The loop width the screen currently states, in chunks — the narrower axis where the two differ — or
+     * {@code null} while it states none.
+     */
     @Nullable Integer loopChunkWidth();
+
+    /**
+     * The loop width the screen currently states along {@code axis}, in chunks, or {@code null} while it states none.
+     * A screen that states one width for both axes need not override it.
+     */
+    default @Nullable Integer loopChunkWidth(Direction.Axis axis) {
+        return loopChunkWidth();
+    }
 
     /** The options the screen was opened with. */
     GenerationOptions options();
