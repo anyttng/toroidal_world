@@ -1,6 +1,7 @@
 package com.toroidalworld.client.shape;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -25,12 +26,12 @@ public abstract class LoopSettingsScreen<S> extends Screen {
     private ScrollableLayout contentsScroll;
     private Button doneButton;
 
-    protected LoopSettingsScreen(Component title, Screen parent, int chunkWidth, int netherScale, int endChunkWidth,
+    protected LoopSettingsScreen(Component title, Screen parent, Function<Runnable, LoopSizeControls> controls,
             Consumer<S> onDone) {
         super(title);
         this.parent = parent;
         this.onDone = onDone;
-        this.controls = new LoopSizeControls(chunkWidth, netherScale, endChunkWidth, this::onControlsChanged);
+        this.controls = controls.apply(this::onControlsChanged);
     }
 
     protected abstract S build();

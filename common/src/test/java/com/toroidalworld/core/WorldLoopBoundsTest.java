@@ -191,6 +191,17 @@ class WorldLoopBoundsTest {
     }
 
     @Test
+    void ofWidthsCentresEachAxisOnItsOwnWidthAndTheNarrowerAxisBoundsTheView() {
+        WorldLoopBounds rectangle = WorldLoopBounds.ofWidths(64, 128);
+
+        assertEquals(new WorldLoopBounds(-32, 32, -64, 64), rectangle);
+        assertFalse(rectangle.isSquare());
+        assertEquals(WorldLoopBounds.ofWidth(32), WorldLoopBounds.ofWidths(32, 32));
+        assertEquals(WorldLoopBounds.ofWidth(64).maxViewDistance(), rectangle.maxViewDistance());
+        assertEquals(WorldLoopBounds.ofWidths(32, 64), rectangle.scaledDown(2));
+    }
+
+    @Test
     void ofWidthOnOneAxisLoopsThatAxisCentredAndLeavesTheOtherUnbounded() {
         assertEquals(new WorldLoopBounds(new AxisBounds.Looped(-16, 16), AxisBounds.Unbounded.INSTANCE),
                 WorldLoopBounds.ofWidth(Direction.Axis.X, 32));

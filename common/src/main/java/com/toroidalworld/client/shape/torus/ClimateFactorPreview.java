@@ -27,7 +27,8 @@ final class ClimateFactorPreview {
 
     private static final double HORIZONTAL_SHARE = 0.0;
 
-    static OptionalDouble temperatureFactor(Screen parent, GenerationOptions generationOptions, int chunkWidth) {
+    static OptionalDouble temperatureFactor(Screen parent, GenerationOptions generationOptions, int xChunkWidth,
+            int zChunkWidth) {
         NoiseHolder temperature = temperatureNoise(parent);
         if (temperature == null) {
             return OptionalDouble.empty();
@@ -36,7 +37,7 @@ final class ClimateFactorPreview {
         NormalNoise.NoiseParameters parameters = temperature.noiseData().value();
         boolean climateField = temperature.noiseData().unwrapKey().filter(ClimateFields::isClimate).isPresent();
         return OptionalDouble.of(ClimateCompression.factor(
-                WorldFolds.of(FlatShape.torus(WorldLoopBounds.ofWidth(chunkWidth)), generationOptions),
+                WorldFolds.of(FlatShape.torus(WorldLoopBounds.ofWidths(xChunkWidth, zChunkWidth)), generationOptions),
                 climateField,
                 parameters.amplitudes(),
                 Math.pow(2.0, parameters.firstOctave()),

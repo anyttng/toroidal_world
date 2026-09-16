@@ -18,11 +18,15 @@ public record TorusSettings(LoopSpans overworld, int netherScale, LoopSpans end,
             LoopSpans.ofWidth(WorldLoopSizes.END_DEFAULT_CHUNK_WIDTH),
             DEFAULT_GENERATION_OPTIONS);
 
-    public int chunkWidth() {
-        return overworld.chunkWidth(Direction.Axis.X);
+    public int chunkWidth(Direction.Axis axis) {
+        return overworld.chunkWidth(axis);
     }
 
     public int endChunkWidth() {
         return end.chunkWidth(Direction.Axis.X);
+    }
+
+    public static boolean isTorus(LoopSpans spans) {
+        return spans.loops(Direction.Axis.X) && spans.loops(Direction.Axis.Z);
     }
 }
