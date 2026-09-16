@@ -54,6 +54,8 @@ public final class InjectionTargets {
 
     public static final String LIVING_ENTITY_GET_Z = "Lnet/minecraft/world/entity/LivingEntity;getZ()D";
 
+    public static final String NOISE_GET = "Lnet/minecraft/world/level/levelgen/synth/Noise;get(DDD)F";
+
     public static final String PATHFINDER_MOB_GET_HOME_POSITION =
             "Lnet/minecraft/world/entity/PathfinderMob;getHomePosition()Lnet/minecraft/core/BlockPos;";
 

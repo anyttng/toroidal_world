@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
+import com.toroidalworld.InjectionTargets;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.engine.noise.ContextScaledNoise;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
@@ -19,9 +20,6 @@ import net.minecraft.world.level.levelgen.synth.Noise;
 
 @Mixin(MaterialSystem.class)
 public class MaterialSystemMixin {
-    @Unique
-    private static final String toroidal$NOISE_GET = "Lnet/minecraft/world/level/levelgen/synth/Noise;get(DDD)F";
-
     @Shadow
     @Final
     private Noise badlandsPillarNoise;
@@ -38,13 +36,25 @@ public class MaterialSystemMixin {
     @Final
     private Noise icebergPillarRoofNoise;
 
-    @WrapOperation(method = "erodedBadlandsExtension", at = @At(value = "INVOKE", target = toroidal$NOISE_GET))
+    @WrapOperation(
+            method = {"getSurfaceDepth", "getSurfaceSecondary", "getBand"},
+            at = @At(value = "INVOKE", target = InjectionTargets.NOISE_GET))
+    private float toroidal$blockPositionNoise(Noise noise, double x, double y, double z, Operation<Float> original) {
+        WorldFold transformer = GenerationTransformerContext.context().wrappedTransformer();
+        if (transformer == null) {
+            return original.call(noise, x, y, z);
+        }
+
+        return ContextScaledNoise.sample(transformer, noise, NoiseConstants.UNSCALED, x, y, z);
+    }
+
+    @WrapOperation(method = "erodedBadlandsExtension", at = @At(value = "INVOKE", target = InjectionTargets.NOISE_GET))
     private float toroidal$rawBadlandsNoise(Noise noise, double x, double y, double z, Operation<Float> original,
             @Local(argsOnly = true, ordinal = 0) int blockX, @Local(argsOnly = true, ordinal = 1) int blockZ) {
         return this.toroidal$rawCoordinateNoise(noise, x, y, z, blockX, blockZ, original);
     }
 
-    @WrapOperation(method = "frozenOceanExtension", at = @At(value = "INVOKE", target = toroidal$NOISE_GET))
+    @WrapOperation(method = "frozenOceanExtension", at = @At(value = "INVOKE", target = InjectionTargets.NOISE_GET))
     private float toroidal$rawIcebergNoise(Noise noise, double x, double y, double z, Operation<Float> original,
             @Local(argsOnly = true, ordinal = 1) int blockX, @Local(argsOnly = true, ordinal = 2) int blockZ) {
         return this.toroidal$rawCoordinateNoise(noise, x, y, z, blockX, blockZ, original);
@@ -53,13 +63,12 @@ public class MaterialSystemMixin {
     @Unique
     private float toroidal$rawCoordinateNoise(Noise noise, double x, double y, double z, int blockX, int blockZ,
             Operation<Float> original) {
-        double scale = this.toroidal$scaleOf(noise);
         WorldFold transformer = GenerationTransformerContext.context().wrappedTransformer();
-        if (scale == NoiseConstants.UNSCALED || transformer == null) {
+        if (transformer == null) {
             return original.call(noise, x, y, z);
         }
 
-        return ContextScaledNoise.sample(transformer, noise, scale, blockX, y, blockZ);
+        return ContextScaledNoise.sample(transformer, noise, this.toroidal$scaleOf(noise), blockX, y, blockZ);
     }
 
     @Unique
