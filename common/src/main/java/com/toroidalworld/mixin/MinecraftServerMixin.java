@@ -9,12 +9,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.toroidalworld.ToroidalWorld;
 import com.toroidalworld.core.RegistrationBoundary;
-import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WorldLoopAttachments;
 import com.toroidalworld.engine.gen.WorldShapeReport;
 import com.toroidalworld.engine.level.CurrentServer;
 import com.toroidalworld.engine.level.SeamRespawnData;
-import com.toroidalworld.engine.noise.GenerationTransformerContext;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -23,7 +21,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.level.storage.ServerLevelData;
 
@@ -53,22 +50,6 @@ public class MinecraftServerMixin {
                 ToroidalWorld.LOGGER.info(line.text());
             }
         }
-    }
-
-    @WrapOperation(
-            method = "setInitialSpawn",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/biome/Climate$Sampler;findSpawnPosition()Lnet/minecraft/core/BlockPos;"))
-    private static BlockPos toroidal$spawnSearchInBounds(Climate.Sampler sampler, Operation<BlockPos> original,
-            @Local(argsOnly = true) ServerLevel level) {
-        WorldFold transformer = WorldLoopAttachments.wrappedTransformerOf(level);
-        if (transformer == null) {
-            return original.call(sampler);
-        }
-
-        BlockPos found = GenerationTransformerContext.withTransformer(transformer, () -> original.call(sampler));
-        return transformer.fold(found);
     }
 
     @WrapOperation(

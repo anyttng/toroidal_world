@@ -40,8 +40,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.StaticCache2D;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.TicketStorage;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.level.levelgen.NoiseRouter;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
@@ -50,6 +52,10 @@ import net.minecraft.world.phys.Vec3;
 
 @Mixin(ChunkMap.class)
 public class ChunkMapMixin implements LevelHolder, ChunkResender, SeamDriveScheduler, TrackedEntityRefresher {
+    @Unique
+    private static final String toroidal$SECTION_POS_OF_ENTITY =
+            "Lnet/minecraft/core/SectionPos;of(Lnet/minecraft/world/level/entity/EntityAccess;)Lnet/minecraft/core/SectionPos;";
+
     @Shadow
     @Final
     private ServerLevel level;
@@ -190,20 +196,41 @@ public class ChunkMapMixin implements LevelHolder, ChunkResender, SeamDriveSched
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/level/levelgen/RandomState;create("
-                            + "Lnet/minecraft/world/level/levelgen/NoiseGeneratorSettings;"
-                            + "Lnet/minecraft/core/HolderGetter;J)"
+                            + "Lnet/minecraft/core/HolderGetter;J"
+                            + "Lnet/minecraft/world/level/levelgen/NoiseGeneratorSettings;)"
                             + "Lnet/minecraft/world/level/levelgen/RandomState;"))
     private RandomState toroidal$bindRouterBuild(
-            NoiseGeneratorSettings settings,
-            HolderGetter<NormalNoise.NoiseParameters> noiseParameters,
+            HolderGetter<NormalNoise> noises,
             long seed,
+            NoiseGeneratorSettings settings,
             Operation<RandomState> original,
-            @Local(argsOnly = true) ChunkGenerator generator,
-            @Local(argsOnly = true) ServerLevel level) {
+            @Local(argsOnly = true) ChunkGenerator generator) {
         WorldFold fold = ShapedChunkGenerator.wrappedTransformerOf(generator);
         NoiseGeneratorSettings shaped = fold != null ? TerrainCeiling.withCeiling(settings) : settings;
         return GenerationTransformerContext.withRouterBuild(fold,
-                () -> original.call(shaped, noiseParameters, seed));
+                () -> original.call(noises, seed, shaped));
+    }
+
+    @WrapOperation(
+            method = "<init>",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/level/levelgen/RandomState;create("
+                            + "Lnet/minecraft/core/HolderGetter;JZ"
+                            + "Lnet/minecraft/world/level/block/state/BlockState;I"
+                            + "Lnet/minecraft/world/level/levelgen/NoiseRouter;)"
+                            + "Lnet/minecraft/world/level/levelgen/RandomState;"))
+    private RandomState toroidal$bindPlainRouterBuild(
+            HolderGetter<NormalNoise> noises,
+            long seed,
+            boolean useLegacyRandom,
+            BlockState defaultBlock,
+            int seaLevel,
+            NoiseRouter router,
+            Operation<RandomState> original,
+            @Local(argsOnly = true) ChunkGenerator generator) {
+        return GenerationTransformerContext.withRouterBuild(ShapedChunkGenerator.wrappedTransformerOf(generator),
+                () -> original.call(noises, seed, useLegacyRandom, defaultBlock, seaLevel, router));
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))
@@ -216,7 +243,7 @@ public class ChunkMapMixin implements LevelHolder, ChunkResender, SeamDriveSched
             method = "updatePlayerStatus",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/core/SectionPos;of(Lnet/minecraft/world/level/entity/EntityAccess;)Lnet/minecraft/core/SectionPos;"))
+                    target = toroidal$SECTION_POS_OF_ENTITY))
     private SectionPos toroidal$canonicalStatusSection(EntityAccess entity, Operation<SectionPos> original) {
         return toroidal$canonical(original.call(entity));
     }
@@ -225,7 +252,7 @@ public class ChunkMapMixin implements LevelHolder, ChunkResender, SeamDriveSched
             method = "updatePlayerPos",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/core/SectionPos;of(Lnet/minecraft/world/level/entity/EntityAccess;)Lnet/minecraft/core/SectionPos;"))
+                    target = toroidal$SECTION_POS_OF_ENTITY))
     private SectionPos toroidal$canonicalPosSection(EntityAccess entity, Operation<SectionPos> original) {
         return toroidal$canonical(original.call(entity));
     }
@@ -234,7 +261,7 @@ public class ChunkMapMixin implements LevelHolder, ChunkResender, SeamDriveSched
             method = "move",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/core/SectionPos;of(Lnet/minecraft/world/level/entity/EntityAccess;)Lnet/minecraft/core/SectionPos;"))
+                    target = toroidal$SECTION_POS_OF_ENTITY))
     private SectionPos toroidal$canonicalMoveSection(EntityAccess entity, Operation<SectionPos> original) {
         return toroidal$canonical(original.call(entity));
     }

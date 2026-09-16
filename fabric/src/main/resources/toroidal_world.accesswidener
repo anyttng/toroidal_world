@@ -9,8 +9,16 @@ extendable method net/minecraft/world/level/levelgen/NoiseBasedChunkGenerator it
 accessible class net/minecraft/server/level/ChunkMap$TrackedEntity
 accessible field net/minecraft/server/level/ChunkMap entityMap Lit/unimi/dsi/fastutil/ints/Int2ObjectMap;
 accessible field net/minecraft/server/level/ChunkMap$TrackedEntity seenBy Ljava/util/Set;
-accessible class net/minecraft/world/level/levelgen/DensityFunctions$Noise
-accessible class net/minecraft/world/level/levelgen/DensityFunctions$ShiftedNoise
-accessible class net/minecraft/world/level/levelgen/DensityFunctions$Shift
-accessible class net/minecraft/world/level/levelgen/DensityFunctions$ShiftA
-accessible class net/minecraft/world/level/levelgen/DensityFunctions$ShiftB
+accessible field net/minecraft/world/level/levelgen/synth/GradientNoise perms [B
+accessible field net/minecraft/world/level/levelgen/synth/GradientNoise offsetX D
+accessible field net/minecraft/world/level/levelgen/synth/GradientNoise offsetY D
+accessible field net/minecraft/world/level/levelgen/synth/GradientNoise offsetZ D
+accessible method net/minecraft/world/level/levelgen/synth/GradientNoise wrap (D)D
+accessible field net/minecraft/world/level/levelgen/synth/NoiseStack layers [Lnet/minecraft/world/level/levelgen/synth/NoiseStack$Layer;
+accessible class net/minecraft/world/level/levelgen/synth/NoiseStack$Layer
+accessible field net/minecraft/world/level/levelgen/synth/SmearedPerlinNoise fudgeYScale D
+accessible method net/minecraft/world/level/levelgen/synth/BlendedNoise xzMultiplier ()D
+accessible method net/minecraft/world/level/levelgen/synth/BlendedNoise yMultiplier ()D
+accessible field net/minecraft/world/level/levelgen/synth/NormalNoise parameters Lnet/minecraft/world/level/levelgen/synth/NormalNoise$Parameters;
+accessible class net/minecraft/world/level/levelgen/synth/NormalNoise$Parameters
+accessible field net/minecraft/world/level/levelgen/RandomState router Lnet/minecraft/world/level/levelgen/NoiseRouter;

@@ -24,6 +24,10 @@ public final class InjectionTargets {
 
     public static final String CHUNK_POS_PACK = "Lnet/minecraft/world/level/ChunkPos;pack(II)J";
 
+    public static final String DENSITY_FUNCTION_COMPILE_SAMPLER =
+            "compileSampler(Lnet/minecraft/world/level/levelgen/densityfunction/DensityFunction$CompileContext;)"
+                    + "Lnet/minecraft/world/level/levelgen/densityfunction/DensitySampler;";
+
     public static final String DENSITY_FUNCTION_COMPUTE =
             "Lnet/minecraft/world/level/levelgen/DensityFunction;compute(Lnet/minecraft/world/level/levelgen/DensityFunction$FunctionContext;)D";
 

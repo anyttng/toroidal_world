@@ -5,6 +5,8 @@ import com.toroidalworld.core.WrapDomain;
 
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.levelgen.synth.NoiseStack;
+import net.minecraft.world.level.levelgen.synth.SimplexNoise;
 
 public final class PeriodicSimplexSampler {
     private static final double SQRT_3 = Math.sqrt(3.0);
@@ -16,7 +18,25 @@ public final class PeriodicSimplexSampler {
     private static final int GRADIENT_COUNT = 12;
     private static final int PERMUTATION_MASK = 0xFF;
 
-    public static double sample(int[] permutations, double xOffset, double zOffset,
+    public static float sampleStack(WorldFold transformer, double scale, NoiseStack stack, double x, double z) {
+        float value = 0.0F;
+        for (NoiseStack.Layer layer : stack.layers) {
+            if (!(layer.noise() instanceof SimplexNoise leaf)) {
+                throw new IllegalArgumentException("A periodic simplex stack samples simplex leaves only, got "
+                        + layer.noise().getClass().getName());
+            }
+
+            value += layer.amplitude() * sample(leaf, transformer, scale * layer.frequency(), x, z);
+        }
+
+        return value;
+    }
+
+    public static float sample(SimplexNoise noise, WorldFold transformer, double scale, double x, double z) {
+        return (float) sample(noise.perms, noise.offsetX, noise.offsetY, transformer, scale, x, z);
+    }
+
+    static double sample(byte[] permutations, double xOffset, double zOffset,
             WorldFold transformer, double scale, double x, double z) {
         WrapDomain xDomain = transformer.blockDomain(Direction.Axis.X);
         WrapDomain zDomain = transformer.blockDomain(Direction.Axis.Z);
@@ -109,7 +129,7 @@ public final class PeriodicSimplexSampler {
         return PeriodicNoiseSampler.closes(period) ? period : PeriodicNoiseSampler.UNBOUNDED_PERIOD;
     }
 
-    private static int gradient(int[] permutations, long u, long v,
+    private static int gradient(byte[] permutations, long u, long v,
             long xLapU, long xLapV, long zLapU, long zLapV) {
         long determinant = xLapU * zLapV - zLapU * xLapV;
         long reducedU = u;
@@ -144,8 +164,8 @@ public final class PeriodicSimplexSampler {
         return falloff * falloff * (gradient[0] * x + gradient[1] * z);
     }
 
-    private static int p(int[] permutations, long index) {
-        return permutations[(int) (index & PERMUTATION_MASK)];
+    private static int p(byte[] permutations, long index) {
+        return permutations[(int) (index & PERMUTATION_MASK)] & PERMUTATION_MASK;
     }
 
     private PeriodicSimplexSampler() {

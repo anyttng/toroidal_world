@@ -2,11 +2,10 @@ package com.toroidalworld.engine.noise;
 
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WrapDomain;
-import com.toroidalworld.engine.noise.GenerationTransformerContext.Context;
 
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.levelgen.synth.PerlinNoise;
+import net.minecraft.world.level.levelgen.synth.GradientNoise;
 
 public final class PeriodicNoiseSampler {
     static final int[][] GRADIENT = {
@@ -32,19 +31,32 @@ public final class PeriodicNoiseSampler {
 
     static final long HELD_PERIOD = -1L;
 
-    public static double sample(byte[] permutations, double xOffset, double yOffset, double zOffset,
-            WorldFold transformer, Context context,
-            double x, double y, double z, double yScale, double yFudge) {
-        return sample(permutations, xOffset, yOffset, zOffset, transformer, context, x, y, z, yScale, yFudge,
+    static final double NO_FUDGE = 0.0;
+
+    private static final float FUDGE_EPSILON = 1.0E-7F;
+
+    public static float sample(byte[] permutations, double xOffset, double yOffset, double zOffset,
+            WorldFold transformer, NoiseFrame frame, double scale, double x, double y, double z) {
+        return sample(permutations, xOffset, yOffset, zOffset, transformer, frame, scale, x, y, z, y, NO_FUDGE,
                 LapFloor.of(transformer));
     }
 
-    static double sample(byte[] permutations, double xOffset, double yOffset, double zOffset,
-            WorldFold transformer, Context context,
-            double x, double y, double z, double yScale, double yFudge, LapFloor floor) {
-        SlotAxes axes = context.slotAxes();
-        double scale = context.horizontalScale();
+    public static float sampleSmeared(byte[] permutations, double xOffset, double yOffset, double zOffset,
+            WorldFold transformer, NoiseFrame frame, double scale, double x, double y, double z,
+            double originalY, double fudgeYScale) {
+        return sample(permutations, xOffset, yOffset, zOffset, transformer, frame, scale, x, y, z, originalY,
+                fudgeYScale, LapFloor.of(transformer));
+    }
 
+    static float sample(byte[] permutations, double xOffset, double yOffset, double zOffset,
+            WorldFold transformer, NoiseFrame frame, double scale, double x, double y, double z, LapFloor floor) {
+        return sample(permutations, xOffset, yOffset, zOffset, transformer, frame, scale, x, y, z, y, NO_FUDGE,
+                floor);
+    }
+
+    private static float sample(byte[] permutations, double xOffset, double yOffset, double zOffset,
+            WorldFold transformer, NoiseFrame frame, double scale, double x, double y, double z,
+            double originalY, double fudgeYScale, LapFloor floor) {
         long xPeriod;
         long yPeriod;
         long zPeriod;
@@ -53,7 +65,7 @@ public final class PeriodicNoiseSampler {
         double zs;
         double correction = 1.0;
         double anchor = 0.0;
-        if (axes == SlotAxes.DEFAULT && context.xDivisor() == 1.0 && context.zDivisor() == 1.0) {
+        if (frame.isDefault()) {
             WrapDomain xDomain = transformer.blockDomain(Direction.Axis.X);
             WrapDomain zDomain = transformer.blockDomain(Direction.Axis.Z);
             xPeriod = period(xDomain, scale, floor);
@@ -63,7 +75,7 @@ public final class PeriodicNoiseSampler {
             ys = y + yOffset;
             zs = foldAndScale(zDomain, zPeriod, scale, z) + zOffset;
 
-            double verticalShare = context.verticalShare();
+            double verticalShare = frame.verticalShare();
             correction = OctaveVarianceCorrection.factor(xDomain, zDomain, scale, verticalShare);
 
             double anchorGain = OctaveVarianceCorrection.anchorGain(xDomain, zDomain, scale, verticalShare);
@@ -72,12 +84,13 @@ public final class PeriodicNoiseSampler {
                         xOffset, yOffset, zOffset);
             }
         } else {
+            SlotAxes axes = frame.axes();
             WrapDomain xDomain = axes.x().domainOf(transformer);
             WrapDomain yDomain = axes.y().domainOf(transformer);
             WrapDomain zDomain = axes.z().domainOf(transformer);
-            double xSlotScale = scale / axes.x().divisorIn(context);
-            double ySlotScale = scale / axes.y().divisorIn(context);
-            double zSlotScale = scale / axes.z().divisorIn(context);
+            double xSlotScale = scale / axes.x().divisorIn(frame);
+            double ySlotScale = scale / axes.y().divisorIn(frame);
+            double zSlotScale = scale / axes.z().divisorIn(frame);
             xPeriod = period(xDomain, xSlotScale, floor);
             yPeriod = period(yDomain, ySlotScale, floor);
             zPeriod = period(zDomain, zSlotScale, floor);
@@ -89,32 +102,32 @@ public final class PeriodicNoiseSampler {
         int xCell = Mth.floor(xs);
         int yCell = Mth.floor(ys);
         int zCell = Mth.floor(zs);
-        double xFrac = xs - xCell;
-        double yFrac = ys - yCell;
-        double zFrac = zs - zCell;
-
-        double yFracFudge;
-        if (yScale != 0.0) {
-            double fudgeLimit = yFudge >= 0.0 && yFudge < yFrac ? yFudge : yFrac;
-            yFracFudge = Mth.floor(fudgeLimit / yScale + 1.0E-7F) * yScale;
-        } else {
-            yFracFudge = 0.0;
-        }
-
-        return correction * sampleAndLerp(permutations, xCell, yCell, zCell, xFrac, yFrac - yFracFudge, zFrac,
-                yFrac, xPeriod, yPeriod, zPeriod) + anchor;
+        float xFrac = (float) (xs - xCell);
+        double yRelative = ys - yCell;
+        float zFrac = (float) (zs - zCell);
+        float yFracFudged = fudgeYScale == NO_FUDGE
+                ? (float) yRelative
+                : (float) (yRelative - fudgeY(originalY, yRelative, fudgeYScale));
+        float noise = sampleAndLerp(permutations, xCell, yCell, zCell, xFrac, yFracFudged, zFrac,
+                (float) yRelative, xPeriod, yPeriod, zPeriod);
+        return (float) (correction * noise) + (float) anchor;
     }
 
-    private static double anchorSample(byte[] permutations, WrapDomain xDomain, WrapDomain zDomain,
+    private static double fudgeY(double originalY, double yRelative, double fudgeYScale) {
+        double fudgeLimit = originalY >= 0.0 && originalY < yRelative ? originalY : yRelative;
+        return Mth.floor(fudgeLimit / fudgeYScale + FUDGE_EPSILON) * fudgeYScale;
+    }
+
+    private static float anchorSample(byte[] permutations, WrapDomain xDomain, WrapDomain zDomain,
             long xPeriod, long zPeriod, double scale, double xOffset, double yOffset, double zOffset) {
         double xs = foldAndScale(xDomain, xPeriod, scale, 0.0) + xOffset;
         double zs = foldAndScale(zDomain, zPeriod, scale, 0.0) + zOffset;
         int xCell = Mth.floor(xs);
         int zCell = Mth.floor(zs);
         int yCell = Mth.floor(yOffset);
-        double yFrac = yOffset - yCell;
-        return sampleAndLerp(permutations, xCell, yCell, zCell, xs - xCell, yFrac, zs - zCell, yFrac,
-                xPeriod, UNBOUNDED_PERIOD, zPeriod);
+        float yFrac = (float) (yOffset - yCell);
+        return sampleAndLerp(permutations, xCell, yCell, zCell, (float) (xs - xCell), yFrac, (float) (zs - zCell),
+                yFrac, xPeriod, UNBOUNDED_PERIOD, zPeriod);
     }
 
     // A slot carrying no world axis arrives already scaled by its caller, so scaling it again would move the lattice.
@@ -137,7 +150,7 @@ public final class PeriodicNoiseSampler {
 
     static double foldAndScale(WrapDomain domain, long period, double scale, double coord) {
         return period == UNBOUNDED_PERIOD
-                ? PerlinNoise.wrap(coord * scale)
+                ? GradientNoise.wrap(coord * scale)
                 : folded(domain, period, coord);
     }
 
@@ -149,8 +162,8 @@ public final class PeriodicNoiseSampler {
         return period == HELD_PERIOD ? 0.0 : domain.wrap(coord) * ((double) period / domain.domainLength);
     }
 
-    private static double sampleAndLerp(byte[] permutations, int xCell, int yCell, int zCell,
-            double xFrac, double yFracFudged, double zFrac, double yFracOriginal,
+    private static float sampleAndLerp(byte[] permutations, int xCell, int yCell, int zCell,
+            float xFrac, float yFracFudged, float zFrac, float yFracOriginal,
             long xPeriod, long yPeriod, long zPeriod) {
         int x0 = p(permutations, wrapCell(xCell, xPeriod));
         int x1 = p(permutations, wrapCell(xCell + 1L, xPeriod));
@@ -162,17 +175,17 @@ public final class PeriodicNoiseSampler {
         int xy11 = p(permutations, x1 + y1);
         long z0 = wrapCell(zCell, zPeriod);
         long z1 = wrapCell(zCell + 1L, zPeriod);
-        double d000 = gradDot(p(permutations, xy00 + z0), xFrac, yFracFudged, zFrac);
-        double d100 = gradDot(p(permutations, xy10 + z0), xFrac - 1.0, yFracFudged, zFrac);
-        double d010 = gradDot(p(permutations, xy01 + z0), xFrac, yFracFudged - 1.0, zFrac);
-        double d110 = gradDot(p(permutations, xy11 + z0), xFrac - 1.0, yFracFudged - 1.0, zFrac);
-        double d001 = gradDot(p(permutations, xy00 + z1), xFrac, yFracFudged, zFrac - 1.0);
-        double d101 = gradDot(p(permutations, xy10 + z1), xFrac - 1.0, yFracFudged, zFrac - 1.0);
-        double d011 = gradDot(p(permutations, xy01 + z1), xFrac, yFracFudged - 1.0, zFrac - 1.0);
-        double d111 = gradDot(p(permutations, xy11 + z1), xFrac - 1.0, yFracFudged - 1.0, zFrac - 1.0);
-        double xAlpha = Mth.smoothstep(xFrac);
-        double yAlpha = Mth.smoothstep(yFracOriginal);
-        double zAlpha = Mth.smoothstep(zFrac);
+        float d000 = gradDot(p(permutations, xy00 + z0), xFrac, yFracFudged, zFrac);
+        float d100 = gradDot(p(permutations, xy10 + z0), xFrac - 1.0F, yFracFudged, zFrac);
+        float d010 = gradDot(p(permutations, xy01 + z0), xFrac, yFracFudged - 1.0F, zFrac);
+        float d110 = gradDot(p(permutations, xy11 + z0), xFrac - 1.0F, yFracFudged - 1.0F, zFrac);
+        float d001 = gradDot(p(permutations, xy00 + z1), xFrac, yFracFudged, zFrac - 1.0F);
+        float d101 = gradDot(p(permutations, xy10 + z1), xFrac - 1.0F, yFracFudged, zFrac - 1.0F);
+        float d011 = gradDot(p(permutations, xy01 + z1), xFrac, yFracFudged - 1.0F, zFrac - 1.0F);
+        float d111 = gradDot(p(permutations, xy11 + z1), xFrac - 1.0F, yFracFudged - 1.0F, zFrac - 1.0F);
+        float xAlpha = Mth.smoothstep(xFrac);
+        float yAlpha = Mth.smoothstep(yFracOriginal);
+        float zAlpha = Mth.smoothstep(zFrac);
         return Mth.lerp3(xAlpha, yAlpha, zAlpha, d000, d100, d010, d110, d001, d101, d011, d111);
     }
 
@@ -188,7 +201,7 @@ public final class PeriodicNoiseSampler {
         return permutations[(int) (index & 0xFFL)] & 0xFF;
     }
 
-    private static double gradDot(int hash, double x, double y, double z) {
+    private static float gradDot(int hash, float x, float y, float z) {
         int[] gradient = GRADIENT[hash & 15];
         return gradient[0] * x + gradient[1] * y + gradient[2] * z;
     }

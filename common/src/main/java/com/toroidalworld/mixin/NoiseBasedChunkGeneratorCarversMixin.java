@@ -15,7 +15,7 @@ import net.minecraft.world.level.levelgen.WorldgenRandom;
 @Mixin(NoiseBasedChunkGenerator.class)
 public class NoiseBasedChunkGeneratorCarversMixin {
     @WrapOperation(
-            method = "applyCarvers",
+            method = "generateCarvers",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/level/levelgen/WorldgenRandom;setLargeFeatureSeed(JII)V"))

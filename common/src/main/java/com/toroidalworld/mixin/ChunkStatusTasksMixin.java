@@ -28,9 +28,7 @@ public class ChunkStatusTasksMixin {
                     "generateStructureStarts",
                     "generateStructureReferences",
                     "generateBiomes",
-                    "generateNoise",
-                    "generateSurface",
-                    "generateCarvers",
+                    "buildTerrain",
                     "generateFeatures",
                     "generateSpawn",
                     "initializeLight",
@@ -51,7 +49,7 @@ public class ChunkStatusTasksMixin {
                 () -> original.call(context, step, chunks, chunk));
     }
 
-    @ModifyReturnValue(method = "generateCarvers", at = @At("RETURN"))
+    @ModifyReturnValue(method = "buildTerrain", at = @At("RETURN"))
     private static CompletableFuture<ChunkAccess> toroidal$sweepFloatingCrumbs(
             CompletableFuture<ChunkAccess> original,
             WorldGenContext context,

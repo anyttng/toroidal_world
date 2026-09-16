@@ -1,20 +1,16 @@
 package com.toroidalworld.shape.torus;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.toroidalworld.accessors.CoastLiftCache;
 import com.toroidalworld.api.v1.ToroidalShape;
 import com.toroidalworld.api.v1.gen.GenerationHooks;
 import com.toroidalworld.api.v1.option.GenerationOptions;
-import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
 
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.levelgen.DensityFunction;
-import net.minecraft.world.level.levelgen.DensityFunction.NoiseHolder;
 import net.minecraft.world.level.levelgen.NoiseRouter;
 import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.densityfunction.DensitySampler;
+import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
 
 public final class CoastFieldLift {
     static final long LAND_FLOOR_BLOCKS = 4096L;
@@ -40,60 +36,42 @@ public final class CoastFieldLift {
             return;
         }
 
-        WorldFold fold = GenerationTransformerContext.context().routerBuildTransformer();
-        if (fold == null) {
+        if (GenerationTransformerContext.context().routerBuildTransformer() == null) {
             return;
         }
 
         int xLength = shape.widthBlocks(Direction.Axis.X);
         int zLength = shape.widthBlocks(Direction.Axis.Z);
 
-        List<CoastLiftCache> coasts = coastNoises(randomState.router());
-        if (coasts.isEmpty()) {
+        NoiseRouter router = randomState.router;
+        if (DensityNoises.matching(router.continents(), CoastFields::isCoast).isEmpty()) {
             return;
         }
 
-        DensityFunction density = randomState.router().finalDensity();
+        CoastLiftCache lift = (CoastLiftCache) (Object) randomState;
+        DensitySampler density = randomState.getSampler(router.finalDensity());
         int stride = Math.max(STRIDE_BLOCKS, Math.max(xLength, zLength) / GRID_CAP);
         int xGrid = Math.max(1, xLength / stride);
         int zGrid = Math.max(1, zLength / stride);
         long cellBlocks = (long) stride * stride;
 
         for (double candidate : CANDIDATES) {
-            apply(coasts, candidate);
-            long patch = GenerationTransformerContext.withTransformer(fold,
-                    () -> largestPatch(density, seaLevel, stride, xGrid, zGrid)) * cellBlocks;
+            lift.toroidal$coastLift(candidate);
+            long patch = largestPatch(density, seaLevel, stride, xGrid, zGrid) * cellBlocks;
             if (patch >= LAND_FLOOR_BLOCKS) {
                 return;
             }
         }
 
-        apply(coasts, CANDIDATES[CANDIDATES.length - 1]);
+        lift.toroidal$coastLift(CANDIDATES[CANDIDATES.length - 1]);
     }
 
-    private static void apply(List<CoastLiftCache> coasts, double lift) {
-        for (CoastLiftCache coast : coasts) {
-            coast.toroidal$coastLift(lift);
-        }
-    }
-
-    private static List<CoastLiftCache> coastNoises(NoiseRouter router) {
-        List<CoastLiftCache> coasts = new ArrayList<>();
-        for (NoiseHolder noise : DensityNoises.matching(router.continents(), CoastFields::isCoast)) {
-            if (noise.noise() instanceof CoastLiftCache coast) {
-                coasts.add(coast);
-            }
-        }
-
-        return coasts;
-    }
-
-    private static int largestPatch(DensityFunction density, int seaLevel, int stride, int xGrid, int zGrid) {
+    private static int largestPatch(DensitySampler density, int seaLevel, int stride, int xGrid, int zGrid) {
         boolean[] land = new boolean[xGrid * zGrid];
         for (int ix = 0; ix < xGrid; ix++) {
             for (int iz = 0; iz < zGrid; iz++) {
-                land[ix * zGrid + iz] = density.compute(
-                        new DensityFunction.SinglePointContext(ix * stride, seaLevel, iz * stride)) > 0.0;
+                land[ix * zGrid + iz] = density.sampleValue(
+                        SamplerContext.EMPTY_UNCACHED, ix * stride, seaLevel, iz * stride) > 0.0F;
             }
         }
 

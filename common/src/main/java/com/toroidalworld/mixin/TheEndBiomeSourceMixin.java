@@ -16,7 +16,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.biome.TheEndBiomeSource;
-import net.minecraft.world.level.levelgen.DensityFunction;
 
 @Mixin(TheEndBiomeSource.class)
 public class TheEndBiomeSourceMixin {
@@ -60,7 +59,7 @@ public class TheEndBiomeSourceMixin {
 
         int erosionBlockX = (chunkX * 2 + 1) * 8;
         int erosionBlockZ = (chunkZ * 2 + 1) * 8;
-        double heightValue = sampler.erosion().compute(new DensityFunction.SinglePointContext(erosionBlockX, blockY, erosionBlockZ));
+        double heightValue = sampler.erosion().sampleValue(erosionBlockX, blockY, erosionBlockZ);
         if (heightValue > 0.25) {
             return this.highlands;
         }

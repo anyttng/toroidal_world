@@ -1,21 +1,19 @@
 package com.toroidalworld.engine.noise;
 
-import java.util.ArrayDeque;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
+
+import com.toroidalworld.core.DensityFunctionNodes;
 
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.dimension.DimensionType;
-import net.minecraft.world.level.levelgen.DensityFunction;
-import net.minecraft.world.level.levelgen.DensityFunctions;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.NoiseRouter;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunction;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunctions;
+import net.minecraft.world.level.levelgen.densityfunction.op.BinaryFunction;
 
 public final class TerrainCeiling {
     private static final String VANILLA_NAMESPACE = "minecraft";
@@ -26,9 +24,13 @@ public final class TerrainCeiling {
 
     private static final double BLOCKS_PER_DENSITY_UNIT = 128.0;
 
-    private static final double RAMP_BLOCKS = 16.0;
+    private static final float RAMP_BLOCKS = 16.0F;
 
-    private static final double PENALTY = 0.25;
+    private static final float PENALTY = 0.25F;
+
+    private static final int CELL_WIDTH = 4;
+
+    private static final int CELL_HEIGHT = 8;
 
     @SuppressWarnings("deprecation")
     public static NoiseGeneratorSettings withCeiling(NoiseGeneratorSettings settings) {
@@ -40,13 +42,13 @@ public final class TerrainCeiling {
                         settings.defaultBlock(),
                         settings.defaultFluid(),
                         ceilinged,
-                        settings.surfaceRule(),
+                        settings.materialRule(),
                         settings.spawnTarget(),
                         settings.seaLevel(),
                         settings.disableMobGeneration(),
-                        settings.aquifersEnabled(),
-                        settings.oreVeinsEnabled(),
-                        settings.useLegacyRandomSource());
+                        settings.aquifers(),
+                        settings.useLegacyRandomSource(),
+                        settings.debugFunctions());
     }
 
     public static @Nullable DensityFunction ceiling(NoiseGeneratorSettings settings) {
@@ -54,7 +56,7 @@ public final class TerrainCeiling {
     }
 
     private static @Nullable DensityFunction ceilingOf(NoiseRouter source) {
-        DensityFunctions.TwoArgumentSimpleFunction jaggedness = jaggednessProduct(source.finalDensity());
+        BinaryFunction jaggedness = jaggednessProduct(source.finalDensity());
         if (jaggedness == null) {
             return null;
         }
@@ -65,21 +67,19 @@ public final class TerrainCeiling {
             return null;
         }
 
-        DensityFunction noise = spline == jaggedness.argument1()
-                ? jaggedness.argument2()
-                : jaggedness.argument1();
-        double lift = BLOCKS_PER_DENSITY_UNIT * noise.maxValue();
+        DensityFunction noise = spline == jaggedness.left() ? jaggedness.right() : jaggedness.left();
+        double lift = BLOCKS_PER_DENSITY_UNIT * noise.range().max();
         if (!Double.isFinite(lift)) {
             return null;
         }
 
-        DensityFunction nonNegativeSpline = spline.minValue() < 0.0
+        DensityFunction nonNegativeSpline = spline.range().min() < 0.0F
                 ? DensityFunctions.max(spline, DensityFunctions.zero())
                 : spline;
-        DensityFunction headroom = DensityFunctions.mul(DensityFunctions.constant(lift), nonNegativeSpline);
+        DensityFunction headroom = DensityFunctions.mul(DensityFunctions.constant((float) lift), nonNegativeSpline);
         return DensityFunctions.add(
-                DensityFunctions.add(DensityFunctions.flatCache(source.preliminarySurfaceLevel()),
-                        DensityFunctions.constant(base)),
+                DensityFunctions.add(DensityFunctions.cache(source.chunkSurfaceLevel()),
+                        DensityFunctions.constant(base.floatValue())),
                 headroom);
     }
 
@@ -89,33 +89,25 @@ public final class TerrainCeiling {
             return source;
         }
 
-        DensityFunction aboveCeiling = DensityFunctions.add(worldY(),
-                DensityFunctions.mul(DensityFunctions.constant(-1.0), ceiling));
+        DensityFunction aboveCeiling = DensityFunctions.sub(worldY(), ceiling);
         DensityFunction ramp = DensityFunctions
-                .mul(DensityFunctions.interpolated(aboveCeiling), DensityFunctions.constant(1.0 / RAMP_BLOCKS))
-                .clamp(0.0, 1.0);
-
+                .mul(DensityFunctions.interpolated(aboveCeiling, CELL_WIDTH, CELL_HEIGHT),
+                        DensityFunctions.constant(1.0F / RAMP_BLOCKS))
+                .clamp(0.0F, 1.0F);
         return withFinalDensity(source, DensityFunctions.add(source.finalDensity(),
                 DensityFunctions.mul(ramp, DensityFunctions.constant(-PENALTY))));
     }
 
     private static NoiseRouter withFinalDensity(NoiseRouter source, DensityFunction finalDensity) {
         return new NoiseRouter(
-                source.barrierNoise(),
-                source.fluidLevelFloodednessNoise(),
-                source.fluidLevelSpreadNoise(),
-                source.lavaNoise(),
                 source.temperature(),
                 source.vegetation(),
                 source.continents(),
                 source.erosion(),
                 source.depth(),
                 source.ridges(),
-                source.preliminarySurfaceLevel(),
-                finalDensity,
-                source.veinToggle(),
-                source.veinRidged(),
-                source.veinGap());
+                source.chunkSurfaceLevel(),
+                finalDensity);
     }
 
     private static DensityFunction worldY() {
@@ -124,38 +116,14 @@ public final class TerrainCeiling {
         return DensityFunctions.yClampedGradient(belowBottom, aboveTop, belowBottom, aboveTop);
     }
 
-    private static DensityFunctions.@Nullable TwoArgumentSimpleFunction jaggednessProduct(DensityFunction root) {
-        Deque<DensityFunction> pending = new ArrayDeque<>();
-        Set<DensityFunction> seen = Collections.newSetFromMap(new IdentityHashMap<>());
-        pending.add(root);
-        seen.add(root);
-
-        while (!pending.isEmpty()) {
-            DensityFunction node = pending.remove();
-            if (node instanceof DensityFunctions.TwoArgumentSimpleFunction candidate
-                    && candidate.type() == DensityFunctions.TwoArgumentSimpleFunction.Type.MUL
-                    && (isJaggedness(candidate.argument1()) || isJaggedness(candidate.argument2()))) {
-                return candidate;
-            }
-
-            if (node instanceof DensityFunctions.HolderHolder(Holder<DensityFunction> holder) && !holder.isBound()) {
-                continue;
-            }
-
-            node.mapChildren(child -> {
-                if (seen.add(child)) {
-                    pending.add(child);
-                }
-
-                return child;
-            });
-        }
-
-        return null;
+    private static @Nullable BinaryFunction jaggednessProduct(DensityFunction root) {
+        return (BinaryFunction) DensityFunctionNodes.first(root, node -> node instanceof BinaryFunction candidate
+                && candidate.type() == BinaryFunction.Type.MUL
+                && (isJaggedness(candidate.left()) || isJaggedness(candidate.right())));
     }
 
-    private static DensityFunction jaggednessSpline(DensityFunctions.TwoArgumentSimpleFunction product) {
-        return isJaggedness(product.argument1()) ? product.argument1() : product.argument2();
+    private static DensityFunction jaggednessSpline(BinaryFunction product) {
+        return isJaggedness(product.left()) ? product.left() : product.right();
     }
 
     private static boolean isJaggedness(DensityFunction function) {

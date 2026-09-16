@@ -2,7 +2,6 @@ package com.toroidalworld.engine.noise;
 
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WrapDomain;
-import com.toroidalworld.engine.noise.GenerationTransformerContext.Context;
 
 import net.minecraft.core.Direction;
 
@@ -29,10 +28,10 @@ public enum SlotAxis {
         };
     }
 
-    public double divisorIn(Context context) {
+    public double divisorIn(NoiseFrame frame) {
         return switch (this) {
-            case X -> context.xDivisor();
-            case Z -> context.zDivisor();
+            case X -> frame.xDivisor();
+            case Z -> frame.zDivisor();
             case NONE -> NoiseConstants.UNDIVIDED;
         };
     }

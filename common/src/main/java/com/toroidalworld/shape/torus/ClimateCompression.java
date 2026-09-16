@@ -1,14 +1,21 @@
 package com.toroidalworld.shape.torus;
 
+import java.util.Collections;
+
 import com.toroidalworld.accessors.ClimateCompressionCache;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.engine.noise.ClimateScaleCompression;
 
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
-import net.minecraft.world.level.levelgen.DensityFunction;
+import net.minecraft.core.Holder;
+import net.minecraft.world.level.levelgen.synth.NoiseStack;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
 
 public final class ClimateCompression {
+    private static final double UNMODIFIED_AMPLITUDE = 1.0;
+
+    private static final double LN_2 = Math.log(2.0);
 
     public record Resolved(WorldFold fold, double baseScale, double verticalShare, double factor) {
         boolean covers(WorldFold fold, double baseScale, double verticalShare) {
@@ -28,9 +35,27 @@ public final class ClimateCompression {
         return resolved.factor();
     }
 
-    public static double warpDivisor(DensityFunction.NoiseHolder noise, WorldFold fold, double xzScale,
+    public static double warpDivisor(Holder<NormalNoise> noise, WorldFold fold, double xzScale,
             double verticalShare) {
-        return xzScale * factorOf(noise, fold, xzScale, verticalShare);
+        return xzScale * factor(fold, noise, xzScale, verticalShare);
+    }
+
+    public static double[] layerFactors(WorldFold fold, Holder<NormalNoise> noise, NoiseStack stack,
+            double baseScale, double verticalShare) {
+        NoiseStack.Layer[] layers = stack.layers;
+        double[] factors = new double[layers.length];
+        for (int i = 0; i < layers.length; i++) {
+            factors[i] = factor(fold, noise, baseScale * detuneOf(layers[i].frequency()), verticalShare);
+        }
+
+        return factors;
+    }
+
+    public static double factor(WorldFold fold, Holder<NormalNoise> noise, double baseScale, double verticalShare) {
+        NormalNoise.Parameters parameters = noise.value().parameters;
+        boolean climateField = noise.unwrapKey().filter(ClimateFields::isClimate).isPresent();
+        return factor(fold, climateField, octaveAmplitudes(parameters), Math.pow(2.0, parameters.baseOctave()),
+                baseScale, verticalShare);
     }
 
     public static double factor(WorldFold fold, boolean climateField, DoubleList amplitudes,
@@ -55,13 +80,14 @@ public final class ClimateCompression {
                 : fitted;
     }
 
-    private static double factorOf(DensityFunction.NoiseHolder noise, WorldFold fold, double baseScale,
-            double verticalShare) {
-        NormalNoise.NoiseParameters parameters = noise.noiseData().value();
-        boolean climateField = noise.noiseData().unwrapKey().filter(ClimateFields::isClimate).isPresent();
+    private static DoubleList octaveAmplitudes(NormalNoise.Parameters parameters) {
+        return parameters.amplitudeModifiers().isEmpty()
+                ? new DoubleArrayList(Collections.nCopies(parameters.octaveCount(), UNMODIFIED_AMPLITUDE))
+                : parameters.amplitudeModifiers();
+    }
 
-        return factor(fold, climateField, parameters.amplitudes(), Math.pow(2.0, parameters.firstOctave()),
-                baseScale, verticalShare);
+    private static double detuneOf(double frequency) {
+        return frequency / Math.pow(2.0, Math.round(Math.log(frequency) / LN_2));
     }
 
     private ClimateCompression() {

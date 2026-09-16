@@ -17,9 +17,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.NoiseColumn;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeResolver;
 import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
 
 public final class PeriodicityCheck {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -60,17 +62,18 @@ public final class PeriodicityCheck {
                 int lapAwayQuartX = QuartPos.fromBlock(xLapAway);
                 int lapAwayQuartZ = QuartPos.fromBlock(zLapAway);
 
-                Climate.Sampler sampler = randomState.sampler();
+                Climate.Sampler sampler = randomState.createClimateSampler(SamplerContext.EMPTY_UNCACHED);
                 Climate.TargetPoint climateHere = GenerationTransformerContext.withTransformer(transformer,
                         () -> sampler.sample(quartX, quartY, quartZ));
                 Climate.TargetPoint climateLapAway = GenerationTransformerContext.withTransformer(transformer,
                         () -> sampler.sample(lapAwayQuartX, quartY, lapAwayQuartZ));
                 broken |= collectClimate(brokenFields, climateHere, climateLapAway);
 
+                BiomeResolver biomes = generator.getBiomeSource().createResolver(sampler);
                 Holder<Biome> biomeHere = GenerationTransformerContext.withTransformer(transformer,
-                        () -> generator.getBiomeSource().getNoiseBiome(quartX, quartY, quartZ, sampler));
+                        () -> biomes.getNoiseBiome(quartX, quartY, quartZ));
                 Holder<Biome> biomeLapAway = GenerationTransformerContext.withTransformer(transformer,
-                        () -> generator.getBiomeSource().getNoiseBiome(lapAwayQuartX, quartY, lapAwayQuartZ, sampler));
+                        () -> biomes.getNoiseBiome(lapAwayQuartX, quartY, lapAwayQuartZ));
                 if (!biomeHere.equals(biomeLapAway)) {
                     brokenFields.add("biome");
                     broken = true;

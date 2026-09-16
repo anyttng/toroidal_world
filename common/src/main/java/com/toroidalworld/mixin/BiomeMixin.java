@@ -1,33 +1,45 @@
 package com.toroidalworld.mixin;
 
-import org.spongepowered.asm.mixin.Final;
+import java.util.function.Supplier;
+
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WorldLoopAttachments;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
-import com.toroidalworld.engine.noise.GenerationTransformerContext.Context;
 import com.toroidalworld.engine.noise.NoiseConstants;
+import com.toroidalworld.engine.noise.PeriodicSimplexSampler;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 
-import java.util.function.Supplier;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.levelgen.synth.PerlinSimplexNoise;
+import net.minecraft.world.level.levelgen.synth.Noise;
+import net.minecraft.world.level.levelgen.synth.NoiseStack;
+import net.minecraft.world.level.levelgen.synth.SimplexNoise;
 
 @Mixin(Biome.class)
 public class BiomeMixin {
-    @Shadow
-    @Final
-    private static PerlinSimplexNoise FROZEN_TEMPERATURE_NOISE;
+    @Unique
+    private static final String toroidal$GET_HEIGHT_ADJUSTED_TEMPERATURE =
+            "getHeightAdjustedTemperature(Lnet/minecraft/core/BlockPos;I)F";
+
+    @Unique
+    private static final float toroidal$LARGE_VARIATION_AMPLITUDE = 7.0F;
+
+    @Unique
+    private static final double toroidal$ICE_PATCH_THRESHOLD = 0.3;
+
+    @Unique
+    private static final double toroidal$SMALL_VARIATION_THRESHOLD = 0.8;
+
+    @Unique
+    private static final float toroidal$ICE_PATCH_TEMPERATURE = 0.2F;
 
     @WrapMethod(method = "shouldFreeze(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;Z)Z")
     private boolean toroidal$freezeThroughSeam(
@@ -51,7 +63,7 @@ public class BiomeMixin {
     }
 
     @WrapOperation(
-            method = "getHeightAdjustedTemperature",
+            method = toroidal$GET_HEIGHT_ADJUSTED_TEMPERATURE,
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/level/biome/Biome$TemperatureModifier;modifyTemperature(Lnet/minecraft/core/BlockPos;F)F"))
@@ -61,35 +73,27 @@ public class BiomeMixin {
             return original.call(modifier, pos, baseTemperature);
         }
 
-        Context generation = GenerationTransformerContext.context();
-        if (generation.wrappedTransformer() == null) {
+        WorldFold transformer = GenerationTransformerContext.context().wrappedTransformer();
+        if (transformer == null) {
             return original.call(modifier, pos, baseTemperature);
         }
 
-        return toroidal$frozenPatchTemperature(generation, pos, baseTemperature);
+        return toroidal$frozenPatchTemperature(transformer, pos, baseTemperature);
     }
 
     @SuppressWarnings("removal")
     @Unique
-    private float toroidal$frozenPatchTemperature(Context generation, BlockPos pos, float baseTemperature) {
-        double groundValueLargeVariation;
-        try (Context.ScaleScope _ = generation.withScale(NoiseConstants.FROZEN_TEMPERATURE_SCALE)) {
-            groundValueLargeVariation = FROZEN_TEMPERATURE_NOISE.getValue(pos.getX(), pos.getZ(), false) * 7.0;
-        }
-
-        double groundValueEdgeVariation;
-        try (Context.ScaleScope _ = generation.withScale(NoiseConstants.BIOME_INFO_EDGE_SCALE)) {
-            groundValueEdgeVariation = Biome.BIOME_INFO_NOISE.getValue(pos.getX(), pos.getZ(), false);
-        }
-
-        if (groundValueLargeVariation + groundValueEdgeVariation < 0.3) {
-            double groundValueSmallVariation;
-            try (Context.ScaleScope _ = generation.withScale(NoiseConstants.BIOME_INFO_PATCH_SCALE)) {
-                groundValueSmallVariation = Biome.BIOME_INFO_NOISE.getValue(pos.getX(), pos.getZ(), false);
-            }
-
-            if (groundValueSmallVariation < 0.8) {
-                return 0.2F;
+    private static float toroidal$frozenPatchTemperature(WorldFold transformer, BlockPos pos, float baseTemperature) {
+        double largeVariation = PeriodicSimplexSampler.sampleStack(transformer, NoiseConstants.FROZEN_TEMPERATURE_SCALE,
+                (NoiseStack) Biome.FROZEN_TEMPERATURE_NOISE, pos.getX(), pos.getZ()) * toroidal$LARGE_VARIATION_AMPLITUDE;
+        SimplexNoise biomeInfo = (SimplexNoise) Biome.BIOME_INFO_NOISE;
+        double edgeVariation = PeriodicSimplexSampler.sample(biomeInfo, transformer,
+                NoiseConstants.BIOME_INFO_EDGE_SCALE, pos.getX(), pos.getZ());
+        if (largeVariation + edgeVariation < toroidal$ICE_PATCH_THRESHOLD) {
+            double smallVariation = PeriodicSimplexSampler.sample(biomeInfo, transformer,
+                    NoiseConstants.BIOME_INFO_PATCH_SCALE, pos.getX(), pos.getZ());
+            if (smallVariation < toroidal$SMALL_VARIATION_THRESHOLD) {
+                return toroidal$ICE_PATCH_TEMPERATURE;
             }
         }
 
@@ -97,24 +101,16 @@ public class BiomeMixin {
     }
 
     @WrapOperation(
-            method = "getHeightAdjustedTemperature",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/levelgen/synth/PerlinSimplexNoise;getValue(DDZ)D"))
-    private double toroidal$rawCoordinateHeightNoise(
-            PerlinSimplexNoise noise,
-            double x,
-            double z,
-            boolean useNoiseStart,
-            Operation<Double> original,
+            method = toroidal$GET_HEIGHT_ADJUSTED_TEMPERATURE,
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/levelgen/synth/Noise;get(DD)F"))
+    private float toroidal$rawCoordinateHeightNoise(Noise noise, double x, double z, Operation<Float> original,
             @Local(argsOnly = true) BlockPos pos) {
-        Context generation = GenerationTransformerContext.context();
-        if (generation.wrappedTransformer() == null) {
-            return original.call(noise, x, z, useNoiseStart);
+        WorldFold transformer = GenerationTransformerContext.context().wrappedTransformer();
+        if (transformer == null) {
+            return original.call(noise, x, z);
         }
 
-        try (Context.ScaleScope _ = generation.withScale(NoiseConstants.HEIGHT_TEMPERATURE_SCALE)) {
-            return original.call(noise, (double) pos.getX(), (double) pos.getZ(), useNoiseStart);
-        }
+        return PeriodicSimplexSampler.sample((SimplexNoise) noise, transformer, NoiseConstants.HEIGHT_TEMPERATURE_SCALE,
+                pos.getX(), pos.getZ());
     }
 }
