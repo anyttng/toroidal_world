@@ -9,6 +9,7 @@ import com.toroidalworld.api.v1.client.WorldOptionContext;
 import com.toroidalworld.api.v1.client.WorldOptionControl;
 import com.toroidalworld.api.v1.client.WorldOptionControls;
 import com.toroidalworld.client.shape.LoopSettingsScreen;
+import com.toroidalworld.client.shape.LoopSizeControls;
 import com.toroidalworld.api.v1.option.GenerationOptions;
 import com.toroidalworld.api.v1.shape.LoopSpans;
 import com.toroidalworld.shape.torus.TorusSettings;
@@ -19,6 +20,7 @@ import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.layouts.LayoutSettings;
 import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 
 public class TorusSettingsScreen extends LoopSettingsScreen<TorusSettings> {
@@ -31,7 +33,8 @@ public class TorusSettingsScreen extends LoopSettingsScreen<TorusSettings> {
     private final List<WorldOptionControl> optionControls;
 
     public TorusSettingsScreen(Screen parent, TorusSettings current, Consumer<TorusSettings> onDone) {
-        super(TITLE, parent, current.chunkWidth(), current.netherScale(), current.endChunkWidth(),
+        super(TITLE, parent, onChange -> LoopSizeControls.perAxis(current.chunkWidth(Direction.Axis.X),
+                current.chunkWidth(Direction.Axis.Z), current.netherScale(), current.endChunkWidth(), onChange),
                 onDone);
         this.generationOptions = current.generationOptions();
         this.optionControls = WorldOptionControls.createAll(new ScreenContext());
@@ -68,7 +71,8 @@ public class TorusSettingsScreen extends LoopSettingsScreen<TorusSettings> {
         }
 
         return new TorusSettings(
-                LoopSpans.ofWidth(this.controls.effectiveSize()),
+                LoopSpans.ofWidths(this.controls.effectiveSize(Direction.Axis.X),
+                        this.controls.effectiveSize(Direction.Axis.Z)),
                 this.controls.netherScale(),
                 LoopSpans.ofWidth(this.controls.effectiveEndSize()),
                 chosen);
@@ -82,7 +86,14 @@ public class TorusSettingsScreen extends LoopSettingsScreen<TorusSettings> {
 
         @Override
         public @Nullable Integer loopChunkWidth() {
-            return TorusSettingsScreen.this.controls.effectiveSize();
+            Integer xChunkWidth = TorusSettingsScreen.this.controls.effectiveSize(Direction.Axis.X);
+            Integer zChunkWidth = TorusSettingsScreen.this.controls.effectiveSize(Direction.Axis.Z);
+            return xChunkWidth == null || zChunkWidth == null ? null : Math.min(xChunkWidth, zChunkWidth);
+        }
+
+        @Override
+        public @Nullable Integer loopChunkWidth(Direction.Axis axis) {
+            return TorusSettingsScreen.this.controls.effectiveSize(axis);
         }
 
         @Override

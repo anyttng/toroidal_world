@@ -18,16 +18,20 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.layouts.CommonLayouts;
 import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 
 public final class LoopSizeControls {
     private static final Component HINT = Component.translatable("gui.toroidal_world.toroidal_settings.hint");
     private static final String SIZE_LABEL_KEY = "gui.toroidal_world.toroidal_settings.size";
+    private static final String SIZE_X_LABEL_KEY = "gui.toroidal_world.toroidal_settings.size_x";
+    private static final String SIZE_Z_LABEL_KEY = "gui.toroidal_world.toroidal_settings.size_z";
     private static final String EFFECTIVE_KEY = "gui.toroidal_world.toroidal_settings.effective";
     private static final String TOO_SMALL_KEY = "gui.toroidal_world.toroidal_settings.too_small";
     private static final String TOO_LARGE_KEY = "gui.toroidal_world.toroidal_settings.too_large";
     private static final String NETHER_SCALE_KEY = "gui.toroidal_world.toroidal_settings.nether_scale";
     private static final String NETHER_EFFECTIVE_KEY = "gui.toroidal_world.toroidal_settings.nether_effective";
+    private static final String NETHER_EFFECTIVE_XZ_KEY = "gui.toroidal_world.toroidal_settings.nether_effective_xz";
     private static final Component NETHER_HINT = Component.translatable("gui.toroidal_world.toroidal_settings.nether_hint");
     private static final String END_SIZE_LABEL_KEY = "gui.toroidal_world.toroidal_settings.end_size";
     private static final String END_EFFECTIVE_KEY = "gui.toroidal_world.toroidal_settings.end_effective";
@@ -55,24 +59,40 @@ public final class LoopSizeControls {
     private final Runnable onChange;
 
     private final SizeField size;
+    private final @Nullable SizeField zSize;
     private final SizeField endSize;
 
     private int netherScale;
     private int wantedNetherScale;
-    private int scalePickedForSize;
+    private int scalePickedForXSize;
+    private int scalePickedForZSize;
 
     private final Map<WorldLoopPresets, Button> presetButtons = new EnumMap<>(WorldLoopPresets.class);
     private Button netherScaleButton;
 
-    public LoopSizeControls(int chunkWidth, int netherScale, int endChunkWidth, Runnable onChange) {
+    private LoopSizeControls(SizeField size, @Nullable SizeField zSize, int xChunkWidth, int zChunkWidth,
+            int netherScale, int endChunkWidth, Runnable onChange) {
         this.onChange = onChange;
-        this.size = new SizeField(SIZE_LABEL_KEY, EFFECTIVE_KEY, HINT,
-                WorldLoopSizes.MIN_CHUNK_WIDTH, WorldLoopSizes::isInRange, chunkWidth);
+        this.size = size;
+        this.zSize = zSize;
         this.endSize = new SizeField(END_SIZE_LABEL_KEY, END_EFFECTIVE_KEY, END_HINT,
                 WorldLoopSizes.END_MIN_CHUNK_WIDTH, WorldLoopSizes::isEndInRange, endChunkWidth);
         this.netherScale = netherScale;
         this.wantedNetherScale = netherScale;
-        this.scalePickedForSize = chunkWidth;
+        this.scalePickedForXSize = xChunkWidth;
+        this.scalePickedForZSize = zChunkWidth;
+    }
+
+    public static LoopSizeControls single(int chunkWidth, int netherScale, int endChunkWidth, Runnable onChange) {
+        return new LoopSizeControls(worldSizeField(SIZE_LABEL_KEY, chunkWidth), null, chunkWidth, chunkWidth,
+                netherScale, endChunkWidth, onChange);
+    }
+
+    public static LoopSizeControls perAxis(int xChunkWidth, int zChunkWidth, int netherScale, int endChunkWidth,
+            Runnable onChange) {
+        return new LoopSizeControls(worldSizeField(SIZE_X_LABEL_KEY, xChunkWidth),
+                worldSizeField(SIZE_Z_LABEL_KEY, zChunkWidth), xChunkWidth, zChunkWidth,
+                netherScale, endChunkWidth, onChange);
     }
 
     public void addPresets(LinearLayout contents) {
@@ -95,6 +115,9 @@ public final class LoopSizeControls {
 
     public void addFields(Font font, LinearLayout contents) {
         this.size.add(font, contents, this::onSizeChanged);
+        if (this.zSize != null) {
+            this.zSize.add(font, contents, this::onSizeChanged);
+        }
 
         this.netherScaleButton = contents.addChild(Button.builder(Component.empty(), button -> this.cycleNetherScale())
                 .width(FIELD_WIDTH)
@@ -108,8 +131,8 @@ public final class LoopSizeControls {
         this.onEndSizeChanged();
     }
 
-    public @Nullable Integer effectiveSize() {
-        return this.size.effective();
+    public @Nullable Integer effectiveSize(Direction.Axis axis) {
+        return axis == Direction.Axis.Z && this.zSize != null ? this.zSize.effective() : this.size.effective();
     }
 
     public int netherScale() {
@@ -121,20 +144,27 @@ public final class LoopSizeControls {
     }
 
     public boolean isComplete() {
-        return this.size.effective() != null && this.endSize.effective() != null;
+        return this.effectiveSize(Direction.Axis.X) != null && this.effectiveSize(Direction.Axis.Z) != null
+                && this.endSize.effective() != null;
     }
 
     private void apply(WorldLoopPresets preset) {
         this.netherScale = preset.netherScale();
         this.wantedNetherScale = preset.netherScale();
         this.size.setValue(preset.chunkWidth());
+        if (this.zSize != null) {
+            this.zSize.setValue(preset.chunkWidth());
+        }
+
         this.endSize.setValue(preset.endChunkWidth());
     }
 
     private boolean matchesPreset(WorldLoopPresets preset) {
-        Integer effectiveSize = this.size.effective();
+        Integer effectiveXSize = this.effectiveSize(Direction.Axis.X);
+        Integer effectiveZSize = this.effectiveSize(Direction.Axis.Z);
         Integer effectiveEndSize = this.endSize.effective();
-        return effectiveSize != null && effectiveSize == preset.chunkWidth()
+        return effectiveXSize != null && effectiveXSize == preset.chunkWidth()
+                && effectiveZSize != null && effectiveZSize == preset.chunkWidth()
                 && this.netherScale == preset.netherScale()
                 && effectiveEndSize != null && effectiveEndSize == preset.endChunkWidth();
     }
@@ -149,8 +179,11 @@ public final class LoopSizeControls {
 
     private void onSizeChanged() {
         this.size.update();
+        if (this.zSize != null) {
+            this.zSize.update();
+        }
 
-        if (this.size.effective() == null) {
+        if (this.effectiveSize(Direction.Axis.X) == null || this.effectiveSize(Direction.Axis.Z) == null) {
             this.netherScaleButton.active = false;
         } else {
             this.refreshNetherScale();
@@ -165,31 +198,50 @@ public final class LoopSizeControls {
     }
 
     private void refreshNetherScale() {
-        int sizeChunks = this.size.effective();
-        List<Integer> allowed = NetherScales.allowedFor(sizeChunks);
-        boolean sizeChanged = sizeChunks != this.scalePickedForSize;
+        int xSizeChunks = this.effectiveSize(Direction.Axis.X);
+        int zSizeChunks = this.effectiveSize(Direction.Axis.Z);
+        List<Integer> allowed = NetherScales.allowedFor(xSizeChunks, zSizeChunks);
+        boolean sizeChanged = xSizeChunks != this.scalePickedForXSize || zSizeChunks != this.scalePickedForZSize;
         this.netherScale = NetherScales.normalize(sizeChanged ? this.wantedNetherScale : this.netherScale, allowed);
-        this.scalePickedForSize = sizeChunks;
+        this.scalePickedForXSize = xSizeChunks;
+        this.scalePickedForZSize = zSizeChunks;
         this.netherScaleButton.active = allowed.size() > 1;
 
-        int netherChunks = NetherScales.netherChunkWidth(sizeChunks, this.netherScale);
         this.netherScaleButton.setMessage(netherScaleLine(this.netherScale));
         this.netherScaleButton.setTooltip(Tooltip.create(
-                Component.translatable(NETHER_EFFECTIVE_KEY, netherChunks, netherChunks * CoordinateConstants.CHUNK_WIDTH)
+                this.netherEffectiveLine(xSizeChunks, zSizeChunks).copy()
                         .append(CommonComponents.NEW_LINE)
                         .append(NETHER_HINT)));
     }
 
+    private Component netherEffectiveLine(int xSizeChunks, int zSizeChunks) {
+        int xNetherChunks = NetherScales.netherChunkWidth(xSizeChunks, this.netherScale);
+        if (this.zSize == null) {
+            return Component.translatable(NETHER_EFFECTIVE_KEY, xNetherChunks,
+                    xNetherChunks * CoordinateConstants.CHUNK_WIDTH);
+        }
+
+        int zNetherChunks = NetherScales.netherChunkWidth(zSizeChunks, this.netherScale);
+        return Component.translatable(NETHER_EFFECTIVE_XZ_KEY, xNetherChunks, zNetherChunks,
+                xNetherChunks * CoordinateConstants.CHUNK_WIDTH, zNetherChunks * CoordinateConstants.CHUNK_WIDTH);
+    }
+
     private void cycleNetherScale() {
-        Integer effectiveSize = this.size.effective();
-        if (effectiveSize == null) {
+        Integer effectiveXSize = this.effectiveSize(Direction.Axis.X);
+        Integer effectiveZSize = this.effectiveSize(Direction.Axis.Z);
+        if (effectiveXSize == null || effectiveZSize == null) {
             return;
         }
 
-        this.netherScale = NetherScales.next(this.netherScale, effectiveSize);
+        this.netherScale = NetherScales.next(this.netherScale, effectiveXSize, effectiveZSize);
         this.wantedNetherScale = this.netherScale;
         this.refreshNetherScale();
         this.changed();
+    }
+
+    private static SizeField worldSizeField(String labelKey, int chunkWidth) {
+        return new SizeField(labelKey, EFFECTIVE_KEY, HINT,
+                WorldLoopSizes.MIN_CHUNK_WIDTH, WorldLoopSizes::isInRange, chunkWidth);
     }
 
     private static Component presetLabel(WorldLoopPresets preset) {

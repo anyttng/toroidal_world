@@ -24,7 +24,8 @@ public class CylinderSettingsScreen extends LoopSettingsScreen<CylinderSettings>
     private Direction.Axis axis;
 
     public CylinderSettingsScreen(Screen parent, CylinderSettings current, Consumer<CylinderSettings> onDone) {
-        super(TITLE, parent, current.chunkWidth(), current.netherScale(), current.endChunkWidth(), onDone);
+        super(TITLE, parent, onChange -> LoopSizeControls.single(current.chunkWidth(), current.netherScale(),
+                current.endChunkWidth(), onChange), onDone);
         this.axis = current.axis();
     }
 
@@ -41,7 +42,7 @@ public class CylinderSettingsScreen extends LoopSettingsScreen<CylinderSettings>
     @Override
     protected CylinderSettings build() {
         return new CylinderSettings(
-                LoopSpans.ofWidth(this.axis, this.controls.effectiveSize()),
+                LoopSpans.ofWidth(this.axis, this.controls.effectiveSize(this.axis)),
                 this.controls.netherScale(),
                 LoopSpans.ofWidth(this.axis, this.controls.effectiveEndSize()));
     }
