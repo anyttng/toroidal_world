@@ -1,7 +1,7 @@
 package com.toroidalworld.client.shape.mixin;
 
 import com.toroidalworld.api.v1.client.ShapeCustomizers;
-import com.toroidalworld.engine.gen.ShapedDimensions;
+import com.toroidalworld.core.ShapedChunkGenerator;
 import com.toroidalworld.shape.WorldShape;
 import com.toroidalworld.shape.WorldShapes;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -15,6 +15,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.dimension.LevelStem;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -31,8 +32,8 @@ public class WorldTabMixin {
     private static final Component toroidal$CUSTOMIZE_LABEL = Component.translatable("selectWorld.customizeType");
 
     @Unique
-    private static final Component toroidal$UNAVAILABLE =
-            Component.translatable("gui.toroidal_world.world_shape.unavailable");
+    private static final Component toroidal$SEAM_WARNING =
+            Component.translatable("gui.toroidal_world.world_shape.seam_warning");
 
     @Unique
     private static final int toroidal$SHAPE_BUTTON_WIDTH = 150;
@@ -46,6 +47,9 @@ public class WorldTabMixin {
     @Unique
     private Button toroidal$customizeShapeButton;
 
+    @Unique
+    private boolean toroidal$terrainTilesAtSeam = true;
+
     @Inject(
             method = "<init>",
             at = @At(
@@ -56,7 +60,7 @@ public class WorldTabMixin {
             @Local(argsOnly = true) CreateWorldScreen screen) {
         this.toroidal$shapeButton = helper.addChild(CycleButton.builder(WorldShape::label, WorldShapes.selected())
                 .withValues(WorldShapes.shapes())
-                .withTooltip(shape -> Tooltip.create(shape.hint()))
+                .withTooltip(this::toroidal$tooltipFor)
                 .create(0, 0, toroidal$SHAPE_BUTTON_WIDTH, toroidal$SHAPE_BUTTON_HEIGHT, toroidal$SHAPE_LABEL,
                         (button, shape) -> {
                             WorldShapes.select(shape);
@@ -73,16 +77,22 @@ public class WorldTabMixin {
 
     @Unique
     private void toroidal$followWorldType(WorldCreationUiState uiState) {
-        boolean takesShape = ShapedDimensions.canTakeShape(uiState.getSettings().selectedDimensions());
+        LevelStem overworld = uiState.getSettings().selectedDimensions().get(LevelStem.OVERWORLD).orElse(null);
+        boolean takesShape = overworld != null;
         if (!takesShape && WorldShapes.selected() != WorldShapes.NORMAL) {
             WorldShapes.select(WorldShapes.NORMAL);
             this.toroidal$shapeButton.setValue(WorldShapes.NORMAL);
         }
 
+        this.toroidal$terrainTilesAtSeam = !takesShape || ShapedChunkGenerator.tilesAtSeam(overworld.generator());
         this.toroidal$shapeButton.active = takesShape;
-        this.toroidal$shapeButton.setTooltip(
-                Tooltip.create(takesShape ? WorldShapes.selected().hint() : toroidal$UNAVAILABLE));
+        this.toroidal$shapeButton.setTooltip(toroidal$tooltipFor(WorldShapes.selected()));
         toroidal$refreshCustomizeButton();
+    }
+
+    @Unique
+    private Tooltip toroidal$tooltipFor(WorldShape shape) {
+        return Tooltip.create(this.toroidal$terrainTilesAtSeam ? shape.hint() : toroidal$SEAM_WARNING);
     }
 
     @Unique
