@@ -94,6 +94,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.random.Weighted;
 import net.minecraft.util.random.WeightedList;
 import net.minecraft.world.entity.PositionMoveRotation;
+import net.minecraft.world.entity.PositionPath;
+import net.minecraft.world.entity.PositionStep;
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.vehicle.minecart.NewMinecartBehavior;
 import net.minecraft.world.level.ChunkPos;
@@ -381,7 +383,18 @@ public final class PacketTranslator {
         }
 
         return new ClientboundEntityPositionSyncPacket(
-                packet.id(), toClientChange(context, packet.values(), Set.of()), packet.onGround());
+                packet.id(), toClientPath(context, packet.position()), packet.yRot(), packet.xRot(),
+                packet.onGround());
+    }
+
+    private static PositionPath toClientPath(TranslationContext context, PositionPath path) {
+        PacketReach reach = context.trackedReach();
+        return switch (path) {
+            case PositionPath.Linear(Vec3 end) -> PositionPath.of(context.toClient(end, reach));
+            case PositionPath.Stepped(Vec3 _, List<PositionStep> steps) -> PositionPath.stepped(steps.stream()
+                    .map(step -> new PositionStep(context.toClient(step.position(), reach), step.tickOffset()))
+                    .toList());
+        };
     }
 
     private static Packet<?> moveVehicle(ClientboundMoveVehiclePacket packet, TranslationContext context) {

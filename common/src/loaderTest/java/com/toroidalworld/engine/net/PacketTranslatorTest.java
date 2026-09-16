@@ -95,6 +95,8 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.PositionMoveRotation;
+import net.minecraft.world.entity.PositionPath;
+import net.minecraft.world.entity.PositionStep;
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.vehicle.minecart.NewMinecartBehavior;
 import net.minecraft.world.level.ChunkPos;
@@ -795,12 +797,31 @@ class PacketTranslatorTest {
         @Test
         void entityPositionSyncTranslatesTheAbsolutePosition() {
             ClientboundEntityPositionSyncPacket packet = new ClientboundEntityPositionSyncPacket(
-                    7, new PositionMoveRotation(new Vec3(SERVER_X, 70.0, SERVER_Z), Vec3.ZERO, 0.0F, 0.0F), false);
+                    7, PositionPath.of(new Vec3(SERVER_X, 70.0, SERVER_Z)), 30.0F, 10.0F, true);
 
             ClientboundEntityPositionSyncPacket translated =
                     (ClientboundEntityPositionSyncPacket) PacketTranslator.toClient(packet, context());
 
-            assertEquals(new Vec3(CLIENT_X, 70.0, CLIENT_Z), translated.values().position());
+            assertEquals(PositionPath.of(new Vec3(CLIENT_X, 70.0, CLIENT_Z)), translated.position());
+            assertEquals(30.0F, translated.yRot());
+            assertEquals(10.0F, translated.xRot());
+            assertTrue(translated.onGround());
+        }
+
+        @Test
+        void entityPositionSyncKeepsASteppedPathThroughTheSeamInOneFrame() {
+            ClientboundEntityPositionSyncPacket packet = new ClientboundEntityPositionSyncPacket(7, PositionPath.stepped(List.of(
+                    new PositionStep(new Vec3(511.75, 70.0, SERVER_Z), 1),
+                    new PositionStep(new Vec3(-511.5, 70.0, SERVER_Z), 2),
+                    new PositionStep(new Vec3(-510.25, 70.0, SERVER_Z), 1))), 0.0F, 0.0F, false);
+
+            ClientboundEntityPositionSyncPacket translated =
+                    (ClientboundEntityPositionSyncPacket) PacketTranslator.toClient(packet, context());
+
+            assertEquals(PositionPath.stepped(List.of(
+                    new PositionStep(new Vec3(511.75, 70.0, CLIENT_Z), 1),
+                    new PositionStep(new Vec3(512.5, 70.0, CLIENT_Z), 2),
+                    new PositionStep(new Vec3(513.75, 70.0, CLIENT_Z), 1))), translated.position());
         }
 
         @Test
