@@ -52,5 +52,10 @@
 
   "gui.toroidal_world.cylinder_settings.title": "Cylinder World Settings",
   "gui.toroidal_world.cylinder_settings.axis": "Looping axis",
-  "gui.toroidal_world.cylinder_settings.axis_hint": "The world loops along this axis and goes on forever along the other."
+  "gui.toroidal_world.cylinder_settings.axis_hint": "The world loops along this axis and goes on forever along the other.",
+
+  "toroidal_world.configuration.mapCopies": "Fullscreen map copies",
+  "toroidal_world.configuration.mapCopies.tooltip": "How map mods show a looped world full screen: Repeated fills the window with its copies, Single shows the world once and stops panning and zooming out at its edges. Minimaps always repeat it.",
+  "toroidal_world.configuration.mapCopies.repeated": "Repeated",
+  "toroidal_world.configuration.mapCopies.single": "Single"
 }

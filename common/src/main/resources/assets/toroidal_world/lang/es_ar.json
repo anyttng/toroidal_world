@@ -52,5 +52,10 @@
 
   "gui.toroidal_world.cylinder_settings.title": "Ajustes del mundo cilíndrico",
   "gui.toroidal_world.cylinder_settings.axis": "Eje de bucle",
-  "gui.toroidal_world.cylinder_settings.axis_hint": "El mundo se cierra sobre sí mismo a lo largo de este eje y sigue sin fin a lo largo del otro."
+  "gui.toroidal_world.cylinder_settings.axis_hint": "El mundo se cierra sobre sí mismo a lo largo de este eje y sigue sin fin a lo largo del otro.",
+
+  "toroidal_world.configuration.mapCopies": "Copias del mundo en el mapa a pantalla completa",
+  "toroidal_world.configuration.mapCopies.tooltip": "Cómo los mods de mapas muestran un mundo cerrado sobre sí mismo a pantalla completa: «Repetido» llena la ventana con sus copias, «Única» muestra el mundo una sola vez y no deja desplazar ni alejar el mapa más allá de sus bordes. Los minimapas siempre lo repiten.",
+  "toroidal_world.configuration.mapCopies.repeated": "Repetido",
+  "toroidal_world.configuration.mapCopies.single": "Única"
 }
