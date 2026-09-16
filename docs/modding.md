@@ -239,6 +239,7 @@ The shape's name and tooltip come from `gui.<namespace>.world_shape.<path>` and 
 
 ```java
 LoopSpans.ofWidth(24);                        // both axes, 24 chunks, centred on the origin
+LoopSpans.ofWidths(24, 48);                   // X over 24 chunks, Z over 48, each centred
 LoopSpans.ofWidth(Direction.Axis.Z, 24);      // Z alone; X runs to the vanilla world border
 LoopSpans.of(Direction.Axis.X, -12, 12);      // an explicit span
 ```
@@ -296,7 +297,7 @@ The client half is one control per option:
 WorldOptionControls.register(OPTION, BandFloorControl::new);
 ```
 
-A `WorldOptionControl` adds its own widgets, commits its value into the options, and may veto **Done** while its value is unusable. It reaches the screen around it only through `WorldOptionContext` — the parent screen, the loop width the screen states, the current options, a change signal and a rebuild request. A shape's settings screen builds them all with `WorldOptionControls.createAll(context)`, in registry order.
+A `WorldOptionControl` adds its own widgets, commits its value into the options, and may veto **Done** while its value is unusable. It reaches the screen around it only through `WorldOptionContext` — the parent screen, the loop width the screen states on each axis (`loopChunkWidth(axis)`; the no-argument form answers the narrower one), the current options, a change signal and a rebuild request. A shape's settings screen builds them all with `WorldOptionControls.createAll(context)`, in registry order.
 
 ## Hooking a generation moment
 
