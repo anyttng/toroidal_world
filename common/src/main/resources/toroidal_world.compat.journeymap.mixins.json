@@ -10,6 +10,7 @@
     "DrawImageStepMixin",
     "DrawMarkerStepMixin",
     "DrawPolygonStepMixin",
+    "FullscreenMixin",
     "LayerDelegateMixin",
     "LocationFormatMixin",
     "MapRendererAccessor",

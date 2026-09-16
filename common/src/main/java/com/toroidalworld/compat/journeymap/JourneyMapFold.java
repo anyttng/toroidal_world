@@ -11,6 +11,7 @@ import com.toroidalworld.client.engine.ClientFrame;
 import com.toroidalworld.compat.AxisCopies;
 import com.toroidalworld.compat.ClientShapes;
 import com.toroidalworld.compat.FullscreenZoomFloor;
+import com.toroidalworld.compat.MapCopies;
 import com.mojang.logging.LogUtils;
 
 import net.minecraft.core.BlockPos;
@@ -45,9 +46,29 @@ public final class JourneyMapFold {
         return shape == null ? coord : shape.foldCoord(axis, coord);
     }
 
-    public static double nearestPixelCoord(Direction.Axis axis, double ref, double coord) {
+    public static double seatPixelCoord(Direction.Axis axis, double ref, double coord, MapCopies copies) {
         ToroidalShape shape = ClientShapes.current();
-        return shape == null ? coord : shape.nearestCoord(axis, ref, coord);
+        if (shape == null) {
+            return coord;
+        }
+
+        return copies == MapCopies.SINGLE ? shape.foldCoord(axis, coord) : shape.nearestCoord(axis, ref, coord);
+    }
+
+    public static MapCopies copiesOf(Context.UI ui) {
+        return ui == Context.UI.Fullscreen ? MapCopies.current() : MapCopies.REPEATED;
+    }
+
+    public static double clampedMove(Direction.Axis axis, double center, double delta, int zoom, int windowPixels) {
+        return copies(axis).clampView(center + delta, halfViewBlocks(zoom, windowPixels)) - center;
+    }
+
+    public static double seatSingleCenter(Direction.Axis axis, double coord, int zoom, int windowPixels) {
+        return copies(axis).clampView(foldCenterCoord(axis, coord), halfViewBlocks(zoom, windowPixels));
+    }
+
+    private static double halfViewBlocks(int zoom, int windowPixels) {
+        return windowPixels / 2.0 * FullscreenZoomFloor.JOURNEYMAP_REGION_BLOCKS / Math.max(1, zoom);
     }
 
     public static Vec3 nearestToPlayer(Vec3 position) {
@@ -96,6 +117,17 @@ public final class JourneyMapFold {
         return shape == null ? 0 : FullscreenZoomFloor.journeyMapZoom(shape);
     }
 
+    public static int fullscreenZoomFloor(int windowWidth, int windowHeight) {
+        ToroidalShape shape = ClientShapes.current();
+        if (shape == null) {
+            return 0;
+        }
+
+        return MapCopies.current() == MapCopies.SINGLE
+                ? FullscreenZoomFloor.journeyMapCoverZoom(shape, windowWidth, windowHeight)
+                : FullscreenZoomFloor.journeyMapZoom(shape);
+    }
+
     public static int[] viewSpan(double centerBlock, int windowPixels, int zoom) {
         double halfSpanBlocks = windowPixels / 2.0 * FullscreenZoomFloor.JOURNEYMAP_REGION_BLOCKS / zoom;
         return new int[] {(int) Math.floor(centerBlock - halfSpanBlocks), (int) Math.ceil(centerBlock + halfSpanBlocks)};
@@ -127,7 +159,12 @@ public final class JourneyMapFold {
         };
     }
 
-    public static int copyRange(int loopedAxes, int tilesWithContent, double periodPixels, int viewportPixels) {
+    public static int copyRange(int loopedAxes, int tilesWithContent, double periodPixels, int viewportPixels,
+            MapCopies copies) {
+        if (copies == MapCopies.SINGLE) {
+            return 0;
+        }
+
         return Math.min(copiesToCover(periodPixels, viewportPixels), copyRangeCap(loopedAxes, tilesWithContent));
     }
 

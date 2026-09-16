@@ -31,6 +31,32 @@ class FullscreenZoomFloorTest {
     }
 
     @Test
+    void journeyMapCoversTheWindowExactly() {
+        assertEquals(2560, FullscreenZoomFloor.journeyMapCoverZoom(512, 2560),
+                "a 512-block world over 2560 px needs 2560 px per region, not the next power of two");
+        assertEquals(86, FullscreenZoomFloor.journeyMapCoverZoom(8192, 1369), "ceil(1369 * 512 / 8192) is 86");
+        assertEquals(16384, FullscreenZoomFloor.journeyMapCoverZoom(64, 2560),
+                "a floor past JourneyMap's deepest level is not held at 16384");
+    }
+
+    @Test
+    void xaeroCoversTheWindow() {
+        assertEquals(5.0, FullscreenZoomFloor.xaeroCoverScale(512, 1.0, 2560), 1e-12, "2560 px over 512 blocks at multiplier 1");
+        assertEquals(1369 / (512 * 1.2676), FullscreenZoomFloor.xaeroCoverScale(512, 1.2676, 1369), 1e-12,
+                "the multiplier does not divide the cover scale");
+    }
+
+    @Test
+    void theCoverFloorReadsEachLoopedAxisAgainstItsOwnWindowSide() {
+        assertEquals(1369, FullscreenZoomFloor.journeyMapCoverZoom(torus(1024, 512), 2560, 1369),
+                "X of 1024 over 2560 px needs 1280 and Z of 512 over 1369 px needs 1369, the larger holds");
+        assertEquals(172, FullscreenZoomFloor.journeyMapCoverZoom(cylinder(4096), 2560, 1369),
+                "a cylinder reads its Z width against the window height alone: ceil(1369 * 512 / 4096) = 172");
+        assertEquals(5.0, FullscreenZoomFloor.xaeroCoverScale(torus(512, 1024), 1.0, 2560, 1369), 1e-12,
+                "X of 512 over 2560 px outweighs Z of 1024 over 1369 px");
+    }
+
+    @Test
     void journeyMapTakesTheNarrowestLoopedAxis() {
         assertEquals(64, FullscreenZoomFloor.journeyMapZoom(torus(1024, 512)), "the 512-block axis sets the floor");
         assertEquals(64, FullscreenZoomFloor.journeyMapZoom(cylinder(512)), "an unbounded axis asks for no floor");

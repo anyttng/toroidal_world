@@ -52,5 +52,10 @@
 
   "gui.toroidal_world.cylinder_settings.title": "Configurações do mundo cilíndrico",
   "gui.toroidal_world.cylinder_settings.axis": "Eixo de repetição",
-  "gui.toroidal_world.cylinder_settings.axis_hint": "O mundo se fecha ao longo deste eixo e segue sem fim ao longo do outro."
+  "gui.toroidal_world.cylinder_settings.axis_hint": "O mundo se fecha ao longo deste eixo e segue sem fim ao longo do outro.",
+
+  "toroidal_world.configuration.mapCopies": "Cópias do mundo no mapa em tela cheia",
+  "toroidal_world.configuration.mapCopies.tooltip": "Como os mods de mapa mostram um mundo que se fecha em tela cheia: \"Repetido\" preenche a janela com cópias dele, \"Única\" mostra o mundo uma só vez e não deixa mover nem afastar o mapa além das bordas. Os minimapas sempre o repetem.",
+  "toroidal_world.configuration.mapCopies.repeated": "Repetido",
+  "toroidal_world.configuration.mapCopies.single": "Única"
 }

@@ -51,6 +51,18 @@ class JourneyMapFoldCopyOffsetsTest {
     }
 
     @Test
+    void theZeroRangeOfASingleCopyMapKeepsTheBaseAlone() {
+        double[][] offsets = JourneyMapFold.copyOffsets(0, 0, 400.0, 500.0, rect(100.0, 100.0, 50.0, 50.0), SCREEN);
+        assertArrayEquals(new double[][] {{0.0, 0.0}}, offsets, "laps 1 at 500 and 900 were drawn with a range of 0");
+    }
+
+    @Test
+    void theZeroRangeOfASingleCopyMapDrawsNothingForABaseOffScreen() {
+        double[][] offsets = JourneyMapFold.copyOffsets(0, 0, 400.0, 0.0, rect(-300.0, 100.0, 50.0, 50.0), SCREEN);
+        assertEquals(0, offsets.length, "the copy at 100 was drawn for a base at -300 with a range of 0");
+    }
+
+    @Test
     void twoLoopedAxesListTheProduct() {
         double[][] offsets = JourneyMapFold.copyOffsets(1, 1, 600.0, 500.0, rect(100.0, 100.0, 50.0, 50.0), SCREEN);
         assertArrayEquals(new double[][] {{0.0, 0.0}, {0.0, 500.0}, {600.0, 0.0}, {600.0, 500.0}}, offsets,

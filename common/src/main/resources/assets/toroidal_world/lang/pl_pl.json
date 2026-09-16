@@ -52,5 +52,10 @@
 
   "gui.toroidal_world.cylinder_settings.title": "Ustawienia świata cylindrycznego",
   "gui.toroidal_world.cylinder_settings.axis": "Oś zapętlenia",
-  "gui.toroidal_world.cylinder_settings.axis_hint": "Świat zapętla się wzdłuż tej osi, a wzdłuż drugiej ciągnie się bez końca."
+  "gui.toroidal_world.cylinder_settings.axis_hint": "Świat zapętla się wzdłuż tej osi, a wzdłuż drugiej ciągnie się bez końca.",
+
+  "toroidal_world.configuration.mapCopies": "Kopie świata na mapie pełnoekranowej",
+  "toroidal_world.configuration.mapCopies.tooltip": "Jak mody map pokazują zapętlony świat na pełnym ekranie: „Powtarzane” wypełnia okno jego kopiami, „Pojedyncza” pokazuje świat raz i nie pozwala przesunąć ani oddalić mapy poza jego krawędzie. Minimapy zawsze go powtarzają.",
+  "toroidal_world.configuration.mapCopies.repeated": "Powtarzane",
+  "toroidal_world.configuration.mapCopies.single": "Pojedyncza"
 }
