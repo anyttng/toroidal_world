@@ -74,6 +74,7 @@
     "DualNoiseProviderMixin",
     "EndIslandFunctionCompileMixin",
     "EnderDragonMixin",
+    "EndermanTeleportTowardsMixin",
     "EntityAccessor",
     "EntityGetterMixin",
     "EntityMixin",
