@@ -174,12 +174,32 @@ var xaeroLibJars = tasks.register('unpackXaeroLib', Sync) {
     into layout.buildDirectory.dir('xaero-lib')
 }
 
+// Simple Clouds keeps its API jar-in-jar, and the cloud regions and managers the weather-field folds name implement
+// its interfaces, so the nested jar is unpacked at build time and rides compileOnly beside the mod jar.
+configurations {
+    simpleCloudsJarJar
+}
+
+dependencies {
+    simpleCloudsJarJar "maven.modrinth:simple-clouds:${simpleclouds_version}"
+}
+
+var simpleCloudsApiJars = tasks.register('unpackSimpleCloudsApi', Sync) {
+    from(zipTree(configurations.simpleCloudsJarJar.singleFile)) {
+        include 'META-INF/jarjar/simplecloudsapi-*.jar'
+        eachFile { it.relativePath = new RelativePath(true, it.name) }
+    }
+    includeEmptyDirs = false
+    into layout.buildDirectory.dir('simpleclouds-api')
+}
+
 dependencies {
     compileOnly files(c2meModuleJars).asFileTree.matching { include '*.jar' }
     compileOnly files(createBundledJars).asFileTree.matching { include '*.jar' }
     compileOnly files(sableCompanionJars).asFileTree.matching { include '*.jar' }
     compileOnly files(aeronauticsModJars).asFileTree.matching { include '*.jar' }
     compileOnly files(xaeroLibJars).asFileTree.matching { include '*.jar' }
+    compileOnly files(simpleCloudsApiJars).asFileTree.matching { include '*.jar' }
     minecraft "com.mojang:minecraft:${minecraft_version}"
     // Mojmap on both sides: the mixins and the accesswidener are written against the same names NeoForge uses,
     // so common's sources compile unchanged for either loader.
@@ -223,6 +243,8 @@ dependencies {
     // One DH jar carries both loaders' builds, so there is no separate fabric flavor to remap: plain compileOnly.
     // The sources name DH's own core types; the per-loader chunk wrapper is reached by name, not by import.
     compileOnly "maven.modrinth:distanthorizons:${distanthorizons_version}"
+    // Simple Clouds publishes no fabric build: plain compileOnly on the neoforge flavor, gated off at runtime.
+    compileOnly "maven.modrinth:simple-clouds:${simpleclouds_version}"
 }
 
 // Two jars on this game version, and only the second one ships. Minecraft is obfuscated here, so Loom compiles into a

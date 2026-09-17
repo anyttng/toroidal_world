@@ -161,12 +161,32 @@ var xaeroLibJars = tasks.register('unpackXaeroLib', Sync) {
     into layout.buildDirectory.dir('xaero-lib')
 }
 
+// Simple Clouds keeps its API jar-in-jar, and the cloud regions and managers the weather-field folds name implement
+// its interfaces, so the nested jar is unpacked at build time and rides compileOnly beside the mod jar.
+configurations {
+    simpleCloudsJarJar
+}
+
+dependencies {
+    simpleCloudsJarJar "maven.modrinth:simple-clouds:${simpleclouds_version}"
+}
+
+var simpleCloudsApiJars = tasks.register('unpackSimpleCloudsApi', Sync) {
+    from(zipTree(configurations.simpleCloudsJarJar.singleFile)) {
+        include 'META-INF/jarjar/simplecloudsapi-*.jar'
+        eachFile { it.relativePath = new RelativePath(true, it.name) }
+    }
+    includeEmptyDirs = false
+    into layout.buildDirectory.dir('simpleclouds-api')
+}
+
 dependencies {
     compileOnly files(c2meModuleJars).asFileTree.matching { include '*.jar' }
     compileOnly files(createBundledJars).asFileTree.matching { include '*.jar' }
     compileOnly files(sableCompanionJars).asFileTree.matching { include '*.jar' }
     compileOnly files(aeronauticsModJars).asFileTree.matching { include '*.jar' }
     compileOnly files(xaeroLibJars).asFileTree.matching { include '*.jar' }
+    compileOnly files(simpleCloudsApiJars).asFileTree.matching { include '*.jar' }
     compileOnly "net.fabricmc:sponge-mixin:${mixin_version}"
     compileOnly "io.github.llamalad7:mixinextras-common:${mixinextras_version}"
     compileOnly "org.jspecify:jspecify:${jspecify_version}"
@@ -177,6 +197,7 @@ dependencies {
     compileOnly "maven.modrinth:distanthorizons:${distanthorizons_version}"
     compileOnly "maven.modrinth:create:${create_version}"
     compileOnly "maven.modrinth:sable:${sable_version}"
+    compileOnly "maven.modrinth:simple-clouds:${simpleclouds_version}"
     // Non-transitive: the FTB poms ask for Architectury, whose types no map fold names — pulling its maven in would
     // put a whole mod on the compile classpath to satisfy a reference nothing makes.
     compileOnly("dev.ftb.mods:ftb-chunks-neoforge:${ftbchunks_version}") { transitive = false }
