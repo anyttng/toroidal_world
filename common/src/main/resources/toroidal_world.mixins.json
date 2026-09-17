@@ -244,6 +244,7 @@
     "UseBonemealMixin",
     "ValidateNearbyPoiMixin",
     "VerticalGradientSeamMixin",
+    "VexChargeAttackGoalMixin",
     "VexYawMixin",
     "VibrationSystemListenerMixin",
     "VibrationSystemTickerMixin",
