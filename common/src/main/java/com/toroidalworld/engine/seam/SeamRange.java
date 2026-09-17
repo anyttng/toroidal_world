@@ -84,6 +84,10 @@ public final class SeamRange {
         return closerThan(levelSource, Vec3.atCenterOf(from), to, distance);
     }
 
+    public static boolean closerToCenterThan(Level levelSource, Vec3i from, Position to, double distance) {
+        return sqr(levelSource, Vec3.atCenterOf(from), to) < Mth.square(distance);
+    }
+
     private static @Nullable WorldFold transformerOf(Entity levelSource) {
         return ((TransformerSource) levelSource).toroidal$wrappedTransformer();
     }
