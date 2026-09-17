@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WorldLoopAttachments;
+import com.toroidalworld.engine.noise.FoldedTemperatureCache;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
 import com.toroidalworld.engine.noise.GenerationTransformerContext.Context;
 import com.toroidalworld.engine.noise.NoiseConstants;
@@ -28,6 +29,22 @@ public class BiomeMixin {
     @Shadow
     @Final
     private static PerlinSimplexNoise FROZEN_TEMPERATURE_NOISE;
+
+    @Unique
+    private final ThreadLocal<FoldedTemperatureCache> toroidal$foldedTemperatureCache =
+            ThreadLocal.withInitial(FoldedTemperatureCache::new);
+
+    @WrapOperation(
+            method = "getTemperature(Lnet/minecraft/core/BlockPos;)F",
+            at = @At(value = "INVOKE", target = "Ljava/lang/ThreadLocal;get()Ljava/lang/Object;"))
+    private Object toroidal$temperatureCacheOfBoundFold(ThreadLocal<?> cache, Operation<Object> original) {
+        WorldFold transformer = GenerationTransformerContext.context().wrappedTransformer();
+        if (transformer == null) {
+            return original.call(cache);
+        }
+
+        return this.toroidal$foldedTemperatureCache.get().temperaturesUnder(transformer);
+    }
 
     @WrapMethod(method = "shouldFreeze(Lnet/minecraft/world/level/LevelReader;Lnet/minecraft/core/BlockPos;Z)Z")
     private boolean toroidal$freezeThroughSeam(
