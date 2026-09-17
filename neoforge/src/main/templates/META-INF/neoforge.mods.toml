@@ -134,4 +134,7 @@ config="toroidal_world.compat.mekanism.mixins.json"
 config="toroidal_world.compat.terrablender.mixins.json"
 
 [[mixins]]
+config="toroidal_world.compat.scalablelux.mixins.json"
+
+[[mixins]]
 config="toroidal_world.neoforge.mixins.json"

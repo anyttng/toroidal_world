@@ -12,6 +12,7 @@ import com.toroidalworld.core.WorldLoopAttachments;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 
@@ -52,6 +53,21 @@ public class ServerChunkCacheMixin {
     @ModifyVariable(method = "hasChunk", at = @At("HEAD"), argsOnly = true, index = 2)
     private int toroidal$wrapPresenceChunkZ(int chunkZ) {
         return toroidal$transformer().chunkDomain(Direction.Axis.Z).wrap(chunkZ);
+    }
+
+    @ModifyVariable(method = "getChunkForLighting", at = @At("HEAD"), argsOnly = true, index = 1)
+    private int toroidal$wrapLightingChunkX(int chunkX) {
+        return toroidal$transformer().chunkDomain(Direction.Axis.X).wrap(chunkX);
+    }
+
+    @ModifyVariable(method = "getChunkForLighting", at = @At("HEAD"), argsOnly = true, index = 2)
+    private int toroidal$wrapLightingChunkZ(int chunkZ) {
+        return toroidal$transformer().chunkDomain(Direction.Axis.Z).wrap(chunkZ);
+    }
+
+    @ModifyVariable(method = "onLightUpdate", at = @At("HEAD"), argsOnly = true)
+    private SectionPos toroidal$foldLightUpdateSection(SectionPos pos) {
+        return toroidal$transformer().fold(pos);
     }
 
     @ModifyVariable(method = "blockChanged", at = @At("HEAD"), argsOnly = true)

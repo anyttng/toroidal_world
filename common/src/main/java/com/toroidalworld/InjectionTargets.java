@@ -65,9 +65,6 @@ public final class InjectionTargets {
     public static final String LEVEL_GET_BLOCK_STATE =
             "Lnet/minecraft/world/level/Level;getBlockState(Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/level/block/state/BlockState;";
 
-    public static final String LIGHT_CHUNK_GETTER_GET_CHUNK_FOR_LIGHTING =
-            "Lnet/minecraft/world/level/chunk/LightChunkGetter;getChunkForLighting(II)Lnet/minecraft/world/level/chunk/LightChunk;";
-
     public static final String LIVING_ENTITY_GET_X = "Lnet/minecraft/world/entity/LivingEntity;getX()D";
 
     public static final String LIVING_ENTITY_GET_Z = "Lnet/minecraft/world/entity/LivingEntity;getZ()D";
