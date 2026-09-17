@@ -24,7 +24,7 @@ import net.minecraft.world.level.levelgen.synth.Noise;
 import net.minecraft.world.level.levelgen.synth.NoiseStack;
 import net.minecraft.world.level.levelgen.synth.SimplexNoise;
 
-@Mixin(Biome.class)
+@Mixin(value = Biome.class, priority = 1100)
 public class BiomeMixin {
     @Unique
     private static final String toroidal$GET_HEIGHT_ADJUSTED_TEMPERATURE =
@@ -48,7 +48,8 @@ public class BiomeMixin {
 
     @WrapOperation(
             method = "getTemperature(Lnet/minecraft/core/BlockPos;I)F",
-            at = @At(value = "INVOKE", target = "Ljava/lang/ThreadLocal;get()Ljava/lang/Object;"))
+            at = @At(value = "INVOKE", target = "Ljava/lang/ThreadLocal;get()Ljava/lang/Object;"),
+            require = 0)
     private Object toroidal$temperatureCacheOfBoundFold(ThreadLocal<?> cache, Operation<Object> original) {
         WorldFold transformer = GenerationTransformerContext.context().wrappedTransformer();
         if (transformer == null) {
