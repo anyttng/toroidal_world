@@ -17,7 +17,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
-import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.structure.Structure;
@@ -33,7 +32,6 @@ public class StructureGenerateBindingMixin {
             RegistryAccess registryAccess,
             ChunkGenerator chunkGenerator,
             BiomeSource biomeSource,
-            Climate.Sampler climateSampler,
             RandomState randomState,
             StructureTemplateManager structureTemplateManager,
             long seed,
@@ -44,8 +42,7 @@ public class StructureGenerateBindingMixin {
             Operation<StructureStart> original) {
         return GenerationTransformerContext.withTransformer(
                 ShapedChunkGenerator.transformerOf(chunkGenerator),
-                () -> original.call(selected, dimension, registryAccess, chunkGenerator, biomeSource, climateSampler,
-                        randomState, structureTemplateManager, seed, sourceChunkPos, references, heightAccessor,
-                        validBiome));
+                () -> original.call(selected, dimension, registryAccess, chunkGenerator, biomeSource, randomState,
+                        structureTemplateManager, seed, sourceChunkPos, references, heightAccessor, validBiome));
     }
 }
