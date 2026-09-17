@@ -93,7 +93,7 @@ public final class AddedStructureStarts {
             byPlacement.computeIfAbsent(set.value().placement(), placement -> new ArrayList<>()).addAll(accepted);
             for (StructureStarts.Added added : accepted) {
                 byChunk.computeIfAbsent(added.chunk().toLong(), key -> new ArrayList<>())
-                        .add(view.entryOf(added.structure()));
+                        .add(view.entryOf(added.structure()).orElseThrow());
             }
         }
 
@@ -211,14 +211,10 @@ public final class AddedStructureStarts {
             return Optional.empty();
         }
 
-        private StructureSet.StructureSelectionEntry entryOf(Holder<Structure> structure) {
-            for (StructureSet.StructureSelectionEntry entry : this.set.value().structures()) {
-                if (entry.structure().equals(structure)) {
-                    return entry;
-                }
-            }
-
-            throw new IllegalArgumentException("Structure " + structure.getRegisteredName() + " is not in the set");
+        private Optional<StructureSet.StructureSelectionEntry> entryOf(Holder<Structure> structure) {
+            return this.set.value().structures().stream()
+                    .filter(entry -> entry.structure().equals(structure))
+                    .findFirst();
         }
 
         private List<StructureStarts.Added> accepted(List<StructureStarts.Added> proposed) {
@@ -255,9 +251,7 @@ public final class AddedStructureStarts {
                 return "picked_chunk";
             }
 
-            boolean inSet = this.set.value().structures().stream()
-                    .anyMatch(entry -> entry.structure().equals(added.structure()));
-            return inSet ? null : "not_in_set";
+            return entryOf(added.structure()).isPresent() ? null : "not_in_set";
         }
     }
 }

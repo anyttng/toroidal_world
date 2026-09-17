@@ -14,8 +14,10 @@ import com.toroidalworld.compat.FullscreenZoomFloor;
 import com.toroidalworld.compat.MapCopies;
 import com.toroidalworld.compat.MapCopyBudget;
 import com.toroidalworld.engine.seam.MapSurfaceCopies.Copies;
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.logging.LogUtils;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
@@ -114,19 +116,22 @@ public final class JourneyMapFold {
         return shape == null ? 0 : FullscreenZoomFloor.journeyMapZoom(shape);
     }
 
-    public static int fullscreenZoomFloor(int windowWidth, int windowHeight) {
+    public static int fullscreenZoomFloor() {
         ToroidalShape shape = ClientShapes.current();
         if (shape == null) {
             return 0;
         }
 
-        return MapCopies.current() == MapCopies.SINGLE
-                ? FullscreenZoomFloor.journeyMapCoverZoom(shape, windowWidth, windowHeight)
-                : FullscreenZoomFloor.journeyMapZoom(shape);
+        if (MapCopies.current() != MapCopies.SINGLE) {
+            return FullscreenZoomFloor.journeyMapZoom(shape);
+        }
+
+        Window window = Minecraft.getInstance().getWindow();
+        return FullscreenZoomFloor.journeyMapCoverZoom(shape, window.getWidth(), window.getHeight());
     }
 
     public static int[] viewSpan(double centerBlock, int windowPixels, int zoom) {
-        double halfSpanBlocks = windowPixels / 2.0 * FullscreenZoomFloor.JOURNEYMAP_REGION_BLOCKS / zoom;
+        double halfSpanBlocks = halfViewBlocks(zoom, windowPixels);
         return new int[] {(int) Math.floor(centerBlock - halfSpanBlocks), (int) Math.ceil(centerBlock + halfSpanBlocks)};
     }
 

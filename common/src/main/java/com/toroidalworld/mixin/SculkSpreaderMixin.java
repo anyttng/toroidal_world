@@ -1,6 +1,7 @@
 package com.toroidalworld.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 import com.toroidalworld.core.WorldLoopAttachments;
@@ -24,6 +25,7 @@ public class SculkSpreaderMixin {
         toroidal$seat(level, cursor, originPos);
     }
 
+    @Unique
     private static void toroidal$seat(LevelAccessor level, SculkSpreader.ChargeCursor cursor, BlockPos originPos) {
         BlockPos raw = cursor.getPos();
         BlockPos seated = WorldLoopAttachments.transformerOfReader(level).nearestCopy(originPos, raw);

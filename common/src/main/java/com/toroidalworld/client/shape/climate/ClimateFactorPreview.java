@@ -16,7 +16,6 @@ import com.toroidalworld.shape.noise.DensityNoises;
 
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
-import net.minecraft.core.Direction;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.DensityFunction;
@@ -29,8 +28,6 @@ final class ClimateFactorPreview {
 
     private static final double HORIZONTAL_SHARE = 0.0;
 
-    private static final Direction.Axis[] HORIZONTAL_AXES = {Direction.Axis.X, Direction.Axis.Z};
-
     static OptionalDouble temperatureFactor(Screen parent, GenerationOptions generationOptions, LoopSpans spans) {
         NoiseHolder temperature = temperatureNoise(parent);
         if (temperature == null) {
@@ -40,7 +37,7 @@ final class ClimateFactorPreview {
         NormalNoise.NoiseParameters parameters = temperature.noiseData().value();
         boolean climateField = temperature.noiseData().unwrapKey().filter(ClimateFields::isClimate).isPresent();
         return OptionalDouble.of(ClimateCompression.factor(
-                WorldFolds.of(new FlatShape(boundsOf(spans), FlatShape.NO_SKEW, null), generationOptions),
+                WorldFolds.of(new FlatShape(WorldLoopBounds.of(spans), FlatShape.NO_SKEW, null), generationOptions),
                 climateField,
                 parameters.amplitudes(),
                 Math.pow(2.0, parameters.firstOctave()),
@@ -62,18 +59,6 @@ final class ClimateFactorPreview {
         }
 
         return climateNoiseOf(noise.generatorSettings().value().noiseRouter().temperature());
-    }
-
-    private static WorldLoopBounds boundsOf(LoopSpans spans) {
-        WorldLoopBounds bounds = WorldLoopBounds.UNBOUNDED;
-        for (Direction.Axis axis : HORIZONTAL_AXES) {
-            if (spans.loops(axis)) {
-                bounds = bounds.with(axis, new WorldLoopBounds.AxisBounds.Looped(spans.minChunk(axis),
-                        spans.maxChunk(axis)));
-            }
-        }
-
-        return bounds;
     }
 
     static @Nullable NoiseHolder climateNoiseOf(DensityFunction function) {

@@ -1,6 +1,7 @@
 package com.toroidalworld.compat;
 
-import org.jspecify.annotations.Nullable;
+import java.util.List;
+
 import org.slf4j.Logger;
 
 public final class ModPresence {
@@ -8,17 +9,13 @@ public final class ModPresence {
     private final ClassLoader classLoader;
     private final String resource;
     private final String gateLabel;
-    private final @Nullable ModSymbol required;
+    private final List<ModSymbol> required;
 
     private boolean probed;
     private boolean present;
 
-    public static ModPresence of(Logger logger, String resource, String gateLabel) {
-        return new ModPresence(logger, ModPresence.class.getClassLoader(), resource, gateLabel, null);
-    }
-
-    public static ModPresence of(Logger logger, String resource, String gateLabel, ModSymbol required) {
-        return new ModPresence(logger, ModPresence.class.getClassLoader(), resource, gateLabel, required);
+    public static ModPresence of(Logger logger, String resource, String gateLabel, ModSymbol... required) {
+        return new ModPresence(logger, ModPresence.class.getClassLoader(), resource, gateLabel, List.of(required));
     }
 
     public static boolean probe(String resource) {
@@ -30,7 +27,7 @@ public final class ModPresence {
     }
 
     ModPresence(Logger logger, ClassLoader classLoader, String resource, String gateLabel,
-            @Nullable ModSymbol required) {
+            List<ModSymbol> required) {
         this.logger = logger;
         this.classLoader = classLoader;
         this.resource = resource;
@@ -53,17 +50,19 @@ public final class ModPresence {
             return false;
         }
 
-        if (this.required == null) {
+        if (this.required.isEmpty()) {
             this.logger.info("{}=true", this.gateLabel);
             return true;
         }
 
-        if (!this.required.carriedBy(this.classLoader)) {
-            this.logger.warn("{}=true symbol_present=false symbol={}", this.gateLabel, this.required);
-            return false;
+        for (ModSymbol symbol : this.required) {
+            if (!symbol.carriedBy(this.classLoader)) {
+                this.logger.warn("{}=true symbol_present=false symbol={}", this.gateLabel, symbol);
+                return false;
+            }
         }
 
-        this.logger.info("{}=true symbol_present=true symbol={}", this.gateLabel, this.required);
+        this.logger.info("{}=true symbol_present=true symbols={}", this.gateLabel, this.required);
         return true;
     }
 }

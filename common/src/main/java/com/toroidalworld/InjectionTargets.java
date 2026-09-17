@@ -4,9 +4,6 @@ public final class InjectionTargets {
     public static final String AABB_INTERSECTS =
             "Lnet/minecraft/world/phys/AABB;intersects(Lnet/minecraft/world/phys/AABB;)Z";
 
-    public static final String ARRAY_LIST_TO_ARRAY_GENERATOR =
-            "Ljava/util/ArrayList;toArray(Ljava/util/function/IntFunction;)[Ljava/lang/Object;";
-
     public static final String BLOCK_ENTITY_HANDLE_UPDATE_TAG =
             "Lnet/minecraft/world/level/block/entity/BlockEntity;handleUpdateTag(Lnet/minecraft/nbt/CompoundTag;"
                     + "Lnet/minecraft/core/HolderLookup$Provider;)V";
