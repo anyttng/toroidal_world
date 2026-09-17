@@ -45,6 +45,10 @@ public class ChunkGeneratorAddedStartsMixin {
         SectionPos section = SectionPos.bottomOf(centerChunk);
         List<StructureSet.StructureSelectionEntry> added = AddedStructureStarts.of(state,
                 ((StructureManagerAccessor) structureManager).toroidal$structureCheck(), carried).at(chunk);
+        if (added.isEmpty()) {
+            return;
+        }
+
         for (StructureSet.StructureSelectionEntry entry : added) {
             StructureStart existing = structureManager.getStartForStructure(section, entry.structure().value(),
                     centerChunk);

@@ -1,6 +1,7 @@
 package com.toroidalworld.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
@@ -15,7 +16,10 @@ import net.minecraft.world.phys.Vec3;
 
 @Mixin(SulfurCube.class)
 public class SulfurCubeMixin {
+    @Unique
     private static final String KNOCKBACK = "knockback(DDDLnet/minecraft/world/damagesource/DamageSource;FZ)V";
+
+    @Unique
     private static final String PLAYER_PUSH = "playerPush(Lnet/minecraft/world/entity/player/Player;)V";
 
     @ModifyVariable(method = KNOCKBACK, at = @At("HEAD"), argsOnly = true, ordinal = 1)
