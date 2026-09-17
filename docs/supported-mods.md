@@ -38,7 +38,8 @@ Toroidal World ships for Minecraft 26.3, 26.2, 26.1.2 and 1.21.1, on NeoForge an
 | [Create](https://modrinth.com/mod/create) | 1.21.1 | NeoForge | Supported | |
 | [Sable](https://modrinth.com/mod/sable) | 1.21.1 | NeoForge, Fabric | Supported | |
 | [Create Aeronautics](https://modrinth.com/mod/create-aeronautics) | 1.21.1 | NeoForge | Supported | |
-| [Mekanism](https://modrinth.com/mod/mekanism) | 1.21.1 | NeoForge | Partially supported | Multiblocks, the laser and radiation stop at the world's edge |
+| [Mekanism](https://modrinth.com/mod/mekanism) | 1.21.1 | NeoForge | Supported | |
+| Mekanism Generators | 1.21.1 | NeoForge | Supported | |
 | Create Electroenergetics | — | — | No seam support | |
 | Astikor Carts | — | — | No seam support | |
 
