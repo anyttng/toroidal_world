@@ -215,6 +215,7 @@
     "StructureBlockEntityMixin",
     "StructureCheckAccessor",
     "StructureCheckBiomeMixin",
+    "StructureGenerateBindingMixin",
     "StructureManagerAccessor",
     "StructureManagerMixin",
     "StructureStartMixin",
