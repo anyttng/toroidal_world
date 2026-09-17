@@ -85,7 +85,7 @@ public final class NetherComplexStarts {
                         continue;
                     }
 
-                    ChunkPos chunk = shape.fold(new ChunkPos(origin.x() + dx, origin.z() + dz));
+                    ChunkPos chunk = shape.fold(new ChunkPos(origin.x + dx, origin.z + dz));
                     if (!visited.add(chunk) || isNearAny(shape, chunk, taken, separation)) {
                         continue;
                     }

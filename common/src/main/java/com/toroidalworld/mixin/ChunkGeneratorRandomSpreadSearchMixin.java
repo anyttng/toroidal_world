@@ -115,8 +115,8 @@ public class ChunkGeneratorRandomSpreadSearchMixin {
         int spacing = placement.spacing();
         for (StructureStarts.Added start : added) {
             if (!structures.contains(start.structure())
-                    || Math.floorDiv(start.chunk().x(), spacing) != Math.floorDiv(probeX, spacing)
-                    || Math.floorDiv(start.chunk().z(), spacing) != Math.floorDiv(probeZ, spacing)) {
+                    || Math.floorDiv(start.chunk().x, spacing) != Math.floorDiv(probeX, spacing)
+                    || Math.floorDiv(start.chunk().z, spacing) != Math.floorDiv(probeZ, spacing)) {
                 continue;
             }
 

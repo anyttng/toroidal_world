@@ -69,7 +69,7 @@ public final class AddedStructureStarts {
     }
 
     public List<StructureSet.StructureSelectionEntry> at(ChunkPos chunk) {
-        List<StructureSet.StructureSelectionEntry> placed = this.byChunk.get(chunk.pack());
+        List<StructureSet.StructureSelectionEntry> placed = this.byChunk.get(chunk.toLong());
         return placed != null ? placed : List.of();
     }
 
@@ -92,7 +92,7 @@ public final class AddedStructureStarts {
 
             byPlacement.computeIfAbsent(set.value().placement(), placement -> new ArrayList<>()).addAll(accepted);
             for (StructureStarts.Added added : accepted) {
-                byChunk.computeIfAbsent(added.chunk().pack(), key -> new ArrayList<>())
+                byChunk.computeIfAbsent(added.chunk().toLong(), key -> new ArrayList<>())
                         .add(view.entryOf(added.structure()));
             }
         }
@@ -167,7 +167,7 @@ public final class AddedStructureStarts {
                 for (int cellZ = Math.floorDiv(zDomain.lowerBound, spacing);
                         cellZ <= Math.floorDiv(zDomain.upperBound - 1, spacing); cellZ++) {
                     ChunkPos chunk = spread.getPotentialStructureChunk(seed, cellX * spacing, cellZ * spacing);
-                    if (this.fold.isOver(chunk) || !spread.isStructureChunk(this.state, chunk.x(), chunk.z())) {
+                    if (this.fold.isOver(chunk) || !spread.isStructureChunk(this.state, chunk.x, chunk.z)) {
                         continue;
                     }
 
@@ -181,7 +181,7 @@ public final class AddedStructureStarts {
         private Optional<Holder<Structure>> selected(long seed, ChunkPos chunk) {
             List<StructureSet.StructureSelectionEntry> options = new ArrayList<>(this.set.value().structures());
             WorldgenRandom random = new WorldgenRandom(new LegacyRandomSource(0L));
-            random.setLargeFeatureSeed(seed, chunk.x(), chunk.z());
+            random.setLargeFeatureSeed(seed, chunk.x, chunk.z);
             int total = 0;
             for (StructureSet.StructureSelectionEntry option : options) {
                 total += option.weight();

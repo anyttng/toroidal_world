@@ -45,7 +45,7 @@ class NetherComplexStartsTest {
         assertFalse(asked.isEmpty());
         for (ChunkPos chunk : asked) {
             for (ChunkPos other : taken) {
-                int gap = Math.max(gap(chunk.x(), other.x()), gap(chunk.z(), other.z()));
+                int gap = Math.max(gap(chunk.x, other.x), gap(chunk.z, other.z));
                 assertTrue(gap >= SEPARATION, chunk + " was asked about, " + gap + " chunks from " + other);
             }
         }
@@ -62,8 +62,8 @@ class NetherComplexStartsTest {
 
         assertEquals(WIDTH * WIDTH, asked.size());
         assertEquals(WIDTH * WIDTH, new HashSet<>(asked).size());
-        assertTrue(asked.stream().noneMatch(chunk -> chunk.x() < -WIDTH / 2 || chunk.x() >= WIDTH / 2
-                || chunk.z() < -WIDTH / 2 || chunk.z() >= WIDTH / 2));
+        assertTrue(asked.stream().noneMatch(chunk -> chunk.x < -WIDTH / 2 || chunk.x >= WIDTH / 2
+                || chunk.z < -WIDTH / 2 || chunk.z >= WIDTH / 2));
     }
 
     private static int gap(int from, int to) {
