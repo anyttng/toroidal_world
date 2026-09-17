@@ -10,6 +10,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import com.toroidalworld.accessors.LevelHolder;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WorldLoopAttachments;
+import com.toroidalworld.engine.fold.NearestCopy;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -20,10 +22,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
+import net.minecraft.world.level.chunk.status.ChunkStep;
 
 @Mixin(WorldGenRegion.class)
 public abstract class WorldGenRegionMixin implements LevelHolder {
@@ -31,9 +36,48 @@ public abstract class WorldGenRegionMixin implements LevelHolder {
     @Final
     private ServerLevel level;
 
+    @Shadow
+    @Final
+    private ChunkAccess center;
+
+    @Shadow
+    @Final
+    private ChunkStep generatingStep;
+
     @Override
     public ServerLevel toroidal$level() {
         return this.level;
+    }
+
+    @Unique
+    private @Nullable ChunkPos toroidal$nearestPastTheReach(int chunkX, int chunkZ) {
+        ChunkPos centre = this.center.getPos();
+        if (centre.getChessboardDistance(chunkX, chunkZ) < this.generatingStep.directDependencies().size()) {
+            return null;
+        }
+
+        ChunkPos nearest = NearestCopy.toward(WorldLoopAttachments.wrappedTransformerOf(this.level), centre,
+                new ChunkPos(chunkX, chunkZ));
+        return nearest.x() == chunkX && nearest.z() == chunkZ ? null : nearest;
+    }
+
+    @WrapMethod(
+            method = "getChunk(IILnet/minecraft/world/level/chunk/status/ChunkStatus;Z)Lnet/minecraft/world/level/chunk/ChunkAccess;")
+    private @Nullable ChunkAccess toroidal$chunkNearestTheGeneratingChunk(int chunkX, int chunkZ,
+            ChunkStatus targetStatus, boolean loadOrGenerate, Operation<@Nullable ChunkAccess> original) {
+        ChunkPos nearest = this.toroidal$nearestPastTheReach(chunkX, chunkZ);
+        return nearest == null
+                ? original.call(chunkX, chunkZ, targetStatus, loadOrGenerate)
+                : original.call(nearest.x(), nearest.z(), targetStatus, loadOrGenerate);
+    }
+
+    @WrapMethod(method = "hasChunk")
+    private boolean toroidal$holdsTheChunkNearestTheGeneratingChunk(int chunkX, int chunkZ,
+            Operation<Boolean> original) {
+        ChunkPos nearest = this.toroidal$nearestPastTheReach(chunkX, chunkZ);
+        return nearest == null
+                ? original.call(chunkX, chunkZ)
+                : original.call(nearest.x(), nearest.z());
     }
 
     @Unique
