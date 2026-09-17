@@ -25,6 +25,14 @@ public final class SeamRange {
         return anchor.distManhattan(transformer.nearestCopy(anchor, BlockPos.ZERO.offset(to)));
     }
 
+    public static int chessboard(@Nullable WorldFold fold, BlockPos from, Vec3i to) {
+        if (fold == null) {
+            return from.distChessboard(to);
+        }
+
+        return from.distChessboard(fold.nearestCopy(from, BlockPos.ZERO.offset(to)));
+    }
+
     public static double sqr(@Nullable WorldFold fold, Vec3i from, Vec3i to) {
         if (fold == null) {
             return from.distSqr(to);
