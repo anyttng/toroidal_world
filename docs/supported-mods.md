@@ -9,8 +9,8 @@ Toroidal World ships for Minecraft 26.3, 26.2, 26.1.2 and 1.21.1, on NeoForge an
 | [Sodium](https://modrinth.com/mod/sodium) and [Iris Shaders](https://modrinth.com/mod/iris) | All | NeoForge, Fabric | Supported | |
 | [Lithium](https://modrinth.com/mod/lithium) | All | NeoForge, Fabric | Supported | |
 | [C2ME](https://modrinth.com/mod/c2me-fabric) | All | NeoForge, Fabric | Supported | |
+| ScalableLux | All | NeoForge, Fabric | Supported | |
 | [Simple Clouds](https://modrinth.com/mod/simple-clouds) | 1.21.1 | NeoForge | Supported | |
-| ScalableLux | All | NeoForge, Fabric | No seam support | |
 
 ## Distant terrain
 
@@ -38,8 +38,8 @@ Toroidal World ships for Minecraft 26.3, 26.2, 26.1.2 and 1.21.1, on NeoForge an
 | [Create](https://modrinth.com/mod/create) | 1.21.1 | NeoForge | Supported | |
 | [Sable](https://modrinth.com/mod/sable) | 1.21.1 | NeoForge, Fabric | Supported | |
 | [Create Aeronautics](https://modrinth.com/mod/create-aeronautics) | 1.21.1 | NeoForge | Supported | |
+| [Mekanism](https://modrinth.com/mod/mekanism) | 1.21.1 | NeoForge | Partially supported | Multiblocks, the laser and radiation stop at the world's edge |
 | Create Electroenergetics | — | — | No seam support | |
-| Mekanism | 1.21.1 | NeoForge | No seam support | |
 | Astikor Carts | — | — | No seam support | |
 
 ## Content and server side
