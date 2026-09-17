@@ -62,6 +62,9 @@ public final class InjectionTargets {
     public static final String PHANTOM_MOVE_TARGET_POINT =
             "Lnet/minecraft/world/entity/monster/Phantom;moveTargetPoint:Lnet/minecraft/world/phys/Vec3;";
 
+    public static final String PLAYER_GET_EYE_POSITION =
+            "Lnet/minecraft/world/entity/player/Player;getEyePosition()Lnet/minecraft/world/phys/Vec3;";
+
     public static final String POSITIONAL_RANDOM_FACTORY_AT =
             "Lnet/minecraft/world/level/levelgen/PositionalRandomFactory;at(III)Lnet/minecraft/util/RandomSource;";
 

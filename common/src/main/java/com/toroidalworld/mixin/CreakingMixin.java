@@ -3,6 +3,7 @@ package com.toroidalworld.mixin;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+import com.toroidalworld.InjectionTargets;
 import com.toroidalworld.engine.seam.SeamSteering;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 
@@ -13,9 +14,7 @@ import net.minecraft.world.phys.Vec3;
 public class CreakingMixin {
     @ModifyExpressionValue(
             method = "playerIsStuckInYou",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/world/entity/player/Player;getEyePosition()Lnet/minecraft/world/phys/Vec3;"))
+            at = @At(value = "INVOKE", target = InjectionTargets.PLAYER_GET_EYE_POSITION))
     private Vec3 toroidal$stuckEyeThroughSeam(Vec3 eyePosition) {
         return SeamSteering.nearestCopy((Creaking) (Object) this, eyePosition);
     }

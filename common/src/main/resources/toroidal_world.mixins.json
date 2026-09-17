@@ -57,6 +57,7 @@
     "ConnectionMixin",
     "CreakingMixin",
     "CrossbowItemAimMixin",
+    "CushionItemMixin",
     "DedicatedServerMixin",
     "DefaultRandomPosMixin",
     "DistanceBoundsMixin",
