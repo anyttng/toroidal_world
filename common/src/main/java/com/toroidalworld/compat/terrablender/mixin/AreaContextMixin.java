@@ -11,7 +11,7 @@ import terrablender.worldgen.noise.Area;
 import terrablender.worldgen.noise.AreaContext;
 import terrablender.worldgen.noise.PixelTransformer;
 
-@Mixin(AreaContext.class)
+@Mixin(value = AreaContext.class, remap = false)
 public class AreaContextMixin {
     private static final String TRANSFORMER = "Lterrablender/worldgen/noise/PixelTransformer;";
     private static final String AREA = "Lterrablender/worldgen/noise/Area;";

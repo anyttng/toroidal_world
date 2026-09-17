@@ -13,7 +13,7 @@ import net.minecraft.core.Direction;
 
 import terrablender.worldgen.noise.Area;
 
-@Mixin(Area.class)
+@Mixin(value = Area.class, remap = false)
 public class AreaMixin implements LayeredArea {
     @Unique
     private @Nullable RegionLayerStack toroidal$stack;
