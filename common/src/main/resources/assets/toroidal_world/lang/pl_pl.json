@@ -52,6 +52,8 @@
   "gui.toroidal_world.toroidal_settings.climate_factor_hint": "Ile razy mniejsze stają się biomy: wartość temperatury przy wybranym rozmiarze, roślinność bierze własną. Jedynka oznacza, że przy tym rozmiarze ten tryb niczego nie zmienia — klimat już się mieści. Wpisywane tylko przy Własne, liczbą całkowitą od 1 do 64.",
   "gui.toroidal_world.toroidal_settings.guaranteed_land": "Gwarantowany ląd",
   "gui.toroidal_world.toroidal_settings.guaranteed_land_hint": "Zapobiega powstaniu świata złożonego z samego oceanu: tam, gdzie na okrążeniu nie byłoby gdzie stanąć, poziom lądu podnosi się dokładnie na tyle, by pojawiła się jedna wyspa. Świat, który już ma ląd, pozostaje bez zmian.",
+  "gui.toroidal_world.toroidal_settings.guaranteed_nether_complexes": "Gwarantowana forteca i bastion",
+  "gui.toroidal_world.toroidal_settings.guaranteed_nether_complexes_hint": "Nether będzie miał co najmniej jedną fortecę Netheru i jedne ruiny bastionu, każde w biomie, w którym mogą stać. Bez tego mały Nether często nie ma żadnej z nich.",
 
   "gui.toroidal_world.cylinder_settings.title": "Ustawienia świata cylindrycznego",
   "gui.toroidal_world.cylinder_settings.axis": "Oś zapętlenia",

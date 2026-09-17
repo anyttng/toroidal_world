@@ -52,6 +52,8 @@
   "gui.toroidal_world.toroidal_settings.climate_factor_hint": "How many times smaller biomes get: temperature's value at the chosen size, and vegetation takes its own. A 1 means this mode changes nothing at this size — the climate already fits. Editable in Custom alone, as a whole number from 1 to 64.",
   "gui.toroidal_world.toroidal_settings.guaranteed_land": "Guaranteed land",
   "gui.toroidal_world.toroidal_settings.guaranteed_land_hint": "Keeps a world from coming out all ocean: where a lap would leave nowhere to stand, the land level rises just enough for one island. A world that already has land is left as it is.",
+  "gui.toroidal_world.toroidal_settings.guaranteed_nether_complexes": "Guaranteed fortress and bastion",
+  "gui.toroidal_world.toroidal_settings.guaranteed_nether_complexes_hint": "Makes the Nether hold at least one nether fortress and one bastion remnant, each in a biome it can stand in. Without it a small Nether often has neither.",
 
   "gui.toroidal_world.cylinder_settings.title": "Cylinder World Settings",
   "gui.toroidal_world.cylinder_settings.axis": "Looping axis",
