@@ -12,6 +12,7 @@ import com.toroidalworld.core.WrapDomain;
 import com.toroidalworld.engine.noise.DensityFunctionSlotAxes;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
 import com.toroidalworld.engine.noise.NoiseConstants;
+import com.toroidalworld.engine.noise.NoiseScaleLadder;
 import com.toroidalworld.engine.noise.SlotAxes;
 import com.toroidalworld.engine.noise.SlotAxis;
 import com.toroidalworld.shape.climate.ClimateCompression;
@@ -71,9 +72,7 @@ public final class C2meDfcAst {
     private static @Nullable Fold foldOf(DensityFunction source) {
         return switch (source) {
             case DensityFunctions.Noise noise -> noiseFold(noise);
-            case DensityFunctions.ShiftedNoise shifted -> new Fold(SlotAxes.DEFAULT, shifted.xzScale(),
-                    GenerationTransformerContext.verticalShare(shifted.xzScale(), shifted.yScale()), false,
-                    shifted.xzScale() != 0.0);
+            case DensityFunctions.ShiftedNoise shifted -> shiftedNoiseFold(shifted);
             case DensityFunctions.Shift _, DensityFunctions.ShiftA _ -> new Fold(SlotAxes.DEFAULT,
                     NoiseConstants.SHIFT_SCALE, GenerationTransformerContext.UNDECLARED_VERTICAL_SHARE, true, false);
             case DensityFunctions.ShiftB _ -> new Fold(DensityFunctionSlotAxes.SHIFT_B, NoiseConstants.SHIFT_SCALE,
@@ -108,8 +107,15 @@ public final class C2meDfcAst {
 
     @SuppressWarnings("deprecation")
     private static Fold noiseFold(DensityFunctions.Noise noise) {
-        return new Fold(SlotAxes.DEFAULT, noise.xzScale(),
-                GenerationTransformerContext.verticalShare(noise.xzScale(), noise.yScale()), false, false);
+        double xzScale = NoiseScaleLadder.installedScale(noise.noise(), noise.xzScale());
+        return new Fold(SlotAxes.DEFAULT, xzScale,
+                GenerationTransformerContext.verticalShare(xzScale, noise.yScale()), false, false);
+    }
+
+    private static Fold shiftedNoiseFold(DensityFunctions.ShiftedNoise shifted) {
+        double xzScale = NoiseScaleLadder.installedScale(shifted.noise(), shifted.xzScale());
+        return new Fold(SlotAxes.DEFAULT, xzScale,
+                GenerationTransformerContext.verticalShare(xzScale, shifted.yScale()), false, xzScale != 0.0);
     }
 
     private static AstNode foldNoise(DensityFunction source, GenericShiftedNoiseNode noise, Fold fold,
