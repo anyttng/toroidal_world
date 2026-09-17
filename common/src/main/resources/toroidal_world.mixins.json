@@ -110,6 +110,7 @@
     "ImprovedNoiseMixin",
     "InitializeBorderPacketAccessor",
     "InteractWithDoorMixin",
+    "LandOnOwnersShoulderGoalMixin",
     "LandRandomPosMixin",
     "LayerLightSectionStorageMixin",
     "LeapAtTargetGoalMixin",
