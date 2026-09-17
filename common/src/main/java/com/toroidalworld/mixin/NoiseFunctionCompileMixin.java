@@ -31,7 +31,7 @@ public class NoiseFunctionCompileMixin {
 
         NoiseFunction self = (NoiseFunction) (Object) this;
         Holder<NormalNoise> noise = self.noise();
-        double xzScale = self.xzScale();
+        double xzScale = folded.ladder().separated(noise, self.xzScale());
         double yScale = self.yScale();
         double verticalShare = GenerationTransformerContext.verticalShare(xzScale, yScale);
         NoiseStack stack = FoldedSamplers.stack(folded, noise);

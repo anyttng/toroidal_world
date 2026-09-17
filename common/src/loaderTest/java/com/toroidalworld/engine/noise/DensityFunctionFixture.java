@@ -84,6 +84,15 @@ public final class DensityFunctionFixture {
         return new DensityFunctionCompiler(new FoldedCompileContext(SEEDED, fold, NO_LIFT)).getSampler(function);
     }
 
+    public static DensitySampler compileSeparated(DensityFunction function, WorldFold fold) {
+        return new DensityFunctionCompiler(new FoldedCompileContext(SEEDED, fold, NO_LIFT, ladderOf(function, fold)))
+                .getSampler(function);
+    }
+
+    public static NoiseScaleLadder ladderOf(DensityFunction function, WorldFold fold) {
+        return NoiseScaleLadder.of(fold, List.of(function), SEEDED);
+    }
+
     public static float sample(DensitySampler sampler, int x, int y, int z) {
         return sampler.sampleValue(SamplerContext.EMPTY_UNCACHED, x, y, z);
     }

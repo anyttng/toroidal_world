@@ -1,5 +1,7 @@
 package com.toroidalworld.mixin;
 
+import java.util.List;
+
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -18,6 +20,8 @@ import com.toroidalworld.engine.gen.CanonicalRandomFactory;
 import com.toroidalworld.engine.noise.AquiferCells;
 import com.toroidalworld.engine.noise.FoldedCompileContext;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
+import com.toroidalworld.engine.noise.NoiseScaleLadder;
+import com.llamalad7.mixinextras.sugar.Local;
 
 import net.minecraft.core.HolderGetter;
 import net.minecraft.world.level.block.state.BlockState;
@@ -66,13 +70,15 @@ public class RandomStateMixin implements CoastLiftCache, TransformerSource, Fold
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/level/levelgen/densityfunction/DensityFunctionCompiler;<init>("
                             + "Lnet/minecraft/world/level/levelgen/densityfunction/DensityFunction$CompileContext;)V"))
-    private DensityFunction.CompileContext toroidal$compileWithTheFold(DensityFunction.CompileContext context) {
+    private DensityFunction.CompileContext toroidal$compileWithTheFold(DensityFunction.CompileContext context,
+            @Local(argsOnly = true) NoiseRouter router) {
         WorldFold fold = GenerationTransformerContext.context().routerBuildTransformer();
         if (fold == null) {
             return context;
         }
 
-        this.toroidal$compileContext = new FoldedCompileContext(context, fold, this);
+        this.toroidal$compileContext = new FoldedCompileContext(context, fold, this,
+                NoiseScaleLadder.of(fold, toroidal$roots(router), context));
         return this.toroidal$compileContext;
     }
 
@@ -85,6 +91,12 @@ public class RandomStateMixin implements CoastLiftCache, TransformerSource, Fold
             GenerationMoments.runAtRandomState((RandomState) (Object) this, new ToroidalShapeView(fold),
                     fold.generationOptions(), seaLevel);
         }
+    }
+
+    @Unique
+    private static List<DensityFunction> toroidal$roots(NoiseRouter router) {
+        return List.of(router.temperature(), router.vegetation(), router.continents(), router.erosion(),
+                router.depth(), router.ridges(), router.chunkSurfaceLevel(), router.finalDensity());
     }
 
     @Override

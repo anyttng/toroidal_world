@@ -11,13 +11,18 @@ import net.minecraft.world.level.levelgen.synth.Noise;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
 
 public record FoldedCompileContext(DensityFunction.CompileContext vanilla, WorldFold fold, CoastLiftCache coastLift,
-        double xDivisor, double zDivisor) implements DensityFunction.CompileContext {
+        NoiseScaleLadder ladder, double xDivisor, double zDivisor) implements DensityFunction.CompileContext {
     public FoldedCompileContext(DensityFunction.CompileContext vanilla, WorldFold fold, CoastLiftCache coastLift) {
-        this(vanilla, fold, coastLift, NoiseConstants.UNDIVIDED, NoiseConstants.UNDIVIDED);
+        this(vanilla, fold, coastLift, NoiseScaleLadder.NONE);
+    }
+
+    public FoldedCompileContext(DensityFunction.CompileContext vanilla, WorldFold fold, CoastLiftCache coastLift,
+            NoiseScaleLadder ladder) {
+        this(vanilla, fold, coastLift, ladder, NoiseConstants.UNDIVIDED, NoiseConstants.UNDIVIDED);
     }
 
     public FoldedCompileContext withDivisors(double xCellWidth, double zCellWidth) {
-        return new FoldedCompileContext(this.vanilla, this.fold, this.coastLift, xCellWidth, zCellWidth);
+        return new FoldedCompileContext(this.vanilla, this.fold, this.coastLift, this.ladder, xCellWidth, zCellWidth);
     }
 
     @Override
