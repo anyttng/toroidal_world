@@ -6,7 +6,7 @@ import com.toroidalworld.InjectionTargets;
 import com.toroidalworld.engine.noise.FoldedCompileContext;
 import com.toroidalworld.engine.noise.FoldedSamplers;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
-import com.toroidalworld.shape.torus.ClimateCompression;
+import com.toroidalworld.shape.climate.ClimateCompression;
 import com.toroidalworld.shape.torus.CoastFields;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;

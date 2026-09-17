@@ -1,4 +1,4 @@
-package com.toroidalworld.shape.torus;
+package com.toroidalworld.shape.climate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -7,6 +7,10 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import com.mojang.serialization.JsonOps;
 import com.toroidalworld.core.FlatShape;
 import com.toroidalworld.api.v1.option.GenerationOptions;
 import com.toroidalworld.core.WorldFold;
@@ -28,6 +32,9 @@ class ClimateCompressionTest {
 
     private static final boolean CLIMATE = true;
     private static final boolean COAST = false;
+
+    private static final String MODE_KEY = "mode";
+    private static final String FACTOR_KEY = "factor";
 
     private static final int[] PRESET_CHUNK_WIDTHS = {32, 64, 128, 256, 512};
 
@@ -173,15 +180,34 @@ class ClimateCompressionTest {
     }
 
     @Test
-    void aCylinderIsNeverCompressed() {
+    void aCylinderIsCompressedAsATorusOfTheSameLapInEveryMode() {
         for (Direction.Axis axis : new Direction.Axis[] {Direction.Axis.X, Direction.Axis.Z}) {
             for (int chunkWidth : PRESET_CHUNK_WIDTHS) {
-                WorldFold cylinder = WorldFolds.of(FlatShape.cylinder(WorldLoopBounds.ofWidth(axis, chunkWidth)));
-                String where = axis + " cylinder of " + chunkWidth * 16 + " blocks";
+                for (ClimateScale scale : List.of(ClimateScale.OFF, ClimateScale.AUTO, ClimateScale.STRONG,
+                        ClimateScale.custom(6))) {
+                    GenerationOptions options = GenerationOptions.DEFAULT.with(CompactBiomes.OPTION, scale);
+                    WorldFold cylinder = WorldFolds.of(
+                            FlatShape.cylinder(WorldLoopBounds.ofWidth(axis, chunkWidth)), options);
+                    WorldFold torus = WorldFolds.of(FlatShape.torus(WorldLoopBounds.ofWidth(chunkWidth)), options);
+                    String where = axis + " cylinder of " + chunkWidth * 16 + " blocks under " + scale.mode();
 
-                assertEquals(1.0, actual(TEMPERATURE, cylinder, HORIZONTAL), 0.0, "temperature on a " + where);
-                assertEquals(1.0, actual(VEGETATION, cylinder, HORIZONTAL), 0.0, "vegetation on a " + where);
+                    for (Field field : List.of(TEMPERATURE, TEMPERATURE_LARGE, VEGETATION, CONTINENTALNESS)) {
+                        assertEquals(actual(field, torus, HORIZONTAL), actual(field, cylinder, HORIZONTAL), 0.0,
+                                field.name() + " on a " + where);
+                    }
+                }
             }
+        }
+    }
+
+    @Test
+    void aCylinderThatDeclinedCompressionIsMultipliedByExactlyOne() {
+        for (Direction.Axis axis : new Direction.Axis[] {Direction.Axis.X, Direction.Axis.Z}) {
+            WorldFold cylinder = WorldFolds.of(FlatShape.cylinder(WorldLoopBounds.ofWidth(axis, 32)),
+                    GenerationOptions.DEFAULT.with(CompactBiomes.OPTION, ClimateScale.OFF));
+
+            assertEquals(1.0, actual(TEMPERATURE, cylinder, HORIZONTAL), 0.0, "temperature on an " + axis + " cylinder");
+            assertEquals(1.0, actual(VEGETATION, cylinder, HORIZONTAL), 0.0, "vegetation on an " + axis + " cylinder");
         }
     }
 
@@ -242,13 +268,39 @@ class ClimateCompressionTest {
     }
 
     @Test
-    void aFixedModeIsRefusedByAVerticallyLiveFieldAndByACylinder() {
+    void aFixedModeIsRefusedByAVerticallyLiveField() {
         assertEquals(1.0, actual(TEMPERATURE, strongSquare(32), 0.5), 0.0, "strong, declared vertical share");
         assertEquals(1.0, actual(TEMPERATURE, customSquare(32, 8), 0.5), 0.0, "custom, declared vertical share");
+    }
 
-        WorldFold cylinder = WorldFolds.of(FlatShape.cylinder(WorldLoopBounds.ofWidth(Direction.Axis.X, 32)),
-                GenerationOptions.DEFAULT.with(CompactBiomes.OPTION, ClimateScale.STRONG));
-        assertEquals(1.0, actual(TEMPERATURE, cylinder, HORIZONTAL), 0.0, "strong on a cylinder");
+    @Test
+    void customReachesWhatAutoFitsOnTheSmallestLargeBiomesWorld() {
+        double auto = actual(TEMPERATURE_LARGE, square(32), HORIZONTAL);
+
+        assertTrue(auto <= ClimateScale.CUSTOM_MAX, "auto fits " + auto + ", above the custom ceiling");
+        assertEquals(ClimateScale.CUSTOM_MAX, actual(TEMPERATURE_LARGE, customSquare(32, ClimateScale.CUSTOM_MAX),
+                HORIZONTAL), 0.0, "temperature_large under custom at the ceiling on 512 blocks");
+    }
+
+    @Test
+    void theCodecTakesTheCeilingRefusesPastItAndReadsAnOlderWorldUnchanged() {
+        assertEquals(ClimateScale.custom(ClimateScale.CUSTOM_MAX), decode(customJson(ClimateScale.CUSTOM_MAX)));
+        assertTrue(ClimateScale.CODEC.parse(JsonOps.INSTANCE, customJson(ClimateScale.CUSTOM_MAX + 1)).isError(),
+                "a factor past the ceiling parses");
+        assertEquals(ClimateScale.custom(16), decode(customJson(16)));
+        assertEquals(ClimateScale.AUTO, decode(new JsonPrimitive(true)));
+        assertEquals(ClimateScale.OFF, decode(new JsonPrimitive(false)));
+    }
+
+    private static JsonElement customJson(int factor) {
+        JsonObject custom = new JsonObject();
+        custom.addProperty(MODE_KEY, ClimateScale.Mode.CUSTOM.getSerializedName());
+        custom.addProperty(FACTOR_KEY, factor);
+        return custom;
+    }
+
+    private static ClimateScale decode(JsonElement json) {
+        return ClimateScale.CODEC.parse(JsonOps.INSTANCE, json).getOrThrow(message -> new AssertionError(message));
     }
 
     @Test

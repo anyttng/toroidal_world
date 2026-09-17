@@ -1,4 +1,4 @@
-package com.toroidalworld.client.shape.torus;
+package com.toroidalworld.client.shape.climate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

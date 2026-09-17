@@ -49,7 +49,7 @@
   "gui.toroidal_world.toroidal_settings.climate_mode.custom.hint": "Shrinks biomes exactly as many times as you type below.",
   "gui.toroidal_world.toroidal_settings.climate_keeps": "Coastlines and terrain keep their usual size.",
   "gui.toroidal_world.toroidal_settings.climate_factor": "Shrink biomes by",
-  "gui.toroidal_world.toroidal_settings.climate_factor_hint": "How many times smaller biomes get: temperature's value at the chosen size, and vegetation takes its own. A 1 means this mode changes nothing at this size — the climate already fits. Editable in Custom alone, as a whole number from 1 to 16.",
+  "gui.toroidal_world.toroidal_settings.climate_factor_hint": "How many times smaller biomes get: temperature's value at the chosen size, and vegetation takes its own. A 1 means this mode changes nothing at this size — the climate already fits. Editable in Custom alone, as a whole number from 1 to 64.",
   "gui.toroidal_world.toroidal_settings.guaranteed_land": "Guaranteed land",
   "gui.toroidal_world.toroidal_settings.guaranteed_land_hint": "Keeps a world from coming out all ocean: where a lap would leave nowhere to stand, the land level rises just enough for one island. A world that already has land is left as it is.",
 

@@ -23,8 +23,8 @@ import com.toroidalworld.core.WorldFolds;
 import com.toroidalworld.core.WorldLoopBounds;
 import com.toroidalworld.core.WorldLoopBounds.AxisBounds;
 import com.toroidalworld.core.WorldLoopSizes;
-import com.toroidalworld.shape.torus.ClimateScale;
-import com.toroidalworld.shape.torus.CompactBiomes;
+import com.toroidalworld.shape.climate.ClimateScale;
+import com.toroidalworld.shape.climate.CompactBiomes;
 import com.toroidalworld.shape.torus.GuaranteedLand;
 
 import net.minecraft.core.Direction;

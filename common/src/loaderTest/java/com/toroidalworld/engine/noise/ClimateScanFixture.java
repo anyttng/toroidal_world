@@ -9,8 +9,8 @@ import com.toroidalworld.core.WorldFolds;
 import com.toroidalworld.core.WorldLoopBounds;
 import com.toroidalworld.shape.GenerationHookSetup;
 import com.toroidalworld.shape.WorldOptionSetup;
-import com.toroidalworld.shape.torus.ClimateScale;
-import com.toroidalworld.shape.torus.CompactBiomes;
+import com.toroidalworld.shape.climate.ClimateScale;
+import com.toroidalworld.shape.climate.CompactBiomes;
 import com.toroidalworld.shape.torus.GuaranteedLand;
 
 import net.minecraft.SharedConstants;
@@ -92,6 +92,11 @@ public final class ClimateScanFixture {
 
     public static WorldFold cylinderOfWidth(int widthBlocks) {
         return WorldFolds.of(FlatShape.cylinder(WorldLoopBounds.ofWidth(Direction.Axis.X, widthBlocks / 16)));
+    }
+
+    public static WorldFold uncompressedCylinderOfWidth(int widthBlocks) {
+        return WorldFolds.of(FlatShape.cylinder(WorldLoopBounds.ofWidth(Direction.Axis.X, widthBlocks / 16)),
+                GenerationOptions.DEFAULT.with(CompactBiomes.OPTION, ClimateScale.OFF));
     }
 
     public static NormalNoise noiseParameters(ResourceKey<NormalNoise> key) {

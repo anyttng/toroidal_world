@@ -1,4 +1,4 @@
-package com.toroidalworld.shape.torus;
+package com.toroidalworld.shape.noise;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.toroidalworld.shape.torus;
+package com.toroidalworld.shape.climate;
 
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
@@ -12,7 +12,7 @@ public record ClimateScale(Mode mode, int factor) {
 
     public static final int STRONG_FACTOR = 4;
     public static final int CUSTOM_MIN = 1;
-    public static final int CUSTOM_MAX = 16;
+    public static final int CUSTOM_MAX = 64;
 
     public static final ClimateScale OFF = new ClimateScale(Mode.OFF, STRONG_FACTOR);
     public static final ClimateScale AUTO = new ClimateScale(Mode.AUTO, STRONG_FACTOR);

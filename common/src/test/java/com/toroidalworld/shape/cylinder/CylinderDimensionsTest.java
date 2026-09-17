@@ -9,10 +9,13 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import com.toroidalworld.api.v1.option.GenerationOptions;
 import com.toroidalworld.api.v1.shape.LoopSpans;
 import com.toroidalworld.core.FlatShape;
 import com.toroidalworld.core.WorldLoopBounds;
 import com.toroidalworld.engine.gen.ShapedDimensions;
+import com.toroidalworld.shape.climate.ClimateScale;
+import com.toroidalworld.shape.climate.CompactBiomes;
 import com.toroidalworld.shape.torus.TorusDimensions;
 import com.toroidalworld.shape.torus.TorusSettings;
 
@@ -34,10 +37,12 @@ class CylinderDimensionsTest {
     private static final HolderLookup.Provider WORLDGEN = VanillaRegistries.createWorldLookup();
 
     private static final CylinderSettings X_32 = new CylinderSettings(
-            LoopSpans.ofWidth(Direction.Axis.X, 32), 2, LoopSpans.ofWidth(Direction.Axis.X, 256));
+            LoopSpans.ofWidth(Direction.Axis.X, 32), 2, LoopSpans.ofWidth(Direction.Axis.X, 256),
+            CylinderSettings.DEFAULT.generationOptions());
 
     private static final CylinderSettings Z_64 = new CylinderSettings(
-            LoopSpans.ofWidth(Direction.Axis.Z, 64), 4, LoopSpans.ofWidth(Direction.Axis.Z, 320));
+            LoopSpans.ofWidth(Direction.Axis.Z, 64), 4, LoopSpans.ofWidth(Direction.Axis.Z, 320),
+            GenerationOptions.DEFAULT.with(CompactBiomes.OPTION, ClimateScale.custom(6)));
 
     @Test
     void anXCylinderRoundTripsThroughItsThreeGenerators() {
@@ -80,7 +85,7 @@ class CylinderDimensionsTest {
 
         assertNull(ShapedDimensions.shapeOf(created, LevelStem.NETHER));
         assertEquals(new CylinderSettings(LoopSpans.ofWidth(Direction.Axis.Z, 64), 4,
-                LoopSpans.ofWidth(Direction.Axis.Z, 256)), CylinderDimensions.read(created));
+                LoopSpans.ofWidth(Direction.Axis.Z, 256), Z_64.generationOptions()), CylinderDimensions.read(created));
     }
 
     @Test
@@ -96,11 +101,14 @@ class CylinderDimensionsTest {
     @Test
     void settingsRefuseATorusOverworldAndAnEndOffTheAxis() {
         assertThrows(IllegalArgumentException.class, () -> new CylinderSettings(
-                LoopSpans.ofWidth(32), 2, LoopSpans.ofWidth(Direction.Axis.X, 256)));
+                LoopSpans.ofWidth(32), 2, LoopSpans.ofWidth(Direction.Axis.X, 256),
+                CylinderSettings.DEFAULT.generationOptions()));
         assertThrows(IllegalArgumentException.class, () -> new CylinderSettings(
-                LoopSpans.ofWidth(Direction.Axis.X, 32), 2, LoopSpans.ofWidth(Direction.Axis.Z, 256)));
+                LoopSpans.ofWidth(Direction.Axis.X, 32), 2, LoopSpans.ofWidth(Direction.Axis.Z, 256),
+                CylinderSettings.DEFAULT.generationOptions()));
         assertThrows(IllegalArgumentException.class, () -> new CylinderSettings(
-                LoopSpans.ofWidth(Direction.Axis.X, 32), 2, LoopSpans.ofWidth(256)));
+                LoopSpans.ofWidth(Direction.Axis.X, 32), 2, LoopSpans.ofWidth(256),
+                CylinderSettings.DEFAULT.generationOptions()));
     }
 
     private static WorldDimensions vanillaDimensions() {
