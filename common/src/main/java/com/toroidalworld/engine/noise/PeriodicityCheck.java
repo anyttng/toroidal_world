@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 
+import com.toroidalworld.core.ShapedChunkGenerator;
 import com.toroidalworld.core.WorldFold;
 import com.mojang.logging.LogUtils;
 
@@ -17,9 +18,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.NoiseColumn;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeResolver;
 import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
 
 public final class PeriodicityCheck {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -38,7 +41,15 @@ public final class PeriodicityCheck {
         }
 
         ChunkGenerator generator = level.getChunkSource().getGenerator();
+        if (!ShapedChunkGenerator.tilesAtSeam(generator)) {
+            LOGGER.info("[world-loop] periodicity_skipped level={} generator={}",
+                    levelName, generator.getClass().getSimpleName());
+            return;
+        }
+
         RandomState randomState = level.getChunkSource().randomState();
+        Climate.Sampler sampler = randomState.createClimateSampler(SamplerContext.EMPTY_UNCACHED);
+        BiomeResolver biomes = generator.getBiomeSource().createResolver(sampler);
         Direction.Axis lapAxis = transformer.bounds().loops(Direction.Axis.X) ? Direction.Axis.X : Direction.Axis.Z;
         int widthBlocks = transformer.blockDomain(lapAxis).domainLength;
         String axisName = lapAxis.getName().toUpperCase(Locale.ROOT);
@@ -60,7 +71,6 @@ public final class PeriodicityCheck {
                 int lapAwayQuartX = QuartPos.fromBlock(xLapAway);
                 int lapAwayQuartZ = QuartPos.fromBlock(zLapAway);
 
-                Climate.Sampler sampler = randomState.sampler();
                 Climate.TargetPoint climateHere = GenerationTransformerContext.withTransformer(transformer,
                         () -> sampler.sample(quartX, quartY, quartZ));
                 Climate.TargetPoint climateLapAway = GenerationTransformerContext.withTransformer(transformer,
@@ -68,9 +78,9 @@ public final class PeriodicityCheck {
                 broken |= collectClimate(brokenFields, climateHere, climateLapAway);
 
                 Holder<Biome> biomeHere = GenerationTransformerContext.withTransformer(transformer,
-                        () -> generator.getBiomeSource().getNoiseBiome(quartX, quartY, quartZ, sampler));
+                        () -> biomes.getNoiseBiome(quartX, quartY, quartZ));
                 Holder<Biome> biomeLapAway = GenerationTransformerContext.withTransformer(transformer,
-                        () -> generator.getBiomeSource().getNoiseBiome(lapAwayQuartX, quartY, lapAwayQuartZ, sampler));
+                        () -> biomes.getNoiseBiome(lapAwayQuartX, quartY, lapAwayQuartZ));
                 if (!biomeHere.equals(biomeLapAway)) {
                     brokenFields.add("biome");
                     broken = true;

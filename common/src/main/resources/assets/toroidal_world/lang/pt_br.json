@@ -12,7 +12,7 @@
   "gui.toroidal_world.world_shape.toroidal.hint": "Os dois eixos horizontais se fecham — ande o bastante em qualquer direção e você volta ao ponto de partida.",
   "gui.toroidal_world.world_shape.cylinder": "Cilíndrico",
   "gui.toroidal_world.world_shape.cylinder.hint": "Um eixo horizontal se fecha; o outro segue sem fim, como no mundo normal.",
-  "gui.toroidal_world.world_shape.unavailable": "Este tipo de mundo traz seu próprio gerador de mundo, que não pode adotar um Formato do mundo.",
+  "gui.toroidal_world.world_shape.seam_warning": "Este tipo de mundo traz seu próprio gerador de mundo: um Formato do mundo ainda limita o mundo e o fecha em um loop, mas o terreno não vai se encaixar na emenda.",
 
   "gui.toroidal_world.toroidal_settings.title": "Configurações do mundo toroidal",
   "gui.toroidal_world.toroidal_settings.preset.tiny": "Minúsculo",
@@ -25,11 +25,14 @@
   "gui.toroidal_world.toroidal_settings.consequence.structures_common": "Espaço para todas as estruturas comuns; fortalezas ficam mais perto que o normal.",
   "gui.toroidal_world.toroidal_settings.consequence.structures_all": "Espaço para toda estrutura na distância normal.",
   "gui.toroidal_world.toroidal_settings.size": "Tamanho do mundo em chunks (%s–%s)",
+  "gui.toroidal_world.toroidal_settings.size_x": "Tamanho do mundo em X em chunks (%s–%s)",
+  "gui.toroidal_world.toroidal_settings.size_z": "Tamanho do mundo em Z em chunks (%s–%s)",
   "gui.toroidal_world.toroidal_settings.hint": "Quão longe você anda até voltar ao ponto de partida.",
   "gui.toroidal_world.toroidal_settings.effective": "%s chunks = %s blocos",
   "gui.toroidal_world.toroidal_settings.nether_scale": "Escala do Nether: 1:%s",
   "gui.toroidal_world.toroidal_settings.nether_hint": "Quanto mais curta fica a mesma viagem pelo Nether. Apenas escalas que dividem o mundo por igual são oferecidas.",
   "gui.toroidal_world.toroidal_settings.nether_effective": "Nether: %s chunks = %s blocos",
+  "gui.toroidal_world.toroidal_settings.nether_effective_xz": "Nether: %s × %s chunks = %s × %s blocos",
   "gui.toroidal_world.toroidal_settings.end_size": "Tamanho do End em chunks (%s–%s)",
   "gui.toroidal_world.toroidal_settings.end_hint": "O End dá a volta na própria largura, independente do tamanho do mundo. Menor que o mínimo não deixa ilhas externas — sem cidades do End, sem élitros.",
   "gui.toroidal_world.toroidal_settings.end_effective": "End: %s chunks = %s blocos",
@@ -46,11 +49,18 @@
   "gui.toroidal_world.toroidal_settings.climate_mode.custom.hint": "Encolhe os biomas exatamente o número de vezes digitado abaixo.",
   "gui.toroidal_world.toroidal_settings.climate_keeps": "As costas e o relevo mantêm o tamanho normal.",
   "gui.toroidal_world.toroidal_settings.climate_factor": "Reduzir os biomas em",
-  "gui.toroidal_world.toroidal_settings.climate_factor_hint": "Quantas vezes menores os biomas ficam: o valor da temperatura no tamanho escolhido, e a vegetação toma o seu. Um 1 significa que este modo não muda nada neste tamanho — o clima já cabe. Só é digitável em Personalizado, como número inteiro de 1 a 16.",
+  "gui.toroidal_world.toroidal_settings.climate_factor_hint": "Quantas vezes menores os biomas ficam: o valor da temperatura no tamanho escolhido, e a vegetação toma o seu. Um 1 significa que este modo não muda nada neste tamanho — o clima já cabe. Só é digitável em Personalizado, como número inteiro de 1 a 64.",
   "gui.toroidal_world.toroidal_settings.guaranteed_land": "Terra garantida",
   "gui.toroidal_world.toroidal_settings.guaranteed_land_hint": "Impede que um mundo saia inteiramente oceânico: onde uma volta não deixaria onde pisar, o nível do terreno sobe apenas o bastante para surgir uma ilha. Um mundo que já tem terra fica como está.",
+  "gui.toroidal_world.toroidal_settings.guaranteed_nether_complexes": "Fortaleza e bastião garantidos",
+  "gui.toroidal_world.toroidal_settings.guaranteed_nether_complexes_hint": "O Nether terá pelo menos uma fortaleza do Nether e uma ruína de bastião, cada uma em um bioma onde pode existir. Sem isso, um Nether pequeno muitas vezes não tem nenhuma.",
 
   "gui.toroidal_world.cylinder_settings.title": "Configurações do mundo cilíndrico",
   "gui.toroidal_world.cylinder_settings.axis": "Eixo de repetição",
-  "gui.toroidal_world.cylinder_settings.axis_hint": "O mundo se fecha ao longo deste eixo e segue sem fim ao longo do outro."
+  "gui.toroidal_world.cylinder_settings.axis_hint": "O mundo se fecha ao longo deste eixo e segue sem fim ao longo do outro.",
+
+  "toroidal_world.configuration.mapCopies": "Cópias do mundo no mapa em tela cheia",
+  "toroidal_world.configuration.mapCopies.tooltip": "Como os mods de mapa mostram um mundo que se fecha em tela cheia: \"Repetido\" preenche a janela com cópias dele, \"Única\" mostra o mundo uma só vez e não deixa mover nem afastar o mapa além das bordas. Os minimapas sempre o repetem.",
+  "toroidal_world.configuration.mapCopies.repeated": "Repetido",
+  "toroidal_world.configuration.mapCopies.single": "Única"
 }

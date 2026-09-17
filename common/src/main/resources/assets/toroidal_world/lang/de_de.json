@@ -12,7 +12,7 @@
   "gui.toroidal_world.world_shape.toroidal.hint": "Beide horizontalen Achsen schließen sich — wer weit genug in eine Richtung geht, kommt am Ausgangspunkt wieder an.",
   "gui.toroidal_world.world_shape.cylinder": "Zylindrisch",
   "gui.toroidal_world.world_shape.cylinder.hint": "Eine horizontale Achse schließt sich, die andere geht wie in Vanilla endlos weiter.",
-  "gui.toroidal_world.world_shape.unavailable": "Dieser Welttyp bringt einen eigenen Weltgenerator mit, der keine Weltform annehmen kann.",
+  "gui.toroidal_world.world_shape.seam_warning": "Dieser Welttyp bringt einen eigenen Weltgenerator mit: Eine Weltform begrenzt die Welt und schließt sie zur Schleife, aber das Gelände passt an der Naht nicht zusammen.",
 
   "gui.toroidal_world.toroidal_settings.title": "Einstellungen der toroidalen Welt",
   "gui.toroidal_world.toroidal_settings.preset.tiny": "Winzig",
@@ -25,11 +25,14 @@
   "gui.toroidal_world.toroidal_settings.consequence.structures_common": "Platz für alle üblichen Bauwerke; Festungen liegen näher als gewohnt.",
   "gui.toroidal_world.toroidal_settings.consequence.structures_all": "Platz für jedes Bauwerk in gewohnter Entfernung.",
   "gui.toroidal_world.toroidal_settings.size": "Weltgröße in Chunks (%s–%s)",
+  "gui.toroidal_world.toroidal_settings.size_x": "Weltgröße entlang X in Chunks (%s–%s)",
+  "gui.toroidal_world.toroidal_settings.size_z": "Weltgröße entlang Z in Chunks (%s–%s)",
   "gui.toroidal_world.toroidal_settings.hint": "Wie weit du läufst, bis du wieder am Ausgangspunkt ankommst.",
   "gui.toroidal_world.toroidal_settings.effective": "%s Chunks = %s Blöcke",
   "gui.toroidal_world.toroidal_settings.nether_scale": "Nether-Maßstab: 1:%s",
   "gui.toroidal_world.toroidal_settings.nether_hint": "Um wie viel kürzer dieselbe Reise durch den Nether ist. Angeboten werden nur Maßstäbe, die die Welt glatt teilen.",
   "gui.toroidal_world.toroidal_settings.nether_effective": "Nether: %s Chunks = %s Blöcke",
+  "gui.toroidal_world.toroidal_settings.nether_effective_xz": "Nether: %s × %s Chunks = %s × %s Blöcke",
   "gui.toroidal_world.toroidal_settings.end_size": "Größe des Endes in Chunks (%s–%s)",
   "gui.toroidal_world.toroidal_settings.end_hint": "Das Ende schließt sich bei seiner eigenen Breite, unabhängig von der Weltgröße. Unter dem Minimum bleiben keine äußeren Inseln — keine Endstädte, keine Elytren.",
   "gui.toroidal_world.toroidal_settings.end_effective": "Ende: %s Chunks = %s Blöcke",
@@ -46,11 +49,18 @@
   "gui.toroidal_world.toroidal_settings.climate_mode.custom.hint": "Verkleinert Biome genau um den unten eingegebenen Faktor.",
   "gui.toroidal_world.toroidal_settings.climate_keeps": "Küstenlinien und Gelände behalten ihre gewohnte Größe.",
   "gui.toroidal_world.toroidal_settings.climate_factor": "Biome verkleinern um",
-  "gui.toroidal_world.toroidal_settings.climate_factor_hint": "Um wie viel kleiner Biome werden: der Wert der Temperatur bei der gewählten Größe, die Vegetation nimmt ihren eigenen. Eine 1 bedeutet, dass dieser Modus bei dieser Größe nichts ändert — das Klima passt bereits. Nur unter Benutzerdefiniert eingebbar, als ganze Zahl von 1 bis 16.",
+  "gui.toroidal_world.toroidal_settings.climate_factor_hint": "Um wie viel kleiner Biome werden: der Wert der Temperatur bei der gewählten Größe, die Vegetation nimmt ihren eigenen. Eine 1 bedeutet, dass dieser Modus bei dieser Größe nichts ändert — das Klima passt bereits. Nur unter Benutzerdefiniert eingebbar, als ganze Zahl von 1 bis 64.",
   "gui.toroidal_world.toroidal_settings.guaranteed_land": "Garantiertes Land",
   "gui.toroidal_world.toroidal_settings.guaranteed_land_hint": "Verhindert, dass eine Welt völlig aus Ozean besteht: Wo eine Runde keinen Platz zum Stehen böte, steigt der Landpegel gerade so weit, dass eine Insel entsteht. Eine Welt, die bereits Land hat, bleibt unverändert.",
+  "gui.toroidal_world.toroidal_settings.guaranteed_nether_complexes": "Garantierte Festung und Bastion",
+  "gui.toroidal_world.toroidal_settings.guaranteed_nether_complexes_hint": "Der Nether enthält mindestens eine Netherfestung und eine Bastionsruine, jede in einem Biom, in dem sie stehen kann. Ohne diese Option hat ein kleiner Nether oft keine von beiden.",
 
   "gui.toroidal_world.cylinder_settings.title": "Einstellungen der zylindrischen Welt",
   "gui.toroidal_world.cylinder_settings.axis": "Schleifenachse",
-  "gui.toroidal_world.cylinder_settings.axis_hint": "Die Welt schließt sich entlang dieser Achse und geht entlang der anderen endlos weiter."
+  "gui.toroidal_world.cylinder_settings.axis_hint": "Die Welt schließt sich entlang dieser Achse und geht entlang der anderen endlos weiter.",
+
+  "toroidal_world.configuration.mapCopies": "Weltkopien auf der Vollbildkarte",
+  "toroidal_world.configuration.mapCopies.tooltip": "Wie Karten-Mods eine geschlossene Welt im Vollbild zeigen: „Wiederholt“ füllt das Fenster mit ihren Kopien, „Einzeln“ zeigt die Welt einmal und lässt die Karte nicht über ihre Ränder hinaus verschieben oder herauszoomen. Minikarten wiederholen sie immer.",
+  "toroidal_world.configuration.mapCopies.repeated": "Wiederholt",
+  "toroidal_world.configuration.mapCopies.single": "Einzeln"
 }

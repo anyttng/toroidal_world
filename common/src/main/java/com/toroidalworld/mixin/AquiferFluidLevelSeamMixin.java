@@ -5,33 +5,39 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
-import com.toroidalworld.InjectionTargets;
-import com.toroidalworld.engine.noise.CanonicalCellSampler;
-import com.toroidalworld.engine.noise.NoiseConstants;
+import com.toroidalworld.accessors.AquiferCellsHolder;
+import com.toroidalworld.engine.noise.AquiferCells;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 
-import net.minecraft.world.level.levelgen.DensityFunction;
+import net.minecraft.world.level.levelgen.densityfunction.DensitySampler;
 
 @Mixin(targets = "net.minecraft.world.level.levelgen.Aquifer$NoiseBasedAquifer")
-public class AquiferFluidLevelSeamMixin {
+public class AquiferFluidLevelSeamMixin implements AquiferCellsHolder {
     @Unique
-    private @Nullable CanonicalCellSampler toroidal$levelSampler;
+    private @Nullable AquiferCells toroidal$aquiferCells;
 
     @WrapOperation(
             method = "computeRandomizedFluidSurfaceLevel",
             at = @At(
                     value = "INVOKE",
-                    target = InjectionTargets.DENSITY_FUNCTION_COMPUTE))
-    private double toroidal$fluidLevelFromCanonicalCell(
-            DensityFunction noise, DensityFunction.FunctionContext cell, Operation<Double> original,
+                    target = "Lnet/minecraft/world/level/levelgen/densityfunction/DensitySampler$Bound;sampleValue(III)F"))
+    private float toroidal$fluidLevelFromTilingCell(DensitySampler.Bound noise, int cellX, int cellY, int cellZ,
+            Operation<Float> original,
             @Local(argsOnly = true, ordinal = 0) int blockX,
             @Local(argsOnly = true, ordinal = 2) int blockZ) {
-        if (this.toroidal$levelSampler == null) {
-            this.toroidal$levelSampler = new CanonicalCellSampler(NoiseConstants.AQUIFER_FLUID_LEVEL_CELL_WIDTH);
-        }
+        AquiferCells cells = this.toroidal$aquiferCells;
+        return cells == null ? original.call(noise, cellX, cellY, cellZ) : cells.level(blockX, cellY, blockZ);
+    }
 
-        return this.toroidal$levelSampler.sample(cell, blockX, blockZ, folded -> original.call(noise, folded));
+    @Override
+    public @Nullable AquiferCells toroidal$aquiferCells() {
+        return this.toroidal$aquiferCells;
+    }
+
+    @Override
+    public void toroidal$aquiferCells(AquiferCells cells) {
+        this.toroidal$aquiferCells = cells;
     }
 }

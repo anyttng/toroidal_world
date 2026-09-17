@@ -34,7 +34,7 @@ import net.minecraft.world.level.levelgen.WorldDimensions;
 import net.minecraft.world.level.levelgen.flat.FlatLevelGeneratorSettings;
 
 class ShapedDimensionsTest {
-    private static final HolderLookup.Provider WORLDGEN = VanillaRegistries.createLookup();
+    private static final HolderLookup.Provider WORLDGEN = VanillaRegistries.createWorldLookup();
 
     private static final FlatShape TORUS = FlatShape.torus(WorldLoopBounds.ofWidth(32));
 

@@ -23,8 +23,8 @@ import com.toroidalworld.core.WorldFolds;
 import com.toroidalworld.core.WorldLoopBounds;
 import com.toroidalworld.core.WorldLoopBounds.AxisBounds;
 import com.toroidalworld.core.WorldLoopSizes;
-import com.toroidalworld.shape.torus.ClimateScale;
-import com.toroidalworld.shape.torus.CompactBiomes;
+import com.toroidalworld.shape.climate.ClimateScale;
+import com.toroidalworld.shape.climate.CompactBiomes;
 import com.toroidalworld.shape.torus.GuaranteedLand;
 
 import net.minecraft.core.Direction;
@@ -42,7 +42,7 @@ class ShapedChunkGeneratorCodecTest {
     private static final WorldLoopBounds X_ONLY =
             new WorldLoopBounds(new AxisBounds.Looped(-16, 16), AxisBounds.Unbounded.INSTANCE);
 
-    private static final HolderLookup.Provider WORLDGEN = VanillaRegistries.createLookup();
+    private static final HolderLookup.Provider WORLDGEN = VanillaRegistries.createWorldLookup();
 
     private static final String FROZEN_ON_DISK_KEY = "wrapping";
     private static final String CLIMATE_SCALE_KEY = CompactBiomes.KEY;

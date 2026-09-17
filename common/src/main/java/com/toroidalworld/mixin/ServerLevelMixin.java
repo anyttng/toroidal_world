@@ -67,6 +67,7 @@ public class ServerLevelMixin {
         ((LevelBindable) level.getFluidTicks()).toroidal$bindLevel(level);
         ((LevelBindable) level.getRaids()).toroidal$bindLevel(level);
         ((LevelBindable) this.entityManager).toroidal$bindLevel(level);
+        ((LevelBindable) level.getPathTypeCache()).toroidal$bindLevel(level);
     }
 
     @Inject(method = "getWorldBorder", at = @At("RETURN"))

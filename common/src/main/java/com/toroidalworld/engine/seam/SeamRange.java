@@ -21,8 +21,16 @@ public final class SeamRange {
             return from.distManhattan(to);
         }
 
-        BlockPos anchor = new BlockPos(from);
-        return anchor.distManhattan(transformer.nearestCopy(anchor, new BlockPos(to)));
+        BlockPos anchor = BlockPos.ZERO.offset(from);
+        return anchor.distManhattan(transformer.nearestCopy(anchor, BlockPos.ZERO.offset(to)));
+    }
+
+    public static int chessboard(@Nullable WorldFold fold, BlockPos from, Vec3i to) {
+        if (fold == null) {
+            return from.distChessboard(to);
+        }
+
+        return from.distChessboard(fold.nearestCopy(from, BlockPos.ZERO.offset(to)));
     }
 
     public static double sqr(@Nullable WorldFold fold, Vec3i from, Vec3i to) {
@@ -82,6 +90,10 @@ public final class SeamRange {
 
     public static boolean closerToCenterThan(Entity levelSource, Vec3i from, Position to, double distance) {
         return closerThan(levelSource, Vec3.atCenterOf(from), to, distance);
+    }
+
+    public static boolean closerToCenterThan(Level levelSource, Vec3i from, Position to, double distance) {
+        return sqr(levelSource, Vec3.atCenterOf(from), to) < Mth.square(distance);
     }
 
     private static @Nullable WorldFold transformerOf(Entity levelSource) {

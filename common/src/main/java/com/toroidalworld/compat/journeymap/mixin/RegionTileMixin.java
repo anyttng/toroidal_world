@@ -9,8 +9,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.Window;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import com.toroidalworld.compat.MapCopies;
 import com.toroidalworld.compat.journeymap.JourneyMapFold;
 
 import journeymap.api.v2.common.Context.UI;
@@ -54,8 +55,9 @@ public abstract class RegionTileMixin {
         int viewportX = toroidal$viewportPixels(context, window.getWidth(), DisplayVars::getMinimapWidth);
         int viewportZ = toroidal$viewportPixels(context, window.getHeight(), DisplayVars::getMinimapHeight);
         int tiles = JourneyMapFold.tilesWithContent(this.zoom, viewportX, viewportZ);
-        int rangeX = JourneyMapFold.copyRange(loopedAxes, tiles, periodX, viewportX);
-        int rangeZ = JourneyMapFold.copyRange(loopedAxes, tiles, periodZ, viewportZ);
+        MapCopies copies = JourneyMapFold.copiesOf(context);
+        int rangeX = JourneyMapFold.copyRange(loopedAxes, tiles, periodX, viewportX, copies);
+        int rangeZ = JourneyMapFold.copyRange(loopedAxes, tiles, periodZ, viewportZ, copies);
         JourneyMapFold.recordCopyRange(context, rangeX, rangeZ);
         if (rangeX == 0 && rangeZ == 0) {
             return;

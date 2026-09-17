@@ -10,12 +10,20 @@ import com.mojang.datafixers.util.Pair;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.StructureManager;
+import net.minecraft.world.level.biome.Climate;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.structure.Structure;
+import net.minecraft.world.level.levelgen.structure.StructureSet;
 import net.minecraft.world.level.levelgen.structure.placement.StructurePlacement;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 
 @Mixin(ChunkGenerator.class)
 public interface ChunkGeneratorAccessor {
@@ -29,4 +37,17 @@ public interface ChunkGeneratorAccessor {
             ChunkPos candidate) {
         throw new AssertionError();
     }
+
+    @Invoker("tryGenerateStructure")
+    boolean toroidal$tryGenerateStructure(
+            StructureSet.StructureSelectionEntry selected,
+            StructureManager structureManager,
+            RegistryAccess registryAccess,
+            RandomState randomState,
+            StructureTemplateManager structureTemplateManager,
+            long seed,
+            ChunkAccess centerChunk,
+            ChunkPos sourceChunkPos,
+            ResourceKey<Level> level,
+            Climate.Sampler climateSampler);
 }

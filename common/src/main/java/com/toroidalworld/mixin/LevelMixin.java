@@ -35,6 +35,7 @@ import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.AbortableIterationConsumer;
+import net.minecraft.util.Continuation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -50,6 +51,10 @@ import net.minecraft.world.phys.AABB;
 
 @Mixin(Level.class)
 public class LevelMixin implements TransformerCache, CrumbSweepCache, TerrainMaskCache {
+    @Unique
+    private static final String toroidal$GET_ENTITIES =
+            "getEntities(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;)Ljava/util/List;";
+
     @Unique
     private WorldFold toroidal$transformer;
 
@@ -108,7 +113,7 @@ public class LevelMixin implements TransformerCache, CrumbSweepCache, TerrainMas
     }
 
     @WrapOperation(
-            method = "getEntities(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;)Ljava/util/List;",
+            method = toroidal$GET_ENTITIES,
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/level/entity/LevelEntityGetter;get(Lnet/minecraft/world/phys/AABB;Ljava/util/function/Consumer;)V"))
@@ -132,7 +137,7 @@ public class LevelMixin implements TransformerCache, CrumbSweepCache, TerrainMas
     }
 
     @WrapOperation(
-            method = "getEntities(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;)Ljava/util/List;",
+            method = toroidal$GET_ENTITIES,
             at = @At(value = "INVOKE", target = InjectionTargets.AABB_INTERSECTS))
     private boolean toroidal$partBoxTowardQuery(AABB query, AABB part, Operation<Boolean> original) {
         return original.call(query, FoldedBoxQuery.toward(toroidal$transformer(), query.getCenter(), part));
@@ -160,10 +165,10 @@ public class LevelMixin implements TransformerCache, CrumbSweepCache, TerrainMas
         for (Folded<AABB> piece : transformer.split(reach)) {
             original.call(entities, type, piece.value(), (AbortableIterationConsumer<U>) entity -> {
                 if (!transformer.boxesOverlap(box, entity.getBoundingBox()) || !seen.add(entity)) {
-                    return AbortableIterationConsumer.Continuation.CONTINUE;
+                    return Continuation.CONTINUE;
                 }
 
-                AbortableIterationConsumer.Continuation next = output.accept(entity);
+                Continuation next = output.accept(entity);
                 if (next.shouldAbort()) {
                     aborted.setTrue();
                 }

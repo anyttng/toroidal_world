@@ -51,13 +51,13 @@ The `world/` folder does not exist yet on a fresh server — create it with just
 {
   "pack": {
     "description": "Custom toroidal world preset",
-    "min_format": 107,
-    "max_format": 107
+    "min_format": 121,
+    "max_format": 121
   }
 }
 ```
 
-107 is the data pack format of Minecraft 26.2. For another game version, read `pack_version.data_major` out of the `version.json` inside the game jar.
+121 is the data pack format of Minecraft 26.3. For another game version, read `pack_version.data_major` out of the `version.json` inside the game jar.
 
 `my_toroidal.json` — the example carries the `tiny` configuration; change the `wrapping` bounds per dimension:
 
@@ -155,9 +155,9 @@ Choose the overworld as a multiple of 16 chunks, 128 or wider, and none of this 
 
 ## World options
 
-Next to `wrapping`, the generator takes the two options the create-world screen offers. Each dimension carries its own, so an option goes on the generator of every dimension it should apply to — the presets the mod ships write both in all three. They work only where the dimension loops on both axes: in a cylinder they are read and then change nothing.
+Next to `wrapping`, the generator takes the options the create-world screen offers. Each dimension carries its own, so an option goes on the generator of every dimension it should apply to.
 
-**`climate_compression`** shrinks biomes so a full climate fits into one lap of the world; coastlines and terrain keep their usual size. It takes either a boolean — `true` for Auto, `false` for Off — or an object naming the mode:
+**`climate_compression`** (toroidal and cylinder) shrinks biomes so a full climate fits into one lap of the world; coastlines and terrain keep their usual size. It takes either a boolean — `true` for Auto, `false` for Off — or an object naming the mode:
 
 ```json
 "climate_compression": { "mode": "strong" }
@@ -174,7 +174,9 @@ Next to `wrapping`, the generator takes the two options the create-world screen 
 
 **Leaving the field out means `auto`, not off.** Every shipped preset writes `"climate_compression": false`, so a hand-written preset started from one keeps that line, or gets compressed biomes it never asked for.
 
-**`guaranteed_land`** keeps a world from coming out all ocean: where a lap would leave nowhere to stand, `true` raises the land level just enough for one island. A world that already has land is left as it is. It defaults to `false`.
+**`guaranteed_land`** (toroidal only) keeps a world from coming out all ocean: where a lap would leave nowhere to stand, `true` raises the land level just enough for one island. A world that already has land is left as it is. It defaults to `false`.
+
+**`guaranteed_nether_complexes`** (toroidal only) keeps a small Nether from coming out without a nether fortress or a bastion remnant, and changes nothing in a dimension that places neither: with `true`, each one the world did not place on its own is placed in the chunk nearest the world's centre whose biome allows it. Where no biome in the Nether allows one, it stays missing and the server log names it. It defaults to `false`.
 
 ## Notes
 

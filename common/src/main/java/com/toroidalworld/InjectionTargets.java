@@ -24,6 +24,10 @@ public final class InjectionTargets {
 
     public static final String CHUNK_POS_PACK = "Lnet/minecraft/world/level/ChunkPos;pack(II)J";
 
+    public static final String DENSITY_FUNCTION_COMPILE_SAMPLER =
+            "compileSampler(Lnet/minecraft/world/level/levelgen/densityfunction/DensityFunction$CompileContext;)"
+                    + "Lnet/minecraft/world/level/levelgen/densityfunction/DensitySampler;";
+
     public static final String DENSITY_FUNCTION_COMPUTE =
             "Lnet/minecraft/world/level/levelgen/DensityFunction;compute(Lnet/minecraft/world/level/levelgen/DensityFunction$FunctionContext;)D";
 
@@ -43,18 +47,20 @@ public final class InjectionTargets {
     public static final String ENTITY_POSITION =
             "Lnet/minecraft/world/entity/Entity;position()Lnet/minecraft/world/phys/Vec3;";
 
-    public static final String LIGHT_CHUNK_GETTER_GET_CHUNK_FOR_LIGHTING =
-            "Lnet/minecraft/world/level/chunk/LightChunkGetter;getChunkForLighting(II)Lnet/minecraft/world/level/chunk/LightChunk;";
-
     public static final String LIVING_ENTITY_GET_X = "Lnet/minecraft/world/entity/LivingEntity;getX()D";
 
     public static final String LIVING_ENTITY_GET_Z = "Lnet/minecraft/world/entity/LivingEntity;getZ()D";
+
+    public static final String NOISE_GET = "Lnet/minecraft/world/level/levelgen/synth/Noise;get(DDD)F";
 
     public static final String PATHFINDER_MOB_GET_HOME_POSITION =
             "Lnet/minecraft/world/entity/PathfinderMob;getHomePosition()Lnet/minecraft/core/BlockPos;";
 
     public static final String PHANTOM_MOVE_TARGET_POINT =
             "Lnet/minecraft/world/entity/monster/Phantom;moveTargetPoint:Lnet/minecraft/world/phys/Vec3;";
+
+    public static final String PLAYER_GET_EYE_POSITION =
+            "Lnet/minecraft/world/entity/player/Player;getEyePosition()Lnet/minecraft/world/phys/Vec3;";
 
     public static final String POSITIONAL_RANDOM_FACTORY_AT =
             "Lnet/minecraft/world/level/levelgen/PositionalRandomFactory;at(III)Lnet/minecraft/util/RandomSource;";
@@ -82,6 +88,8 @@ public final class InjectionTargets {
             "Lnet/minecraft/world/phys/Vec3;distanceTo(Lnet/minecraft/world/phys/Vec3;)D";
 
     public static final String VEC3_DISTANCE_TO_SQR_XYZ = "Lnet/minecraft/world/phys/Vec3;distanceToSqr(DDD)D";
+
+    public static final String VEC3_INIT = "Lnet/minecraft/world/phys/Vec3;<init>(DDD)V";
 
     public static final String VEC3_NEW = "(DDD)Lnet/minecraft/world/phys/Vec3;";
 

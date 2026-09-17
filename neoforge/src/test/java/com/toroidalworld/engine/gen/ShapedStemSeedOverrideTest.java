@@ -50,7 +50,7 @@ class ShapedStemSeedOverrideTest {
         SharedConstants.tryDetectVersion();
         Bootstrap.bootStrap();
         WorldOptionSetup.registerAll(false);
-        worldgen = VanillaRegistries.createLookup();
+        worldgen = VanillaRegistries.createWorldLookup();
     }
 
     @Test

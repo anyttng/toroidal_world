@@ -17,10 +17,11 @@ import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 
-import net.minecraft.world.level.levelgen.DensityFunction;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
-import net.minecraft.world.level.levelgen.NoiseRouter;
 import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunction;
+import net.minecraft.world.level.levelgen.densityfunction.DensitySampler;
+import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
 
 final class SuspendedLand {
     static final int WIDTH_BLOCKS = 512;
@@ -112,18 +113,18 @@ final class SuspendedLand {
         return SEED_BASE + index * SEED_STEP;
     }
 
-    static int topSolid(DensityFunction density, int blockX, int blockZ, int seaLevel) {
+    static int topSolid(DensitySampler density, int blockX, int blockZ, int seaLevel) {
         return topSolidAbove(density, blockX, blockZ, Math.min(FLOOR_Y, seaLevel));
     }
 
-    private static int topSolidAbove(DensityFunction density, int blockX, int blockZ, int floor) {
+    private static int topSolidAbove(DensitySampler density, int blockX, int blockZ, int floor) {
         for (int y = TOP_Y; y >= floor; y -= COARSE_STEP_BLOCKS) {
-            if (density.compute(new DensityFunction.SinglePointContext(blockX, y, blockZ)) <= 0.0) {
+            if (density.sampleValue(SamplerContext.EMPTY_UNCACHED, blockX, y, blockZ) <= 0.0F) {
                 continue;
             }
 
             for (int refined = Math.min(TOP_Y, y + COARSE_STEP_BLOCKS - 1); refined > y; refined--) {
-                if (density.compute(new DensityFunction.SinglePointContext(blockX, refined, blockZ)) > 0.0) {
+                if (density.sampleValue(SamplerContext.EMPTY_UNCACHED, blockX, refined, blockZ) > 0.0F) {
                     return refined;
                 }
             }
@@ -134,41 +135,8 @@ final class SuspendedLand {
         return Integer.MIN_VALUE;
     }
 
-    static double at(DensityFunction function, int blockX, int blockZ) {
-        return function.compute(new DensityFunction.SinglePointContext(blockX, 0, blockZ));
-    }
-
-    @SuppressWarnings("deprecation")
-    static NoiseGeneratorSettings withCeilingParked(NoiseGeneratorSettings settings, DensityFunction ceiling) {
-        NoiseRouter source = settings.noiseRouter();
-        NoiseRouter parked = new NoiseRouter(
-                ceiling,
-                source.fluidLevelFloodednessNoise(),
-                source.fluidLevelSpreadNoise(),
-                source.lavaNoise(),
-                source.temperature(),
-                source.vegetation(),
-                source.continents(),
-                source.erosion(),
-                source.depth(),
-                source.ridges(),
-                source.preliminarySurfaceLevel(),
-                source.finalDensity(),
-                source.veinToggle(),
-                source.veinRidged(),
-                source.veinGap());
-        return new NoiseGeneratorSettings(
-                settings.noiseSettings(),
-                settings.defaultBlock(),
-                settings.defaultFluid(),
-                parked,
-                settings.surfaceRule(),
-                settings.spawnTarget(),
-                settings.seaLevel(),
-                settings.disableMobGeneration(),
-                settings.aquifersEnabled(),
-                settings.oreVeinsEnabled(),
-                settings.useLegacyRandomSource());
+    static double at(DensitySampler function, int blockX, int blockZ) {
+        return function.sampleValue(SamplerContext.EMPTY_UNCACHED, blockX, 0, blockZ);
     }
 
     private static void search() {
@@ -181,16 +149,15 @@ final class SuspendedLand {
             }
 
             types.add(type.name());
-            NoiseGeneratorSettings probe = withCeilingParked(vanilla, rawCeiling);
             WorldFold fold = torusOfWidth(WIDTH_BLOCKS);
             Site site = null;
             Hit highest = null;
             String highestAt = "";
             for (int index = 0; index < SEEDS && site == null; index++) {
                 long seed = seed(index);
-                RandomState state = randomState(probe, fold, seed);
-                DensityFunction ceiling = state.router().barrierNoise();
-                DensityFunction density = state.router().finalDensity();
+                RandomState state = randomState(vanilla, fold, seed);
+                DensitySampler ceiling = state.getSampler(rawCeiling);
+                DensitySampler density = state.getSampler(state.router.finalDensity());
                 Sweep[] result = new Sweep[1];
                 GenerationTransformerContext.runWithTransformer(fold,
                         () -> result[0] = sweep(type, seed, ceiling, density, vanilla.seaLevel()));
@@ -214,7 +181,7 @@ final class SuspendedLand {
                 + SWEEP_STEP_BLOCKS + " blocks over a " + WIDTH_BLOCKS + "-block lap";
     }
 
-    private static Sweep sweep(WorldType type, long seed, DensityFunction ceiling, DensityFunction density,
+    private static Sweep sweep(WorldType type, long seed, DensitySampler ceiling, DensitySampler density,
             int seaLevel) {
         List<Hit> hits = new ArrayList<>();
         Hit reach = null;
@@ -249,7 +216,7 @@ final class SuspendedLand {
         return new Sweep(null, reach);
     }
 
-    private static int overshoot(DensityFunction ceiling, DensityFunction density, int blockX, int blockZ) {
+    private static int overshoot(DensitySampler ceiling, DensitySampler density, int blockX, int blockZ) {
         double ceilingY = at(ceiling, blockX, blockZ);
         int top = topSolidAbove(density, blockX, blockZ, (int) Math.floor(ceilingY) + 1);
         return top == Integer.MIN_VALUE ? Integer.MIN_VALUE : (int) Math.floor(top - ceilingY);
@@ -280,7 +247,7 @@ final class SuspendedLand {
                 && Math.abs(hit.blockZ() - centre.blockZ()) <= WINDOW_BLOCKS / 2;
     }
 
-    private static int suspendedColumns(DensityFunction ceiling, DensityFunction density, Hit centre,
+    private static int suspendedColumns(DensitySampler ceiling, DensitySampler density, Hit centre,
             int seaLevel) {
         int columns = 0;
         for (int dx = -WINDOW_BLOCKS / 2; dx <= WINDOW_BLOCKS / 2; dx += STRIDE_BLOCKS) {

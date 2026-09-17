@@ -22,6 +22,9 @@ sourceSets.main.resources {
     exclude("**/*.bbmodel") // BlockBench project files
 }
 
+sourceSets.main.java.exclude(rootProject.unportedCompat)
+sourceSets.test.java.exclude(rootProject.unportedCompat)
+
 repositories {
     // JourneyMap API mirror (TeamJM's own maven is flaky).
     maven {

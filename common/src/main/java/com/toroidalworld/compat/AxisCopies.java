@@ -75,6 +75,16 @@ public record AxisCopies(boolean loops, int min, int width) {
         return seams;
     }
 
+    public double clampView(double center, double halfSpan) {
+        if (!this.loops) {
+            return center;
+        }
+
+        double low = this.min + halfSpan;
+        double high = max() - halfSpan;
+        return low > high ? (this.min + max()) / 2.0 : Math.max(low, Math.min(high, center));
+    }
+
     public int offset(int lap) {
         return lap * this.width;
     }

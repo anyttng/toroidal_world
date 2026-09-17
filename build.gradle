@@ -3,3 +3,8 @@
 plugins {
     id 'idea'
 }
+
+// Compat not yet ported to 26.3, left out of every source set that compiles it; the sources stay in the tree.
+ext.unportedCompat = { FileTreeElement file ->
+    file.relativePath.pathString.matches('com/toroidalworld/compat/distanthorizons/.*')
+}

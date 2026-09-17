@@ -12,7 +12,6 @@ import static com.toroidalworld.scan.SuspendedLand.TOP_Y;
 import static com.toroidalworld.scan.SuspendedLand.WIDTH_BLOCKS;
 import static com.toroidalworld.scan.SuspendedLand.at;
 import static com.toroidalworld.scan.SuspendedLand.topSolid;
-import static com.toroidalworld.scan.SuspendedLand.withCeilingParked;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
@@ -24,10 +23,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 
-import net.minecraft.world.level.levelgen.DensityFunction;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.NoiseRouter;
 import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunction;
+import net.minecraft.world.level.levelgen.densityfunction.DensitySampler;
+import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
 
 class TerrainCeilingScan {
     private static final List<String> OVERWORLD_TYPES = List.of("default", "large biomes", "amplified");
@@ -193,16 +194,15 @@ class TerrainCeilingScan {
         DensityFunction rawCeiling = TerrainCeiling.ceiling(settings);
         assertTrue(rawCeiling != null, "no jaggedness node in the " + type.name() + " router — nothing to measure");
 
-        NoiseGeneratorSettings probe = withCeilingParked(settings, rawCeiling);
         double step = WIDTH_BLOCKS / (double) GRID;
 
         for (int s = 0; s < SEEDS; s++) {
             int before = columns.size();
-            RandomState randomState = randomState(probe, fold, SuspendedLand.seed(s));
-            NoiseRouter router = randomState.router();
-            DensityFunction ceiling = router.barrierNoise();
-            DensityFunction density = router.finalDensity();
-            DensityFunction surface = router.preliminarySurfaceLevel();
+            RandomState randomState = randomState(settings, fold, SuspendedLand.seed(s));
+            NoiseRouter router = randomState.router;
+            DensitySampler ceiling = randomState.getSampler(rawCeiling);
+            DensitySampler density = randomState.getSampler(router.finalDensity());
+            DensitySampler surface = randomState.getSampler(router.chunkSurfaceLevel());
             GenerationTransformerContext.runWithTransformer(fold, () -> {
                 for (int ix = 0; ix < GRID; ix++) {
                     for (int iz = 0; iz < GRID; iz++) {
@@ -216,7 +216,7 @@ class TerrainCeilingScan {
                         double ceilingY = at(ceiling, blockX, blockZ);
                         int probeY = (int) Math.min(TOP_Y, Math.round(ceilingY + RAMP_BLOCKS));
                         columns.add(new Column(top, at(surface, blockX, blockZ), ceilingY,
-                                density.compute(new DensityFunction.SinglePointContext(blockX, probeY, blockZ))));
+                                density.sampleValue(SamplerContext.EMPTY_UNCACHED, blockX, probeY, blockZ)));
                         if (Math.abs(top - ceilingY) <= RAMP_BLOCKS) {
                             nearCeiling.add(new QuartStep(
                                     Math.abs(at(ceiling, blockX + QUART_BLOCKS, blockZ) - ceilingY),
@@ -269,11 +269,11 @@ class TerrainCeilingScan {
         DensityFunction rawCeiling = TerrainCeiling.ceiling(vanilla);
         assertTrue(rawCeiling != null, "no ceiling for the " + site.type().name() + " settings");
 
-        RandomState probeState = randomState(withCeilingParked(vanilla, rawCeiling), fold, site.seed());
+        RandomState probeState = randomState(vanilla, fold, site.seed());
         RandomState cutState = randomState(TerrainCeiling.withCeiling(vanilla), fold, site.seed());
-        DensityFunction ceiling = probeState.router().barrierNoise();
-        DensityFunction vanillaDensity = probeState.router().finalDensity();
-        DensityFunction cutDensity = cutState.router().finalDensity();
+        DensitySampler ceiling = probeState.getSampler(rawCeiling);
+        DensitySampler vanillaDensity = probeState.getSampler(probeState.router.finalDensity());
+        DensitySampler cutDensity = cutState.getSampler(cutState.router.finalDensity());
         int seaLevel = vanilla.seaLevel();
 
         report.add("Suspended island the sweep settled on — " + site.describe());
@@ -316,8 +316,7 @@ class TerrainCeilingScan {
                     ceilingsAtCut.add(ceilingY);
                     topsAtCut.add((double) cutTop);
                     int midY = (int) Math.round((ceilingY + vanillaTop) / 2.0);
-                    insides.add(vanillaDensity.compute(
-                            new DensityFunction.SinglePointContext(blockX, midY, blockZ)));
+                    insides.add((double) vanillaDensity.sampleValue(SamplerContext.EMPTY_UNCACHED, blockX, midY, blockZ));
                 }
             }
         });

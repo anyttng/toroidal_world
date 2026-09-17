@@ -3,6 +3,8 @@ package com.toroidalworld.client.shape.cylinder;
 import java.util.Locale;
 import java.util.function.Consumer;
 
+import org.jspecify.annotations.Nullable;
+
 import com.toroidalworld.client.shape.LoopSettingsScreen;
 import com.toroidalworld.client.shape.LoopSizeControls;
 import com.toroidalworld.api.v1.shape.LoopSpans;
@@ -24,7 +26,9 @@ public class CylinderSettingsScreen extends LoopSettingsScreen<CylinderSettings>
     private Direction.Axis axis;
 
     public CylinderSettingsScreen(Screen parent, CylinderSettings current, Consumer<CylinderSettings> onDone) {
-        super(TITLE, parent, current.chunkWidth(), current.netherScale(), current.endChunkWidth(), onDone);
+        super(TITLE, parent, onChange -> LoopSizeControls.single(current.chunkWidth(), current.netherScale(),
+                current.endChunkWidth(), onChange), current.generationOptions(), CylinderSettings.OFFERED_OPTIONS,
+                onDone);
         this.axis = current.axis();
     }
 
@@ -34,18 +38,42 @@ public class CylinderSettingsScreen extends LoopSettingsScreen<CylinderSettings>
                 .withValues(Direction.Axis.X, Direction.Axis.Z)
                 .withTooltip(chosen -> Tooltip.create(AXIS_HINT))
                 .create(0, 0, LoopSizeControls.FIELD_WIDTH, LoopSizeControls.FIELD_HEIGHT, AXIS_LABEL,
-                        (button, chosen) -> this.axis = chosen));
+                        (button, chosen) -> this.chooseAxis(chosen)));
     }
 
     @Override
     protected CylinderSettings build() {
         return new CylinderSettings(
-                LoopSpans.ofWidth(this.axis, this.controls.effectiveSize()),
+                LoopSpans.ofWidth(this.axis, this.controls.effectiveSize(this.axis)),
                 this.controls.netherScale(),
-                LoopSpans.ofWidth(this.axis, this.controls.effectiveEndSize()));
+                LoopSpans.ofWidth(this.axis, this.controls.effectiveEndSize()),
+                this.committedOptions());
+    }
+
+    @Override
+    protected OptionContext newOptionContext() {
+        return new ScreenContext();
+    }
+
+    private void chooseAxis(Direction.Axis chosen) {
+        this.axis = chosen;
+        this.onControlsChanged();
     }
 
     private static Component axisName(Direction.Axis axis) {
         return Component.literal(axis.getName().toUpperCase(Locale.ROOT));
+    }
+
+    private final class ScreenContext extends OptionContext {
+        @Override
+        public @Nullable Integer loopChunkWidth() {
+            return CylinderSettingsScreen.this.controls.effectiveSize(CylinderSettingsScreen.this.axis);
+        }
+
+        @Override
+        public @Nullable LoopSpans loopSpans() {
+            Integer chunkWidth = this.loopChunkWidth();
+            return chunkWidth == null ? null : LoopSpans.ofWidth(CylinderSettingsScreen.this.axis, chunkWidth);
+        }
     }
 }

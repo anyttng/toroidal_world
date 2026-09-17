@@ -40,6 +40,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.PositionAndRotation;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.particles.ExplosionParticleInfo;
 import net.minecraft.core.particles.ParticleOptions;
@@ -95,6 +96,8 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.PositionMoveRotation;
+import net.minecraft.world.entity.PositionPath;
+import net.minecraft.world.entity.PositionStep;
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.vehicle.minecart.NewMinecartBehavior;
 import net.minecraft.world.level.ChunkPos;
@@ -105,6 +108,7 @@ import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityTypes;
+import net.minecraft.world.level.block.entity.SignTextSlot;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -238,10 +242,10 @@ class PacketTranslatorTest {
                     (ClientboundLevelChunkWithLightPacket) PacketTranslator.toClient(packet, context());
 
             assertSame(packet, translated);
-            assertEquals(CLIENT_CHUNK.x(), translated.getX());
-            assertEquals(CLIENT_CHUNK.z(), translated.getZ());
-            assertTrue(translated.getChunkData().getHeightmaps().isEmpty());
-            FriendlyByteBuf data = translated.getChunkData().getReadBuffer();
+            assertEquals(CLIENT_CHUNK.x(), translated.x());
+            assertEquals(CLIENT_CHUNK.z(), translated.z());
+            assertTrue(translated.chunkData().getHeightmaps().isEmpty());
+            FriendlyByteBuf data = translated.chunkData().getReadBuffer();
             assertEquals(blob.length, data.readableBytes());
             byte[] readBack = new byte[blob.length];
             data.readBytes(readBack);
@@ -260,10 +264,10 @@ class PacketTranslatorTest {
                     (ClientboundLightUpdatePacket) PacketTranslator.toClient(packet, context());
 
             assertSame(packet, translated);
-            assertEquals(CLIENT_CHUNK.x(), translated.getX());
-            assertEquals(CLIENT_CHUNK.z(), translated.getZ());
-            assertTrue(translated.getLightData().getSkyUpdates().isEmpty());
-            assertTrue(translated.getLightData().getBlockUpdates().isEmpty());
+            assertEquals(CLIENT_CHUNK.x(), translated.x());
+            assertEquals(CLIENT_CHUNK.z(), translated.z());
+            assertTrue(translated.lightData().skyUpdates().isEmpty());
+            assertTrue(translated.lightData().blockUpdates().isEmpty());
         }
 
         @Test
@@ -415,7 +419,7 @@ class PacketTranslatorTest {
                     ClientboundTrackedWaypointPacket.addWaypointPosition(new UUID(1L, 2L), new Waypoint.Icon(), SERVER_BLOCK),
                     context());
 
-            assertEquals(CLIENT_BLOCK, new BlockPos(((Vec3iWaypointAccessor) translated.waypoint()).toroidal$getVector()));
+            assertEquals(CLIENT_BLOCK, BlockPos.ZERO.offset(((Vec3iWaypointAccessor) translated.waypoint()).toroidal$getVector()));
         }
 
         @Test
@@ -600,10 +604,10 @@ class PacketTranslatorTest {
                             SERVER_X, 64.0, SERVER_Z, 0.0F, 0.0F, 0.0F, 0.0F, 1),
                     context());
 
-            TrailParticleOption trail = (TrailParticleOption) translated.getParticle();
+            TrailParticleOption trail = (TrailParticleOption) translated.particle();
             assertEquals(new Vec3(CLIENT_X + 3.0, 65.0, CLIENT_Z + 3.0), trail.target());
-            assertEquals(CLIENT_X, translated.getX());
-            assertEquals(CLIENT_Z, translated.getZ());
+            assertEquals(CLIENT_X, translated.x());
+            assertEquals(CLIENT_Z, translated.z());
             assertEquals(16545810, trail.color());
             assertEquals(30, trail.duration());
         }
@@ -616,7 +620,7 @@ class PacketTranslatorTest {
                             SERVER_X, 64.0, SERVER_Z, 0.0F, 0.0F, 0.0F, 0.0F, 1),
                     context());
 
-            VibrationParticleOption vibration = (VibrationParticleOption) translated.getParticle();
+            VibrationParticleOption vibration = (VibrationParticleOption) translated.particle();
             assertEquals(CLIENT_BLOCK, ((BlockPositionSource) vibration.getDestination()).pos());
             assertEquals(12, vibration.getArrivalInTicks());
         }
@@ -634,7 +638,7 @@ class PacketTranslatorTest {
                             SERVER_X, 64.0, SERVER_Z, 0.0F, 0.0F, 0.0F, 0.0F, 1),
                     context());
 
-            assertSame(particle, translated.getParticle());
+            assertSame(particle, translated.particle());
         }
 
         @Test
@@ -644,8 +648,8 @@ class PacketTranslatorTest {
                             SERVER_X, 64.0, SERVER_Z, 0.0F, 0.0F, 0.0F, 0.0F, 1),
                     context());
 
-            assertSame(ParticleTypes.FLAME, translated.getParticle());
-            assertEquals(CLIENT_X, translated.getX());
+            assertSame(ParticleTypes.FLAME, translated.particle());
+            assertEquals(CLIENT_X, translated.x());
         }
 
         @Test
@@ -655,7 +659,7 @@ class PacketTranslatorTest {
                     new ClientboundExplodePacket(
                             new Vec3(SERVER_X, 70.0, SERVER_Z), 3.0F, 4, Optional.empty(),
                             new TrailParticleOption(serverTarget, 6250335, 20),
-                            SoundEvents.GENERIC_EXPLODE, WeightedList.of()),
+                            SoundEvents.GENERIC_EXPLODE, WeightedList.of(), true),
                     context());
 
             TrailParticleOption trail = (TrailParticleOption) translated.explosionParticle();
@@ -671,7 +675,7 @@ class PacketTranslatorTest {
             ClientboundExplodePacket translated = (ClientboundExplodePacket) PacketTranslator.toClient(
                     new ClientboundExplodePacket(
                             new Vec3(SERVER_X, 70.0, SERVER_Z), 3.0F, 4, Optional.empty(),
-                            ParticleTypes.EXPLOSION, SoundEvents.GENERIC_EXPLODE, blockParticles),
+                            ParticleTypes.EXPLOSION, SoundEvents.GENERIC_EXPLODE, blockParticles, true),
                     context());
 
             assertSame(blockParticles, translated.blockParticles());
@@ -795,20 +799,40 @@ class PacketTranslatorTest {
         @Test
         void entityPositionSyncTranslatesTheAbsolutePosition() {
             ClientboundEntityPositionSyncPacket packet = new ClientboundEntityPositionSyncPacket(
-                    7, new PositionMoveRotation(new Vec3(SERVER_X, 70.0, SERVER_Z), Vec3.ZERO, 0.0F, 0.0F), false);
+                    7, PositionPath.of(new Vec3(SERVER_X, 70.0, SERVER_Z)), 30.0F, 10.0F, true);
 
             ClientboundEntityPositionSyncPacket translated =
                     (ClientboundEntityPositionSyncPacket) PacketTranslator.toClient(packet, context());
 
-            assertEquals(new Vec3(CLIENT_X, 70.0, CLIENT_Z), translated.values().position());
+            assertEquals(PositionPath.of(new Vec3(CLIENT_X, 70.0, CLIENT_Z)), translated.position());
+            assertEquals(30.0F, translated.yRot());
+            assertEquals(10.0F, translated.xRot());
+            assertTrue(translated.onGround());
+        }
+
+        @Test
+        void entityPositionSyncKeepsASteppedPathThroughTheSeamInOneFrame() {
+            ClientboundEntityPositionSyncPacket packet = new ClientboundEntityPositionSyncPacket(7, PositionPath.stepped(List.of(
+                    new PositionStep(new Vec3(511.75, 70.0, SERVER_Z), 1),
+                    new PositionStep(new Vec3(-511.5, 70.0, SERVER_Z), 2),
+                    new PositionStep(new Vec3(-510.25, 70.0, SERVER_Z), 1))), 0.0F, 0.0F, false);
+
+            ClientboundEntityPositionSyncPacket translated =
+                    (ClientboundEntityPositionSyncPacket) PacketTranslator.toClient(packet, context());
+
+            assertEquals(PositionPath.stepped(List.of(
+                    new PositionStep(new Vec3(511.75, 70.0, CLIENT_Z), 1),
+                    new PositionStep(new Vec3(512.5, 70.0, CLIENT_Z), 2),
+                    new PositionStep(new Vec3(513.75, 70.0, CLIENT_Z), 1))), translated.position());
         }
 
         @Test
         void moveVehicleTranslatesThePosition() {
             ClientboundMoveVehiclePacket translated = (ClientboundMoveVehiclePacket) PacketTranslator.toClient(
-                    new ClientboundMoveVehiclePacket(new Vec3(SERVER_X, 70.0, SERVER_Z), 30.0F, 10.0F), context());
+                    new ClientboundMoveVehiclePacket(PositionAndRotation.of(new Vec3(SERVER_X, 70.0, SERVER_Z), 30.0F, 10.0F)),
+                    context());
 
-            assertEquals(new Vec3(CLIENT_X, 70.0, CLIENT_Z), translated.position());
+            assertEquals(new Vec3(CLIENT_X, 70.0, CLIENT_Z), translated.movingTo().position());
         }
 
         @Test
@@ -973,7 +997,7 @@ class PacketTranslatorTest {
             ServerboundUseItemOnPacket translated = (ServerboundUseItemOnPacket) PacketTranslator.toServer(
                     new ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, hit, 4), context());
 
-            BlockHitResult translatedHit = translated.getHitResult();
+            BlockHitResult translatedHit = translated.hitResult();
             assertEquals(SERVER_BLOCK, translatedHit.getBlockPos());
             Vec3 expected = Vec3.atLowerCornerOf(SERVER_BLOCK).add(0.3, 0.5, 1.0);
             assertEquals(expected.x, translatedHit.getLocation().x, 1.0e-9);
@@ -990,7 +1014,7 @@ class PacketTranslatorTest {
             ServerboundUseItemOnPacket translated = (ServerboundUseItemOnPacket) PacketTranslator.toServer(
                     new ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, hit, 4), mirroredContext());
 
-            BlockHitResult translatedHit = translated.getHitResult();
+            BlockHitResult translatedHit = translated.hitResult();
             assertEquals(MIRRORED_SERVER_BLOCK, translatedHit.getBlockPos());
             Vec3 expected = Vec3.atLowerCornerOf(MIRRORED_SERVER_BLOCK).add(0.3, 0.5, 0.25);
             assertEquals(expected.x, translatedHit.getLocation().x, 1.0e-9);
@@ -1032,10 +1056,12 @@ class PacketTranslatorTest {
         @Test
         void signUpdateReturnsToTheServerFrame() {
             ServerboundSignUpdatePacket translated = (ServerboundSignUpdatePacket) PacketTranslator.toServer(
-                    new ServerboundSignUpdatePacket(CLIENT_BLOCK, true, "a", "b", "c", "d"), context());
+                    new ServerboundSignUpdatePacket(CLIENT_BLOCK, List.of("a", "b", "c", "d"), SignTextSlot.FRONT),
+                    context());
 
-            assertEquals(SERVER_BLOCK, translated.getPos());
-            assertArrayEquals(new String[] {"a", "b", "c", "d"}, translated.getLines());
+            assertEquals(SERVER_BLOCK, translated.pos());
+            assertEquals(List.of("a", "b", "c", "d"), translated.lines());
+            assertEquals(SignTextSlot.FRONT, translated.slot());
         }
 
         @Test

@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 
 
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.levelgen.synth.PerlinNoise;
 
 // Measurement harness and regression gate of the floating-terrain fix: compares the value distribution of the
 // biome-parameter fields between vanilla sampling and the periodic fold, on the standard 32-chunk (512-block) world,
@@ -122,9 +121,8 @@ class FieldDistributionProbeTest {
             for (int i = 0; i < this.params.amplitudes.length; i++) {
                 Octave octave = this.layers[layer][i];
                 if (octave != null) {
-                    sum += this.params.amplitudes[i] * valueWeight
-                            * octave.vanilla().noise(PerlinNoise.wrap(x * inputFactor), 0.0,
-                                    PerlinNoise.wrap(z * inputFactor), 0.0, 0.0);
+                    float octaveValue = octave.vanilla().get(x * inputFactor, 0.0, z * inputFactor);
+                    sum += this.params.amplitudes[i] * valueWeight * octaveValue;
                 }
 
                 inputFactor *= 2.0;
@@ -159,7 +157,7 @@ class FieldDistributionProbeTest {
                     sum += this.params.amplitudes[i] * valueWeight
                             * sample(octave.permutations(), octave.xo(), octave.yo(),
                                     octave.zo(), WORLD, baseScale * inputFactor,
-                                    x, 0.0, z, 0.0, 0.0, mode == WalkMode.CORRECTED ? 0.0 : -1.0);
+                                    x, 0.0, z, mode == WalkMode.CORRECTED ? 0.0 : -1.0);
                 }
 
                 inputFactor *= 2.0;
@@ -367,12 +365,11 @@ class FieldDistributionProbeTest {
                     double x = i * (WORLD_BLOCKS / (double) grid);
                     for (int j = 0; j < grid; j++) {
                         double z = j * (WORLD_BLOCKS / (double) grid);
-                        vanillaGrid[k] = octave.vanilla().noise(PerlinNoise.wrap((windowX + x) * scale), 0.0,
-                                PerlinNoise.wrap((windowZ + z) * scale), 0.0, 0.0);
+                        vanillaGrid[k] = octave.vanilla().get((windowX + x) * scale, 0.0, (windowZ + z) * scale);
                         wrappedGrid[k] = sample(octave.permutations(), octave.xo(), octave.yo(),
-                                octave.zo(), WORLD, scale, x - 256.0, 0.0, z - 256.0, 0.0, 0.0, -1.0, floor);
+                                octave.zo(), WORLD, scale, x - 256.0, 0.0, z - 256.0, -1.0, floor);
                         correctedGrid[k] = sample(octave.permutations(), octave.xo(),
-                                octave.yo(), octave.zo(), WORLD, scale, x - 256.0, 0.0, z - 256.0, 0.0, 0.0, 0.0,
+                                octave.yo(), octave.zo(), WORLD, scale, x - 256.0, 0.0, z - 256.0, 0.0,
                                 floor);
                         k++;
                     }
@@ -457,11 +454,9 @@ class FieldDistributionProbeTest {
                         double x = i * (WORLD_BLOCKS / (double) grid);
                         for (int j = 0; j < grid; j++) {
                             double z = j * (zBlocks / grid);
-                            vanillaGrid[k] = octave.vanilla().noise(PerlinNoise.wrap((windowX + x) * scale), 0.0,
-                                    PerlinNoise.wrap((windowZ + z) * scale), 0.0, 0.0);
+                            vanillaGrid[k] = octave.vanilla().get((windowX + x) * scale, 0.0, (windowZ + z) * scale);
                             wrappedGrid[k] = sample(octave.permutations(), octave.xo(),
-                                    octave.yo(), octave.zo(), world, scale, x - 256.0, 0.0, z - zBlocks / 2.0,
-                                    0.0, 0.0, -1.0);
+                                    octave.yo(), octave.zo(), world, scale, x - 256.0, 0.0, z - zBlocks / 2.0, -1.0);
                             k++;
                         }
                     }
@@ -503,11 +498,10 @@ class FieldDistributionProbeTest {
                     double x = i * (WORLD_BLOCKS / (double) gridX);
                     for (int j = 0; j < gridZ; j++) {
                         double z = j * (zSpan / gridZ);
-                        grids[0][i][j] = octave.vanilla().noise(PerlinNoise.wrap((windowX + x) * scale), 0.0,
-                                PerlinNoise.wrap((windowZ + z) * scale), 0.0, 0.0);
+                        grids[0][i][j] = octave.vanilla().get((windowX + x) * scale, 0.0, (windowZ + z) * scale);
                         for (int f = 0; f < floors.length; f++) {
                             grids[f + 1][i][j] = sample(octave.permutations(), octave.xo(), octave.yo(),
-                                    octave.zo(), cylinder, scale, x - 256.0, 0.0, windowZ + z, 0.0, 0.0, -1.0,
+                                    octave.zo(), cylinder, scale, x - 256.0, 0.0, windowZ + z, -1.0,
                                     floors[f]);
                         }
                     }
@@ -598,13 +592,12 @@ class FieldDistributionProbeTest {
                             double z = j * (WORLD_BLOCKS / (double) gridXZ);
                             for (int t = 0; t < ySteps; t++) {
                                 double y = windowY + t * (nu / gridY);
-                                vanillaGrid[k] = octave.vanilla().noise(PerlinNoise.wrap((windowX + x) * scale),
-                                        PerlinNoise.wrap(y), PerlinNoise.wrap((windowZ + z) * scale), 0.0, 0.0);
+                                vanillaGrid[k] = octave.vanilla().get((windowX + x) * scale, y, (windowZ + z) * scale);
                                 wrappedGrid[k] = sample(octave.permutations(), octave.xo(),
-                                        octave.yo(), octave.zo(), WORLD, scale, x - 256.0, y, z - 256.0, 0.0, 0.0,
+                                        octave.yo(), octave.zo(), WORLD, scale, x - 256.0, y, z - 256.0,
                                         -1.0, floor);
                                 correctedGrid[k] = sample(octave.permutations(), octave.xo(),
-                                        octave.yo(), octave.zo(), WORLD, scale, x - 256.0, y, z - 256.0, 0.0, 0.0,
+                                        octave.yo(), octave.zo(), WORLD, scale, x - 256.0, y, z - 256.0,
                                         verticalShare, floor);
                                 k++;
                             }
@@ -805,16 +798,15 @@ class FieldDistributionProbeTest {
                     double x = i * (WORLD_BLOCKS / (double) grid);
                     for (int j = 0; j < grid; j++) {
                         double z = j * (WORLD_BLOCKS / (double) grid);
-                        vanillaSum += octave.vanilla().noise(PerlinNoise.wrap((windowX + x) * scale), 0.0,
-                                PerlinNoise.wrap((windowZ + z) * scale), 0.0, 0.0);
+                        vanillaSum += octave.vanilla().get((windowX + x) * scale, 0.0, (windowZ + z) * scale);
                         foldSum += sample(octave.permutations(), octave.xo(), octave.yo(),
-                                octave.zo(), WORLD, scale, x - 256.0, 0.0, z - 256.0, 0.0, 0.0, -1.0, floor);
+                                octave.zo(), WORLD, scale, x - 256.0, 0.0, z - 256.0, -1.0, floor);
                     }
                 }
                 vanillaMeans[s] = vanillaSum / (grid * grid);
                 foldMeans[s] = foldSum / (grid * grid);
                 anchors[s] = sample(octave.permutations(), octave.xo(), octave.yo(),
-                        octave.zo(), WORLD, scale, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, floor);
+                        octave.zo(), WORLD, scale, 0.0, 0.0, 0.0, -1.0, floor);
             }
             report.append(String.format(
                     "  f=%.3f cells/lap: vanilla mean-spread %.4f, fold mean-spread %.4f, anchor spread %.4f%n",

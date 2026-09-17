@@ -2,10 +2,8 @@ package com.toroidalworld.shape.cylinder;
 
 import org.jspecify.annotations.Nullable;
 
-import com.toroidalworld.api.v1.option.GenerationOptions;
 import com.toroidalworld.api.v1.shape.LoopSpans;
 import com.toroidalworld.api.v1.shape.ShapeDimensions;
-import com.toroidalworld.core.NetherScales;
 import com.toroidalworld.core.WorldLoopSizes;
 import com.toroidalworld.shape.ShapeStems;
 
@@ -18,9 +16,9 @@ public final class CylinderDimensions {
     public static WorldDimensions apply(WorldDimensions dimensions, CylinderSettings settings) {
         return ShapeDimensions.withSpans(dimensions,
                 settings.overworld(),
-                ShapeStems.netherSpans(settings.overworld(), settings.netherScale(), settings.chunkWidth()),
+                ShapeStems.netherSpans(settings.overworld(), settings.netherScale()),
                 settings.end(),
-                GenerationOptions.DEFAULT);
+                settings.generationOptions());
     }
 
     public static @Nullable CylinderSettings read(WorldDimensions dimensions) {
@@ -30,13 +28,11 @@ public final class CylinderDimensions {
         }
 
         Direction.Axis axis = CylinderSettings.loopedAxis(overworld);
-        int overworldChunkWidth = overworld.chunkWidth(axis);
-        int netherScale = ShapeStems.readNetherScale(dimensions, CylinderSettings::isCylinder, axis,
-                overworldChunkWidth);
         return new CylinderSettings(
                 overworld,
-                NetherScales.normalize(netherScale, overworldChunkWidth),
-                readEndSpans(dimensions, axis));
+                ShapeStems.readNetherScale(dimensions, CylinderSettings::isCylinder, overworld, axis),
+                readEndSpans(dimensions, axis),
+                ShapeDimensions.optionsOf(dimensions, LevelStem.OVERWORLD));
     }
 
     private static LoopSpans readEndSpans(WorldDimensions dimensions, Direction.Axis axis) {

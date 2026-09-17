@@ -12,7 +12,7 @@
   "gui.toroidal_world.world_shape.toroidal.hint": "Обидві горизонтальні осі зациклені — пройди достатньо в будь-який бік і повернешся туди, звідки вийшов.",
   "gui.toroidal_world.world_shape.cylinder": "Циліндрична",
   "gui.toroidal_world.world_shape.cylinder.hint": "Одна горизонтальна вісь зациклена, інша триває нескінченно, як у звичайному світі.",
-  "gui.toroidal_world.world_shape.unavailable": "Цей тип світу має власний генератор світу, який не приймає Форму світу.",
+  "gui.toroidal_world.world_shape.seam_warning": "Цей тип світу має власний генератор світу: Форма світу все одно обмежить і зациклить світ, але рельєф на шві не зійдеться.",
 
   "gui.toroidal_world.toroidal_settings.title": "Налаштування тороїдального світу",
   "gui.toroidal_world.toroidal_settings.preset.tiny": "Крихітний",
@@ -25,11 +25,14 @@
   "gui.toroidal_world.toroidal_settings.consequence.structures_common": "Місця вистачає всім звичайним структурам; твердині — ближче, ніж зазвичай.",
   "gui.toroidal_world.toroidal_settings.consequence.structures_all": "Місця вистачає будь-якій структурі на її звичній відстані.",
   "gui.toroidal_world.toroidal_settings.size": "Розмір світу в чанках (%s–%s)",
+  "gui.toroidal_world.toroidal_settings.size_x": "Розмір світу по X у чанках (%s–%s)",
+  "gui.toroidal_world.toroidal_settings.size_z": "Розмір світу по Z у чанках (%s–%s)",
   "gui.toroidal_world.toroidal_settings.hint": "Скільки треба пройти, щоб повернутися туди, звідки вийшов.",
   "gui.toroidal_world.toroidal_settings.effective": "%s чанків = %s блоків",
   "gui.toroidal_world.toroidal_settings.nether_scale": "Масштаб Незеру: 1:%s",
   "gui.toroidal_world.toroidal_settings.nether_hint": "Наскільки та сама дорога коротша через Незер. Пропонуються лише масштаби, що ділять світ націло.",
   "gui.toroidal_world.toroidal_settings.nether_effective": "Незер: %s чанків = %s блоків",
+  "gui.toroidal_world.toroidal_settings.nether_effective_xz": "Незер: %s × %s чанків = %s × %s блоків",
   "gui.toroidal_world.toroidal_settings.end_size": "Розмір Енду в чанках (%s–%s)",
   "gui.toroidal_world.toroidal_settings.end_hint": "Енд зациклюється на власній ширині, незалежній від розміру світу. Менше за мінімум — і зовнішніх островів не буде: ані міст Енду, ані елітр.",
   "gui.toroidal_world.toroidal_settings.end_effective": "Енд: %s чанків = %s блоків",
@@ -46,11 +49,18 @@
   "gui.toroidal_world.toroidal_settings.climate_mode.custom.hint": "Зменшує біоми рівно у стільки разів, скільки введено нижче.",
   "gui.toroidal_world.toroidal_settings.climate_keeps": "Берегова лінія та рельєф лишаються звичного розміру.",
   "gui.toroidal_world.toroidal_settings.climate_factor": "Зменшити біоми в",
-  "gui.toroidal_world.toroidal_settings.climate_factor_hint": "У скільки разів біоми стають меншими: значення температури при обраному розмірі, а рослинність бере своє. Одиниця означає, що цей режим тут нічого не змінює — клімат уже вміщується. Вводиться лише у Власному, цілим числом від 1 до 16.",
+  "gui.toroidal_world.toroidal_settings.climate_factor_hint": "У скільки разів біоми стають меншими: значення температури при обраному розмірі, а рослинність бере своє. Одиниця означає, що цей режим тут нічого не змінює — клімат уже вміщується. Вводиться лише у Власному, цілим числом від 1 до 64.",
   "gui.toroidal_world.toroidal_settings.guaranteed_land": "Гарантована земля",
   "gui.toroidal_world.toroidal_settings.guaranteed_land_hint": "Не дає світу вийти суцільним океаном: там, де на оберті ніде стати, рівень суходолу піднімається рівно настільки, щоб з'явився один острів. Світ, у якому земля вже є, лишається незмінним.",
+  "gui.toroidal_world.toroidal_settings.guaranteed_nether_complexes": "Гарантовані фортеця й бастіон",
+  "gui.toroidal_world.toroidal_settings.guaranteed_nether_complexes_hint": "Незер матиме щонайменше одну фортецю Незеру й одні руїни бастіону, кожну споруду в біомі, де вона може стояти. Без цього в малому Незері часто немає жодної з них.",
 
   "gui.toroidal_world.cylinder_settings.title": "Налаштування циліндричного світу",
   "gui.toroidal_world.cylinder_settings.axis": "Вісь зациклення",
-  "gui.toroidal_world.cylinder_settings.axis_hint": "Світ зациклюється вздовж цієї осі, а вздовж іншої триває нескінченно."
+  "gui.toroidal_world.cylinder_settings.axis_hint": "Світ зациклюється вздовж цієї осі, а вздовж іншої триває нескінченно.",
+
+  "toroidal_world.configuration.mapCopies": "Копії світу на повноекранній мапі",
+  "toroidal_world.configuration.mapCopies.tooltip": "Як моди мап показують зациклений світ на весь екран: «Повторювати» заповнює вікно його копіями, «Одна копія» показує світ один раз і не дає відсунути чи віддалити мапу за його краї. Мінімапи завжди повторюють світ.",
+  "toroidal_world.configuration.mapCopies.repeated": "Повторювати",
+  "toroidal_world.configuration.mapCopies.single": "Одна копія"
 }

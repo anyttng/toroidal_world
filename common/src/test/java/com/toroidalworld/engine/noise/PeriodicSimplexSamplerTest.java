@@ -17,7 +17,6 @@ import com.toroidalworld.core.WorldLoopBounds.AxisBounds;
 import com.toroidalworld.core.WrapDomain;
 
 import net.minecraft.core.Direction;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.levelgen.LegacyRandomSource;
 import net.minecraft.world.level.levelgen.synth.SimplexNoise;
 
@@ -54,33 +53,14 @@ class PeriodicSimplexSamplerTest {
         return WorldFolds.of(FlatShape.torus(new WorldLoopBounds(xChunkMin, xChunkMax, zChunkMin, zChunkMax)));
     }
 
-    private record NoiseInstance(SimplexNoise vanilla, int[] permutations, double xo, double zo) {
+    private record NoiseInstance(SimplexNoise vanilla, byte[] permutations, double xo, double zo) {
         static NoiseInstance of(long worldSeed) {
             SimplexNoise vanilla = new SimplexNoise(new LegacyRandomSource(worldSeed));
-            RandomSource random = new LegacyRandomSource(worldSeed);
-            double xo = random.nextDouble() * 256.0;
-            double yo = random.nextDouble() * 256.0;
-            double zo = random.nextDouble() * 256.0;
-            int[] permutations = new int[256];
-            for (int i = 0; i < 256; i++) {
-                permutations[i] = i;
-            }
-
-            for (int i = 0; i < 256; i++) {
-                int offset = random.nextInt(256 - i);
-                int tmp = permutations[i];
-                permutations[i] = permutations[i + offset];
-                permutations[i + offset] = tmp;
-            }
-
-            assertEquals(vanilla.xo, xo);
-            assertEquals(vanilla.yo, yo);
-            assertEquals(vanilla.zo, zo);
-            return new NoiseInstance(vanilla, permutations, xo, yo);
+            return new NoiseInstance(vanilla, vanilla.perms, vanilla.offsetX, vanilla.offsetY);
         }
 
         double sample(WorldFold transformer, double scale, double x, double z) {
-            return PeriodicSimplexSampler.sample(permutations, 0.0, 0.0, transformer, scale, x, z);
+            return (float) PeriodicSimplexSampler.sample(permutations, xo, zo, transformer, scale, x, z);
         }
     }
 
@@ -334,8 +314,8 @@ class PeriodicSimplexSamplerTest {
                     double widest = 0.0;
                     for (int i = 0; i < LINE_SAMPLES; i++) {
                         double z = lineCoord(random, DEFAULT.blockDomain(Direction.Axis.Z), i) * scale;
-                        widest = Math.max(widest, Math.abs(noise.vanilla().getValue(before * scale, z)
-                                - noise.vanilla().getValue(after * scale, z)));
+                        widest = Math.max(widest, Math.abs(noise.vanilla().get(before * scale, z)
+                                - noise.vanilla().get(after * scale, z)));
                     }
 
                     double measured = widest;
@@ -360,7 +340,7 @@ class PeriodicSimplexSamplerTest {
                         double z = lineCoord(random, WorldFolds.NOOP.blockDomain(Direction.Axis.Z), i);
 
                         double periodic = noise.sample(WorldFolds.NOOP, scale, x, z);
-                        double vanilla = noise.vanilla().getValue(x * scale, z * scale);
+                        double vanilla = noise.vanilla().get(x * scale, z * scale);
                         assertEquals(vanilla, periodic,
                                 () -> "sample(" + x + ", " + z + ") vs vanilla "
                                         + at(WorldFolds.NOOP, worldSeed, scale));

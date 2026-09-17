@@ -12,7 +12,7 @@
   "gui.toroidal_world.world_shape.toroidal.hint": "두 수평 축이 모두 순환합니다. 어느 방향으로든 충분히 가면 출발한 곳으로 돌아옵니다.",
   "gui.toroidal_world.world_shape.cylinder": "원통형",
   "gui.toroidal_world.world_shape.cylinder.hint": "수평 축 하나는 순환하고, 다른 하나는 일반 세계처럼 끝없이 이어집니다.",
-  "gui.toroidal_world.world_shape.unavailable": "이 세계 유형은 자체 세계 생성기를 사용하므로 세계 형태를 적용할 수 없습니다.",
+  "gui.toroidal_world.world_shape.seam_warning": "이 세계 유형은 자체 세계 생성기를 사용합니다. 세계 형태로 세계의 경계와 순환은 적용되지만, 이음새에서 지형이 이어지지 않습니다.",
 
   "gui.toroidal_world.toroidal_settings.title": "토로이드형 세계 설정",
   "gui.toroidal_world.toroidal_settings.preset.tiny": "아주 작음",
@@ -25,11 +25,14 @@
   "gui.toroidal_world.toroidal_settings.consequence.structures_common": "일반적인 구조물이 모두 들어섭니다. 요새는 평소보다 가까이 나타납니다.",
   "gui.toroidal_world.toroidal_settings.consequence.structures_all": "모든 구조물이 평소 거리에서 생성됩니다.",
   "gui.toroidal_world.toroidal_settings.size": "청크 단위 세계 크기 (%s–%s)",
+  "gui.toroidal_world.toroidal_settings.size_x": "X축 청크 단위 세계 크기 (%s–%s)",
+  "gui.toroidal_world.toroidal_settings.size_z": "Z축 청크 단위 세계 크기 (%s–%s)",
   "gui.toroidal_world.toroidal_settings.hint": "출발한 곳으로 돌아오기까지 걷는 거리입니다.",
   "gui.toroidal_world.toroidal_settings.effective": "%s 청크 = %s 블록",
   "gui.toroidal_world.toroidal_settings.nether_scale": "네더 배율: 1:%s",
   "gui.toroidal_world.toroidal_settings.nether_hint": "같은 여정이 네더를 거치면 얼마나 짧아지는지입니다. 세계를 나누어떨어지게 하는 배율만 제공됩니다.",
   "gui.toroidal_world.toroidal_settings.nether_effective": "네더: %s 청크 = %s 블록",
+  "gui.toroidal_world.toroidal_settings.nether_effective_xz": "네더: %s × %s 청크 = %s × %s 블록",
   "gui.toroidal_world.toroidal_settings.end_size": "청크 단위 엔드 크기 (%s–%s)",
   "gui.toroidal_world.toroidal_settings.end_hint": "엔드는 세계 크기와 무관하게 자체 너비로 순환합니다. 최솟값보다 작으면 바깥 섬이 없어 엔드 시티도 겉날개도 없습니다.",
   "gui.toroidal_world.toroidal_settings.end_effective": "엔드: %s 청크 = %s 블록",
@@ -46,11 +49,18 @@
   "gui.toroidal_world.toroidal_settings.climate_mode.custom.hint": "아래에 입력한 배수만큼 정확히 생물 군계를 줄입니다.",
   "gui.toroidal_world.toroidal_settings.climate_keeps": "해안선과 지형은 평소 크기를 유지합니다.",
   "gui.toroidal_world.toroidal_settings.climate_factor": "생물 군계를 줄일 배수",
-  "gui.toroidal_world.toroidal_settings.climate_factor_hint": "생물 군계가 몇 배 작아지는지입니다. 선택한 크기에서 기온의 값이며, 식생은 자기 값을 따릅니다. 1은 이 크기에서 이 모드가 아무것도 바꾸지 않는다는 뜻으로, 기후가 이미 들어간다는 말입니다. 사용자 지정에서만 1부터 16까지의 정수로 입력할 수 있습니다.",
+  "gui.toroidal_world.toroidal_settings.climate_factor_hint": "생물 군계가 몇 배 작아지는지입니다. 선택한 크기에서 기온의 값이며, 식생은 자기 값을 따릅니다. 1은 이 크기에서 이 모드가 아무것도 바꾸지 않는다는 뜻으로, 기후가 이미 들어간다는 말입니다. 사용자 지정에서만 1부터 64까지의 정수로 입력할 수 있습니다.",
   "gui.toroidal_world.toroidal_settings.guaranteed_land": "육지 보장",
   "gui.toroidal_world.toroidal_settings.guaranteed_land_hint": "세계가 온통 바다로 생성되는 것을 막습니다. 한 바퀴 돌아도 설 곳이 없을 경우, 섬 하나가 생길 만큼만 육지 높이를 올립니다. 이미 육지가 있는 세계는 그대로 둡니다.",
+  "gui.toroidal_world.toroidal_settings.guaranteed_nether_complexes": "네더 요새와 보루 잔해 보장",
+  "gui.toroidal_world.toroidal_settings.guaranteed_nether_complexes_hint": "네더에 네더 요새와 보루 잔해가 최소 하나씩, 각각 생성될 수 있는 생물 군계에 배치됩니다. 끄면 작은 네더에는 둘 다 없는 경우가 많습니다.",
 
   "gui.toroidal_world.cylinder_settings.title": "원통형 세계 설정",
   "gui.toroidal_world.cylinder_settings.axis": "순환 축",
-  "gui.toroidal_world.cylinder_settings.axis_hint": "세계는 이 축을 따라 순환하고, 다른 축을 따라서는 끝없이 이어집니다."
+  "gui.toroidal_world.cylinder_settings.axis_hint": "세계는 이 축을 따라 순환하고, 다른 축을 따라서는 끝없이 이어집니다.",
+
+  "toroidal_world.configuration.mapCopies": "전체 화면 지도의 세계 복사본",
+  "toroidal_world.configuration.mapCopies.tooltip": "지도 모드가 순환하는 세계를 전체 화면으로 보여 주는 방식입니다. '반복'은 창 전체를 세계의 복사본으로 채우고, '하나만'은 세계를 한 번만 보여 주며 가장자리 너머로 지도를 옮기거나 축소할 수 없게 합니다. 미니맵은 항상 반복해서 보여 줍니다.",
+  "toroidal_world.configuration.mapCopies.repeated": "반복",
+  "toroidal_world.configuration.mapCopies.single": "하나만"
 }

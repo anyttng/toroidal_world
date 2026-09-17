@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URL;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -27,6 +28,13 @@ class ModPresenceTest {
     void aGateWhoseModCarriesTheSymbolOpens() {
         assertTrue(ModPresence.of(LOGGER, SHIPPED_CLASS, "[test-compat] gate carried_present", CARRIED_SYMBOL)
                 .present(), "the class is on the classpath and declares the member the gate names");
+    }
+
+    @Test
+    void aGateClosesOnTheOneSymbolOfSeveralTheModLost() {
+        assertFalse(ModPresence.of(LOGGER, SHIPPED_CLASS, "[test-compat] gate one_moved_present",
+                CARRIED_SYMBOL, MOVED_SYMBOL).present(),
+                "a gate with one carried and one moved symbol opened");
     }
 
     @Test
@@ -62,7 +70,7 @@ class ModPresenceTest {
     @Test
     void theProbeAsksTheClassLoaderOnce() {
         CountingLoader loader = new CountingLoader(SHIPPED_CLASS);
-        ModPresence gate = new ModPresence(LOGGER, loader, SHIPPED_CLASS, "[test-compat] gate once_present", null);
+        ModPresence gate = new ModPresence(LOGGER, loader, SHIPPED_CLASS, "[test-compat] gate once_present", List.of());
 
         assertTrue(gate.present());
         assertTrue(gate.present());

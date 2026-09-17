@@ -7,7 +7,7 @@ import static com.toroidalworld.engine.noise.DensityFunctionFixture.SQUARE;
 import static com.toroidalworld.engine.noise.DensityFunctionFixture.WORLDS;
 import static com.toroidalworld.engine.noise.DensityFunctionFixture.blockIn;
 import static com.toroidalworld.engine.noise.DensityFunctionFixture.blockY;
-import static com.toroidalworld.engine.noise.DensityFunctionFixture.withLiveNoise;
+import static com.toroidalworld.engine.noise.DensityFunctionFixture.compile;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,8 +18,8 @@ import org.junit.jupiter.api.Test;
 
 
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.levelgen.DensityFunction;
-import net.minecraft.world.level.levelgen.DensityFunctions;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunction;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunctions;
 
 class ShiftFunctionPeriodicityTest {
     private static final int SAMPLES = 64;
@@ -29,9 +29,9 @@ class ShiftFunctionPeriodicityTest {
     }
 
     private static final List<ShiftFunction> SHIFTS = List.of(
-            new ShiftFunction("shift", withLiveNoise(DensityFunctions.shift(NOISE_DATA))),
-            new ShiftFunction("shift_a", withLiveNoise(DensityFunctions.shiftA(NOISE_DATA))),
-            new ShiftFunction("shift_b", withLiveNoise(DensityFunctions.shiftB(NOISE_DATA))));
+            new ShiftFunction("shift", DensityFunctions.shift(NOISE_DATA)),
+            new ShiftFunction("shift_a", DensityFunctions.shiftA(NOISE_DATA)),
+            new ShiftFunction("shift_b", DensityFunctions.shiftB(NOISE_DATA)));
 
     @Test
     void everyShiftFunctionAgreesOneWorldWidthApartInX() {
@@ -89,9 +89,7 @@ class ShiftFunctionPeriodicityTest {
     }
 
     private static double sample(ShiftFunction shift, WorldFold transformer, int x, int y, int z) {
-        DensityFunction.FunctionContext at = new DensityFunction.SinglePointContext(x, y, z);
-
-        return GenerationTransformerContext.withTransformer(transformer, () -> shift.function().compute(at));
+        return DensityFunctionFixture.sample(compile(shift.function(), transformer), x, y, z);
     }
 
     private static String at(ShiftFunction shift, WorldFold transformer,

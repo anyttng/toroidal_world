@@ -2,8 +2,9 @@ package com.toroidalworld.engine.gen;
 
 import com.toroidalworld.core.CarriedShape;
 import com.toroidalworld.core.FlatShape;
+import com.toroidalworld.core.ShapedChunkGenerator;
 import com.toroidalworld.shape.WorldOptionSetup;
-import com.toroidalworld.shape.torus.CompactBiomes;
+import com.toroidalworld.shape.climate.CompactBiomes;
 import com.toroidalworld.shape.torus.TorusDimensions;
 import com.toroidalworld.shape.torus.TorusSettings;
 import static com.toroidalworld.engine.gen.BakeStampFixture.foreignGenerator;
@@ -51,14 +52,14 @@ class CreationShapeTest {
         SharedConstants.tryDetectVersion();
         Bootstrap.bootStrap();
         WorldOptionSetup.registerAll(false);
-        worldgen = VanillaRegistries.createLookup();
+        worldgen = VanillaRegistries.createWorldLookup();
     }
 
     @Test
-    void aNoiseSubclassCanTakeAShapeAndAForeignGeneratorCannot() {
-        assertTrue(ShapedDimensions.canTakeShape(noiseSubclassGenerator(worldgen)));
-        assertTrue(ShapedDimensions.canTakeShape(noiseGenerator(worldgen)));
-        assertFalse(ShapedDimensions.canTakeShape(foreignGenerator()));
+    void terrainTilesAtTheSeamForNoiseGeneratorsAndNotForAForeignOne() {
+        assertTrue(ShapedChunkGenerator.tilesAtSeam(noiseGenerator(worldgen)));
+        assertTrue(ShapedChunkGenerator.tilesAtSeam(noiseSubclassGenerator(worldgen)));
+        assertFalse(ShapedChunkGenerator.tilesAtSeam(foreignGenerator()));
     }
 
     @Test
@@ -75,11 +76,16 @@ class CreationShapeTest {
     }
 
     @Test
-    void aForeignOverworldIsLeftUnshaped() {
-        WorldDimensions dimensions = overworldOnly(foreignGenerator());
+    void aForeignOverworldKeepsItsClassAndTakesTheShape() {
+        ChunkGenerator overworld = foreignGenerator();
+        WorldDimensions dimensions = overworldOnly(overworld);
+        FlatShape shape = squareTorus(CHOSEN_CHUNK_WIDTH);
 
-        assertSame(dimensions,
-                ShapedDimensions.withShape(dimensions, LevelStem.OVERWORLD, new CarriedShape(squareTorus(CHOSEN_CHUNK_WIDTH))));
+        WorldDimensions shaped = ShapedDimensions.withShape(dimensions, LevelStem.OVERWORLD, new CarriedShape(shape));
+
+        assertNotSame(dimensions, shaped, "the shaped dimensions are the object the apply guard compares");
+        assertEquals(shape, ShapedDimensions.shapeOf(shaped, LevelStem.OVERWORLD));
+        assertSame(overworld, shaped.get(LevelStem.OVERWORLD).orElseThrow().generator());
     }
 
     @Test

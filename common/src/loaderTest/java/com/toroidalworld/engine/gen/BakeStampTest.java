@@ -4,8 +4,8 @@ import com.toroidalworld.core.CarriedShape;
 import com.toroidalworld.core.FlatShape;
 import com.toroidalworld.api.v1.option.GenerationOptions;
 import com.toroidalworld.shape.WorldOptionSetup;
-import com.toroidalworld.shape.torus.ClimateScale;
-import com.toroidalworld.shape.torus.CompactBiomes;
+import com.toroidalworld.shape.climate.ClimateScale;
+import com.toroidalworld.shape.climate.CompactBiomes;
 import static com.toroidalworld.engine.gen.BakeStampFixture.OVERWORLD_CHUNK_WIDTH;
 import static com.toroidalworld.engine.gen.BakeStampFixture.carriedShapeOf;
 import static com.toroidalworld.engine.gen.BakeStampFixture.chunkWidth;
@@ -77,7 +77,7 @@ class BakeStampTest {
         SharedConstants.tryDetectVersion();
         Bootstrap.bootStrap();
         WorldOptionSetup.registerAll(false);
-        worldgen = VanillaRegistries.createLookup();
+        worldgen = VanillaRegistries.createWorldLookup();
     }
 
     @Test

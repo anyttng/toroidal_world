@@ -20,9 +20,10 @@ import net.minecraft.core.RegistrationInfo;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.levelgen.DensityFunction;
-import net.minecraft.world.level.levelgen.DensityFunctions;
 import net.minecraft.world.level.levelgen.NoiseRouter;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunction;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunctions;
+import net.minecraft.world.level.levelgen.densityfunction.op.BinaryFunction;
 
 class TerrainCeilingTest {
     private static final String JAGGEDNESS_PATH = "overworld/jaggedness";
@@ -43,11 +44,10 @@ class TerrainCeilingTest {
 
     private static final double PENALTY = 0.25;
 
-    private static final double TOLERANCE = 1.0e-9;
+    private static final double TOLERANCE = 1.0e-6;
 
     private static double densityAt(NoiseRouter router, int y) {
-        return TerrainCeiling.withCeiling(router).finalDensity()
-                .compute(new DensityFunction.SinglePointContext(0, y, 0));
+        return CompiledDensity.valueAt(TerrainCeiling.withCeiling(router).finalDensity(), 0, y, 0);
     }
 
     private static NoiseRouter routerWithJaggedness(double splineValue) {
@@ -59,19 +59,18 @@ class TerrainCeilingTest {
                 new MappedRegistry<>(Registries.DENSITY_FUNCTION, Lifecycle.stable());
         Holder.Reference<DensityFunction> spline = functions.register(
                 ResourceKey.create(Registries.DENSITY_FUNCTION, Identifier.withDefaultNamespace(path)),
-                DensityFunctions.constant(splineValue),
+                DensityFunctions.constant((float) splineValue),
                 RegistrationInfo.BUILT_IN);
         functions.freeze();
-        return DensityFunctions.flatCache(DensityFunctions.mul(new DensityFunctions.HolderHolder(spline),
-                DensityFunctions.constant(NOISE_MAX)));
+        return DensityFunctions.cache(DensityFunctions.mul(new DensityFunctions.HolderHolder(spline),
+                DensityFunctions.constant((float) NOISE_MAX)));
     }
 
     private static NoiseRouter router(DensityFunction jaggedness) {
         DensityFunction zero = DensityFunctions.zero();
         DensityFunction finalDensity =
-                DensityFunctions.add(DensityFunctions.constant(BASE_DENSITY), jaggedness);
-        return new NoiseRouter(zero, zero, zero, zero, zero, zero, zero, zero, zero, zero,
-                DensityFunctions.constant(SURFACE_Y), finalDensity, zero, zero, zero);
+                DensityFunctions.add(DensityFunctions.constant((float) BASE_DENSITY), jaggedness);
+        return new NoiseRouter(zero, zero, zero, zero, zero, zero, DensityFunctions.constant(SURFACE_Y), finalDensity);
     }
 
     private static double undisturbed(double splineValue) {
@@ -91,8 +90,7 @@ class TerrainCeilingTest {
 
         while (!pending.isEmpty()) {
             DensityFunction node = pending.remove();
-            if (node instanceof DensityFunctions.TwoArgumentSimpleFunction candidate
-                    && candidate.type() == DensityFunctions.TwoArgumentSimpleFunction.Type.MAX) {
+            if (node instanceof BinaryFunction candidate && candidate.type() == BinaryFunction.Type.MAX) {
                 found++;
             }
 
@@ -100,7 +98,7 @@ class TerrainCeilingTest {
                 continue;
             }
 
-            node.mapChildren(child -> {
+            node.rewriteChildren(child -> {
                 if (seen.add(child)) {
                     pending.add(child);
                 }
@@ -116,7 +114,7 @@ class TerrainCeilingTest {
     class NothingToStandOn {
         @Test
         void aRouterWithoutAJaggednessNodeIsHandedBackUnchanged() {
-            NoiseRouter source = router(DensityFunctions.constant(0.0));
+            NoiseRouter source = router(DensityFunctions.zero());
             assertSame(source, TerrainCeiling.withCeiling(source));
         }
 

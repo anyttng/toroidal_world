@@ -48,7 +48,7 @@ repositories {
             includeGroup 'com.github.bawnorton.mixinsquared'
         }
     }
-    // C2ME, for the AST classes the density-function fold test builds by hand.
+    // C2ME, on the test runtime so the C2ME compat mixins apply against the real classes.
     maven {
         name = 'Modrinth'
         url = 'https://api.modrinth.com/maven'
@@ -107,9 +107,8 @@ neoForge {
 
     // Creates the test source set with the Minecraft classes on its classpath and runs tests through the FML JUnit
     // launcher, so registries are bootstrapped and the mod's mixins are applied. Only tests that need a loader live
-    // here: packets read through accessor mixins, density-function samples whose expected values come from the noise
-    // mixins, and the C2ME fold test — C2ME's own access transformer opens the NoiseChunk internals its AST walks.
-    // Everything else runs as plain JUnit in common.
+    // here: packets read through accessor mixins and density-function samples whose expected values come from the
+    // noise mixins. Everything else runs as plain JUnit in common.
     unitTest {
         enable()
         testedMod = mods.toroidal_world
@@ -141,6 +140,8 @@ sourceSets.test.java.srcDir '../common/src/loaderTest/java'
 // The scans are measurements over the same folded router, run by the scan tool rather than by the gate.
 sourceSets.test.java.srcDir '../common/src/scan/java'
 
+sourceSets.test.java.exclude(rootProject.unportedCompat)
+
 test {
     useJUnitPlatform()
     filter {
@@ -168,27 +169,9 @@ test {
     dependsOn(':common:test')
 }
 
-// FML extracts the outer artifact's jar-in-jar modules on the test runtime itself; the unpacked jars serve compile only.
-configurations {
-    c2meModules
-}
-
+// FML extracts the outer artifact's jar-in-jar modules on the test runtime itself.
 dependencies {
-    c2meModules "maven.modrinth:c2me-neoforge:${c2me_version}"
     testRuntimeOnly "maven.modrinth:c2me-neoforge:${c2me_version}"
-}
-
-var c2meModuleJars = tasks.register('unpackC2meModules', Sync) {
-    from(zipTree(configurations.c2meModules.singleFile)) {
-        include 'META-INF/jars/c2me-*.jar'
-        eachFile { it.relativePath = new RelativePath(true, it.name) }
-    }
-    includeEmptyDirs = false
-    into layout.buildDirectory.dir('c2me-modules')
-}
-
-dependencies {
-    testCompileOnly files(c2meModuleJars).asFileTree.matching { include '*.jar' }
 }
 
 // The test runtime has no JarJar to drop one of the two MixinSquared copies, and the launcher refuses the duplicate.

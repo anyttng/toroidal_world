@@ -4,7 +4,6 @@ import org.jspecify.annotations.Nullable;
 
 import com.toroidalworld.api.v1.shape.LoopSpans;
 import com.toroidalworld.api.v1.shape.ShapeDimensions;
-import com.toroidalworld.core.NetherScales;
 import com.toroidalworld.shape.ShapeStems;
 
 import net.minecraft.core.Direction;
@@ -16,23 +15,20 @@ public final class TorusDimensions {
     public static WorldDimensions apply(WorldDimensions dimensions, TorusSettings settings) {
         return ShapeDimensions.withSpans(dimensions,
                 settings.overworld(),
-                ShapeStems.netherSpans(settings.overworld(), settings.netherScale(), settings.chunkWidth()),
+                ShapeStems.netherSpans(settings.overworld(), settings.netherScale()),
                 settings.end(),
                 settings.generationOptions());
     }
 
     public static @Nullable TorusSettings read(WorldDimensions dimensions) {
-        LoopSpans overworld = ShapeStems.spansOf(dimensions, LevelStem.OVERWORLD, LoopSpans::isSquare);
+        LoopSpans overworld = ShapeStems.spansOf(dimensions, LevelStem.OVERWORLD, TorusSettings::isTorus);
         if (overworld == null) {
             return null;
         }
 
-        int overworldChunkWidth = overworld.chunkWidth(Direction.Axis.X);
-        int netherScale = ShapeStems.readNetherScale(dimensions, LoopSpans::isSquare, Direction.Axis.X,
-                overworldChunkWidth);
         return new TorusSettings(
                 overworld,
-                NetherScales.normalize(netherScale, overworldChunkWidth),
+                ShapeStems.readNetherScale(dimensions, TorusSettings::isTorus, overworld, Direction.Axis.X),
                 readEndSpans(dimensions),
                 ShapeDimensions.optionsOf(dimensions, LevelStem.OVERWORLD));
     }

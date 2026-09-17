@@ -33,16 +33,17 @@ public class StructureManagerMixin {
     private LevelAccessor level;
 
     @WrapMethod(
-            method = "startsForStructure(Lnet/minecraft/world/level/ChunkPos;Ljava/util/function/Predicate;)Ljava/util/List;")
-    private List<StructureStart> toroidal$startsInTheAskingChunksFrame(ChunkPos pos, Predicate<Structure> matcher,
+            method = "startsForStructure(IILjava/util/function/Predicate;)Ljava/util/List;")
+    private List<StructureStart> toroidal$startsInTheAskingChunksFrame(int chunkX, int chunkZ, Predicate<Structure> matcher,
             Operation<List<StructureStart>> original) {
-        List<StructureStart> starts = original.call(pos, matcher);
+        List<StructureStart> starts = original.call(chunkX, chunkZ, matcher);
         if (!(this.level instanceof WorldGenRegion region)) {
             return starts;
         }
 
         WorldFold transformer = WorldLoopAttachments.wrappedTransformerOf(((LevelHolder) region).toroidal$level());
         if (transformer != null && !starts.isEmpty()) {
+            ChunkPos pos = new ChunkPos(chunkX, chunkZ);
             List<StructureStart> framed = new ArrayList<>(starts.size());
             for (StructureStart start : starts) {
                 StructureStart inFrame = ((FramedStructureStart) (Object) start)

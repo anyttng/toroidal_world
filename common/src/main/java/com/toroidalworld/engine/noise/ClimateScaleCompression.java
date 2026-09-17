@@ -13,7 +13,7 @@ public final class ClimateScaleCompression {
 
     private static final double HORIZONTAL_SHARE = 0.0;
 
-    private static final int UNBOUNDED_LAP = 0;
+    static final int UNBOUNDED_LAP = 0;
 
     public static boolean compressible(WorldFold fold, double verticalShare) {
         return verticalShare == HORIZONTAL_SHARE && lapBlocks(fold) != UNBOUNDED_LAP;
@@ -24,12 +24,18 @@ public final class ClimateScaleCompression {
         return fittedFactor(amplitudes, lapBlocks(fold) * baseScale * lowestFreqInputFactor);
     }
 
-    private static int lapBlocks(WorldFold fold) {
+    static int lapBlocks(WorldFold fold) {
         WrapDomain xDomain = fold.blockDomain(Direction.Axis.X);
         WrapDomain zDomain = fold.blockDomain(Direction.Axis.Z);
-        return xDomain.loops() && zDomain.loops()
-                ? Math.min(xDomain.domainLength, zDomain.domainLength)
-                : UNBOUNDED_LAP;
+        if (xDomain.loops() && zDomain.loops()) {
+            return Math.min(xDomain.domainLength, zDomain.domainLength);
+        }
+
+        if (xDomain.loops()) {
+            return xDomain.domainLength;
+        }
+
+        return zDomain.loops() ? zDomain.domainLength : UNBOUNDED_LAP;
     }
 
     private static double fittedFactor(DoubleList amplitudes, double lowestOctaveCells) {

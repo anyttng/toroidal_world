@@ -46,6 +46,17 @@ class AxisCopiesTest {
     }
 
     @Test
+    void clampViewKeepsTheViewInsideTheCanonicalCopy() {
+        AxisCopies axis = AxisCopies.looped(MIN, WIDTH);
+        assertEquals(100.5, axis.clampView(100.5, 200.0), "a view inside the world moved");
+        assertEquals(MIN + 200.0, axis.clampView(MIN - 3000.0, 200.0), "a view past the first edge is not stopped 200 inside it");
+        assertEquals(MIN + WIDTH - 200.0, axis.clampView(MIN + WIDTH + 3000.0, 200.0),
+                "a view past the last edge is not stopped 200 inside it");
+        assertEquals(0.0, axis.clampView(300.0, 600.0), "a view wider than the world is not centred on it at 0");
+        assertEquals(-5000.0, AxisCopies.UNBOUNDED.clampView(-5000.0, 200.0), "an unbounded axis clamped a view");
+    }
+
+    @Test
     void anUnboundedAxisDrawsTheOneLapWithNoSeamAndNoOffset() {
         AxisCopies axis = AxisCopies.UNBOUNDED;
         assertFalse(axis.loops(), "the unbounded axis reads as looped");

@@ -9,8 +9,8 @@ import com.toroidalworld.core.WorldLoopBounds;
 import com.toroidalworld.core.WorldLoopBounds.AxisBounds;
 import com.toroidalworld.core.WrapDomain;
 
-import net.minecraft.world.level.levelgen.DensityFunction;
-import net.minecraft.world.level.levelgen.DensityFunctions;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunction;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunctions;
 
 public final class EndIslandFixture {
     private static final int SWEEP_REACH_BLOCKS = 13 * 16;
@@ -22,7 +22,7 @@ public final class EndIslandFixture {
     public static final WorldFold CYLINDER = WorldFolds.of(FlatShape.cylinder(
             new WorldLoopBounds(new AxisBounds.Looped(-128, 128), AxisBounds.Unbounded.INSTANCE)));
 
-    public static final DensityFunction END_ISLANDS = DensityFunctions.endIslands(DensityFunctionFixture.SEED);
+    public static final DensityFunction END_ISLANDS = DensityFunctions.endOuterIslands();
 
     public static final double NO_ISLAND_DENSITY = PeriodicEndIslands.density(NO_ISLAND_HEIGHT);
 

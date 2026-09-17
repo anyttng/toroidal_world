@@ -13,7 +13,7 @@ import static com.toroidalworld.engine.noise.ClimateScanFixture.SCAN_Y_BLOCKS;
 import static com.toroidalworld.engine.noise.ClimateScanFixture.SEED_BASE;
 import static com.toroidalworld.engine.noise.ClimateScanFixture.TYPES;
 import static com.toroidalworld.engine.noise.ClimateScanFixture.biomeSource;
-import static com.toroidalworld.engine.noise.ClimateScanFixture.cylinderOfWidth;
+import static com.toroidalworld.engine.noise.ClimateScanFixture.uncompressedCylinderOfWidth;
 import static com.toroidalworld.engine.noise.ClimateScanFixture.guaranteedTorusOfWidth;
 import static com.toroidalworld.engine.noise.ClimateScanFixture.randomState;
 import static com.toroidalworld.engine.noise.ClimateScanFixture.settingsOf;
@@ -40,8 +40,9 @@ import net.minecraft.core.QuartPos;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.biome.MultiNoiseBiomeSource;
-import net.minecraft.world.level.levelgen.DensityFunction;
 import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.densityfunction.DensitySampler;
+import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
 
 class ClimateScan {
     private static final int GRID = 64;
@@ -115,7 +116,8 @@ class ClimateScan {
             new Shape("torus", ClimateScanFixture::torusOfWidth, true),
             new Shape("torus, strong", ClimateScanFixture::strongTorusOfWidth, true),
             new Shape("torus, uncompressed", ClimateScanFixture::uncompressedTorusOfWidth, false),
-            new Shape("cylinder", ClimateScanFixture::cylinderOfWidth, false));
+            new Shape("cylinder", ClimateScanFixture::cylinderOfWidth, true),
+            new Shape("cylinder, uncompressed", ClimateScanFixture::uncompressedCylinderOfWidth, false));
 
     private record Scan(double distinctBiomes, double topShare, double temperatureSpread, double landShare) {
     }
@@ -151,9 +153,9 @@ class ClimateScan {
                 .append("min is the narrowest world the game will create; the nether is the overworld width")
                 .append(" divided by the nether scale that width allows, and carries five biomes in all, so it is")
                 .append(" reported and not gated.").append(System.lineSeparator())
-                .append("A torus that declined compression and a cylinder are never compressed, so one lap of")
+                .append("A torus or a cylinder that declined compression is never compressed, so one lap of")
                 .append(" either is vanilla's own window of that size; the one-biome gate applies to the")
-                .append(" compressed torus alone.")
+                .append(" compressed shapes alone.")
                 .append(System.lineSeparator())
                 .append("Criterion: the distribution clause. The empty-control check is a blindness guard and")
                 .append(" the one-biome check a feature gate on compression; every number in the table is a")
@@ -338,7 +340,8 @@ class ClimateScan {
     }
 
     private static double landShare(WorldType type, WorldFold fold, int widthBlocks, long seed, int grid) {
-        DensityFunction density = randomState(type, fold, seed).router().finalDensity();
+        RandomState randomState = randomState(type, fold, seed);
+        DensitySampler density = randomState.getSampler(randomState.router.finalDensity());
         int seaLevel = settingsOf(type).seaLevel();
         double step = widthBlocks / (double) grid;
         int[] land = new int[1];
@@ -475,8 +478,8 @@ class ClimateScan {
         int stride = Math.max(PATCH_STRIDE_BLOCKS, widthBlocks / PATCH_GRID_CAP);
         int grid = widthBlocks / stride;
         RandomState randomState = randomState(type, fold, seed);
-        DensityFunction density = randomState.router().finalDensity();
-        DensityFunction continents = randomState.router().continents();
+        DensitySampler density = randomState.getSampler(randomState.router.finalDensity());
+        DensitySampler continents = randomState.getSampler(randomState.router.continents());
         int seaLevel = settingsOf(type).seaLevel();
         boolean[] land = new boolean[grid * grid];
         double[] field = new double[grid * grid];
@@ -488,7 +491,7 @@ class ClimateScan {
                     int blockZ = iz * stride;
                     land[ix * grid + iz] = isLand(density, blockX, seaLevel, blockZ);
                     field[ix * grid + iz] =
-                            continents.compute(new DensityFunction.SinglePointContext(blockX, seaLevel, blockZ));
+                            continents.sampleValue(SamplerContext.EMPTY_UNCACHED, blockX, seaLevel, blockZ);
                 }
             }
         });
@@ -557,7 +560,8 @@ class ClimateScan {
     @Test
     void theCylinderCarriesVanillaClimateAlongItsUnboundedAxis() {
         StringBuilder report = new StringBuilder();
-        report.append("Cylinder, climate along the unbounded axis - the axis that carries no lap and so is")
+        report.append("Cylinder that declined compression, climate along the unbounded axis - the axis that")
+                .append(" carries no lap and so is")
                 .append(" starved of nothing.").append(System.lineSeparator())
                 .append(GRID).append(" lines, spread across the ring and across ")
                 .append(CONTROL_LINE_SPREAD_BLOCKS).append(" blocks for the control, which has no ring; each is ")
@@ -586,7 +590,7 @@ class ClimateScan {
 
             for (Width width : WIDTHS) {
                 int widthBlocks = width.widthBlocks(type);
-                AxisScan folded = meanAlongZ(type, source, widthBlocks, cylinderOfWidth(widthBlocks));
+                AxisScan folded = meanAlongZ(type, source, widthBlocks, uncompressedCylinderOfWidth(widthBlocks));
                 AxisScan control = meanAlongZ(type, source, CONTROL_LINE_SPREAD_BLOCKS, WorldFolds.NOOP);
 
                 report.append(String.format(Locale.ROOT, "    %-8s %-14s %6.2f biomes %8.4f %6.2f biomes %8.4f%n",
@@ -636,7 +640,7 @@ class ClimateScan {
 
     private static AxisScan alongZ(WorldType type, MultiNoiseBiomeSource source, int lineSpreadBlocks,
             WorldFold fold, long seed) {
-        Climate.Sampler sampler = randomState(type, fold, seed).sampler();
+        Climate.Sampler sampler = randomState(type, fold, seed).createClimateSampler(SamplerContext.EMPTY_UNCACHED);
         int quartY = QuartPos.fromBlock(SCAN_Y_BLOCKS);
         double xStep = lineSpreadBlocks / (double) GRID;
         double zStep = UNBOUNDED_SPAN_BLOCKS / (double) GRID;
@@ -651,7 +655,7 @@ class ClimateScan {
 
                 for (int iz = 0; iz < GRID; iz++) {
                     int quartZ = QuartPos.fromBlock((int) Math.round(iz * zStep));
-                    biomes.add(source.getNoiseBiome(quartX, quartY, quartZ, sampler));
+                    biomes.add(source.getNoiseBiome(sampler.sample(quartX, quartY, quartZ)));
                     temperatures[iz] = Climate.unquantizeCoord(sampler.sample(quartX, quartY, quartZ).temperature());
                 }
 
@@ -686,8 +690,8 @@ class ClimateScan {
     private static Scan scan(WorldType type, MultiNoiseBiomeSource source, int widthBlocks, WorldFold fold,
             long seed) {
         RandomState randomState = randomState(type, fold, seed);
-        Climate.Sampler sampler = randomState.sampler();
-        DensityFunction density = randomState.router().finalDensity();
+        Climate.Sampler sampler = randomState.createClimateSampler(SamplerContext.EMPTY_UNCACHED);
+        DensitySampler density = randomState.getSampler(randomState.router.finalDensity());
         int seaLevel = settingsOf(type).seaLevel();
         int quartY = QuartPos.fromBlock(SCAN_Y_BLOCKS);
         double step = widthBlocks / (double) GRID;
@@ -702,7 +706,7 @@ class ClimateScan {
                     int blockZ = (int) Math.round(iz * step);
                     int quartX = QuartPos.fromBlock(blockX);
                     int quartZ = QuartPos.fromBlock(blockZ);
-                    counts.merge(source.getNoiseBiome(quartX, quartY, quartZ, sampler), 1, Integer::sum);
+                    counts.merge(source.getNoiseBiome(sampler.sample(quartX, quartY, quartZ)), 1, Integer::sum);
                     temperatures[ix * GRID + iz] =
                             Climate.unquantizeCoord(sampler.sample(quartX, quartY, quartZ).temperature());
                     if (isLand(density, blockX, seaLevel, blockZ)) {
@@ -718,8 +722,8 @@ class ClimateScan {
                 land[0] / (double) samples);
     }
 
-    private static boolean isLand(DensityFunction density, int blockX, int seaLevel, int blockZ) {
-        return density.compute(new DensityFunction.SinglePointContext(blockX, seaLevel, blockZ)) > 0.0;
+    private static boolean isLand(DensitySampler density, int blockX, int seaLevel, int blockZ) {
+        return density.sampleValue(SamplerContext.EMPTY_UNCACHED, blockX, seaLevel, blockZ) > 0.0F;
     }
 
     private static double mean(double[] values) {

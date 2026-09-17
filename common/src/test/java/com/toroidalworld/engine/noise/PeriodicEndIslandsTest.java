@@ -9,6 +9,7 @@ import java.util.Random;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.toroidalworld.accessors.CoastLiftCache;
 import com.toroidalworld.core.FlatShape;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WorldFolds;
@@ -17,10 +18,19 @@ import com.toroidalworld.core.WorldLoopBounds.AxisBounds;
 import com.toroidalworld.core.WrapDomain;
 
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Vec3i;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.levelgen.DensityFunction;
-import net.minecraft.world.level.levelgen.DensityFunctions;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.levelgen.LegacyRandomSource;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunction;
+import net.minecraft.world.level.levelgen.densityfunction.DensitySampler;
+import net.minecraft.world.level.levelgen.densityfunction.DistanceMetric;
+import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
+import net.minecraft.world.level.levelgen.densityfunction.generator.EndIslandFunction;
+import net.minecraft.world.level.levelgen.synth.Noise;
+import net.minecraft.world.level.levelgen.synth.NormalNoise;
 import net.minecraft.world.level.levelgen.synth.SimplexNoise;
 
 class PeriodicEndIslandsTest {
@@ -32,6 +42,9 @@ class PeriodicEndIslandsTest {
     private static final int MAIN_ISLAND_REACH_BLOCKS = 96;
     private static final int UNBOUNDED_SPAN = 4096;
     private static final float NO_ISLAND_HEIGHT = -100.0F;
+    private static final float MAIN_ISLAND_PEAK_HEIGHT = 100.0F;
+    private static final float MAX_HEIGHT_VALUE = 80.0F;
+    private static final String ONLY_THE_END_ISLAND_RANDOM = "the End islands draw only the End island random";
 
     private static final WorldFold TORUS = WorldFolds.of(FlatShape.torus(new WorldLoopBounds(-128, 128, -96, 96)));
     private static final WorldFold CYLINDER = WorldFolds.of(FlatShape.cylinder(
@@ -42,10 +55,39 @@ class PeriodicEndIslandsTest {
 
     private static final SimplexNoise ISLAND_NOISE = islandNoise();
 
+    private static final DensityFunction.CompileContext SEEDED = new DensityFunction.CompileContext() {
+        @Override
+        public Noise createNoiseSampler(Holder<NormalNoise> parameters) {
+            throw new UnsupportedOperationException(ONLY_THE_END_ISLAND_RANDOM);
+        }
+
+        @Override
+        public RandomSource createRandom(Identifier seed) {
+            throw new UnsupportedOperationException(ONLY_THE_END_ISLAND_RANDOM);
+        }
+
+        @Override
+        @Deprecated
+        public RandomSource createEndIslandRandom() {
+            return new LegacyRandomSource(SEED);
+        }
+    };
+
+    private static final CoastLiftCache NO_LIFT = new CoastLiftCache() {
+        @Override
+        public double toroidal$coastLift() {
+            return 0.0;
+        }
+
+        @Override
+        public void toroidal$coastLift(double lift) {
+        }
+    };
+
     private static SimplexNoise islandNoise() {
         RandomSource random = new LegacyRandomSource(SEED);
         random.consumeCount(ISLAND_NOISE_SKIP);
-        return new SimplexNoise(random);
+        return new SimplexNoise(random, true);
     }
 
     @Nested
@@ -58,8 +100,8 @@ class PeriodicEndIslandsTest {
                 for (int i = 0; i < SAMPLES; i++) {
                     int x = clearOfSeam(random, fold.blockDomain(Direction.Axis.X));
                     int z = clearOfSeam(random, fold.blockDomain(Direction.Axis.Z));
-                    float folded = PeriodicEndIslands.heightValue(ISLAND_NOISE, fold, x, z);
-                    assertEquals(PeriodicEndIslands.heightValue(ISLAND_NOISE, WorldFolds.NOOP, x, z), folded,
+                    float folded = PeriodicEndIslands.outerHeightValue(ISLAND_NOISE, fold, x, z);
+                    assertEquals(PeriodicEndIslands.outerHeightValue(ISLAND_NOISE, WorldFolds.NOOP, x, z), folded,
                             () -> "at (" + x + ", " + z + ") in " + fold);
                     hits += folded > NO_ISLAND_HEIGHT ? 1 : 0;
                 }
@@ -99,14 +141,14 @@ class PeriodicEndIslandsTest {
     class VanillaParity {
         @Test
         void noFoldReproducesVanillaInTheNonNegativeQuadrant() {
-            DensityFunction vanilla = DensityFunctions.endIslands(SEED);
+            DensitySampler vanilla = new EndIslandFunction().compileSampler(SEEDED);
             Random random = new Random(SEED);
             int hits = 0;
             for (int i = 0; i < SAMPLES; i++) {
                 int x = random.nextInt(UNBOUNDED_SPAN);
                 int z = random.nextInt(UNBOUNDED_SPAN);
-                float height = PeriodicEndIslands.heightValue(ISLAND_NOISE, WorldFolds.NOOP, x, z);
-                assertEquals(vanilla.compute(new DensityFunction.SinglePointContext(x, 0, z)),
+                float height = PeriodicEndIslands.outerHeightValue(ISLAND_NOISE, WorldFolds.NOOP, x, z);
+                assertEquals(vanilla.sampleValue(SamplerContext.EMPTY_UNCACHED, x, 0, z),
                         PeriodicEndIslands.density(height), () -> "at (" + x + ", " + z + ")");
                 hits += height > NO_ISLAND_HEIGHT ? 1 : 0;
             }
@@ -122,11 +164,11 @@ class PeriodicEndIslandsTest {
             for (int i = 0; i < SAMPLES; i++) {
                 int along = random.nextInt(2 * MAIN_ISLAND_REACH_BLOCKS) - MAIN_ISLAND_REACH_BLOCKS;
                 int across = random.nextInt(2 * MAIN_ISLAND_REACH_BLOCKS) - MAIN_ISLAND_REACH_BLOCKS;
-                float base = height(fold, axis, along, across);
+                float base = mainIslandHeight(fold, axis, along, across);
                 String where = axis + "=" + along + " vs " + axis + "=" + (along + width) + ", across " + across
                         + " in " + fold;
                 assertTrue(base > NO_ISLAND_HEIGHT, () -> "the main island does not reach " + where);
-                assertEquals(base, height(fold, axis, along + width, across), () -> "main island at " + where);
+                assertEquals(base, mainIslandHeight(fold, axis, along + width, across), () -> "main island at " + where);
             }
         }
     }
@@ -153,8 +195,17 @@ class PeriodicEndIslandsTest {
 
     private static float height(WorldFold fold, Direction.Axis axis, int along, int across) {
         return axis == Direction.Axis.X
-                ? PeriodicEndIslands.heightValue(ISLAND_NOISE, fold, along, across)
-                : PeriodicEndIslands.heightValue(ISLAND_NOISE, fold, across, along);
+                ? PeriodicEndIslands.outerHeightValue(ISLAND_NOISE, fold, along, across)
+                : PeriodicEndIslands.outerHeightValue(ISLAND_NOISE, fold, across, along);
+    }
+
+    private static float mainIslandHeight(WorldFold fold, Direction.Axis axis, int along, int across) {
+        DensitySampler distance = FoldedSamplers.distanceToPoint(new FoldedCompileContext(SEEDED, fold, NO_LIFT),
+                Vec3i.ZERO, DistanceMetric.EUCLIDEAN);
+        float blocks = axis == Direction.Axis.X
+                ? distance.sampleValue(SamplerContext.EMPTY_UNCACHED, along, 0, across)
+                : distance.sampleValue(SamplerContext.EMPTY_UNCACHED, across, 0, along);
+        return Mth.clamp(MAIN_ISLAND_PEAK_HEIGHT - blocks, NO_ISLAND_HEIGHT, MAX_HEIGHT_VALUE);
     }
 
     private static int clearOfSeam(Random random, WrapDomain domain) {

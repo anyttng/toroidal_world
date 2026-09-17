@@ -33,6 +33,7 @@ import com.google.common.base.Suppliers;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
+import net.minecraft.core.PositionAndRotation;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.particles.ExplosionParticleInfo;
 import net.minecraft.core.particles.ParticleOptions;
@@ -47,6 +48,7 @@ import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
+import net.minecraft.network.protocol.game.ClientboundAddTransientBlockPacket;
 import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.network.protocol.game.ClientboundBlockEventPacket;
@@ -92,6 +94,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.random.Weighted;
 import net.minecraft.util.random.WeightedList;
 import net.minecraft.world.entity.PositionMoveRotation;
+import net.minecraft.world.entity.PositionPath;
+import net.minecraft.world.entity.PositionStep;
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.vehicle.minecart.NewMinecartBehavior;
 import net.minecraft.world.level.ChunkPos;
@@ -125,10 +129,10 @@ public final class PacketTranslator {
     private static final Map<Class<?>, BiFunction<Packet<?>, TranslationContext, Packet<?>>> TO_CLIENT = Map.ofEntries(
             Map.entry(ClientboundLevelChunkWithLightPacket.class, rewriter(
                     (ClientboundLevelChunkWithLightPacket packet, TranslationContext context) ->
-                            chunkPosition(packet, packet.getX(), packet.getZ(), context))),
+                            chunkPosition(packet, packet.x(), packet.z(), context))),
             Map.entry(ClientboundLightUpdatePacket.class, rewriter(
                     (ClientboundLightUpdatePacket packet, TranslationContext context) ->
-                            chunkPosition(packet, packet.getX(), packet.getZ(), context))),
+                            chunkPosition(packet, packet.x(), packet.z(), context))),
             Map.entry(ClientboundForgetLevelChunkPacket.class, rewriter(PacketTranslator::forgetChunk)),
             Map.entry(ClientboundSetChunkCacheCenterPacket.class, rewriter(PacketTranslator::chunkCacheCenter)),
             Map.entry(ClientboundChunksBiomesPacket.class, rewriter(PacketTranslator::chunkBiomes)),
@@ -136,6 +140,7 @@ public final class PacketTranslator {
             Map.entry(ClientboundBlockUpdatePacket.class, rewriter(PacketTranslator::blockUpdate)),
             Map.entry(ClientboundSectionBlocksUpdatePacket.class, rewriter(PacketTranslator::sectionBlocksUpdate)),
             Map.entry(ClientboundBlockEntityDataPacket.class, rewriter(PacketTranslator::blockEntityData)),
+            Map.entry(ClientboundAddTransientBlockPacket.class, rewriter(PacketTranslator::addTransientBlock)),
             Map.entry(ClientboundBlockDestructionPacket.class, rewriter(PacketTranslator::blockDestruction)),
             Map.entry(ClientboundSetEntityDataPacket.class, rewriter(PacketTranslator::setEntityData)),
             Map.entry(ClientboundAddEntityPacket.class, rewriter(PacketTranslator::addEntity)),
@@ -378,12 +383,24 @@ public final class PacketTranslator {
         }
 
         return new ClientboundEntityPositionSyncPacket(
-                packet.id(), toClientChange(context, packet.values(), Set.of()), packet.onGround());
+                packet.id(), toClientPath(context, packet.position()), packet.yRot(), packet.xRot(),
+                packet.onGround());
+    }
+
+    private static PositionPath toClientPath(TranslationContext context, PositionPath path) {
+        PacketReach reach = context.trackedReach();
+        return switch (path) {
+            case PositionPath.Linear(Vec3 end) -> PositionPath.of(context.toClient(end, reach));
+            case PositionPath.Stepped(Vec3 _, List<PositionStep> steps) -> PositionPath.stepped(steps.stream()
+                    .map(step -> new PositionStep(context.toClient(step.position(), reach), step.tickOffset()))
+                    .toList());
+        };
     }
 
     private static Packet<?> moveVehicle(ClientboundMoveVehiclePacket packet, TranslationContext context) {
-        Vec3 clientPos = context.toClient(packet.position(), context.trackedReach());
-        return new ClientboundMoveVehiclePacket(clientPos, packet.yRot(), packet.xRot());
+        PositionAndRotation movingTo = packet.movingTo();
+        Vec3 clientPos = context.toClient(movingTo.position(), context.trackedReach());
+        return new ClientboundMoveVehiclePacket(PositionAndRotation.of(clientPos, movingTo.yRot(), movingTo.xRot()));
     }
 
     private static PositionMoveRotation toClientChange(TranslationContext context, PositionMoveRotation change, Set<Relative> relatives) {
@@ -413,6 +430,10 @@ public final class PacketTranslator {
     private static ClientboundBlockEntityDataPacket blockEntityData(ClientboundBlockEntityDataPacket packet, TranslationContext context) {
         return BlockEntityDataPacketAccessor.toroidal$create(
                 context.toClient(packet.getPos()), packet.getType(), packet.getTag());
+    }
+
+    private static ClientboundAddTransientBlockPacket addTransientBlock(ClientboundAddTransientBlockPacket packet, TranslationContext context) {
+        return new ClientboundAddTransientBlockPacket(context.toClient(packet.getPos()), packet.getBlockState());
     }
 
     private static ClientboundBlockDestructionPacket blockDestruction(ClientboundBlockDestructionPacket packet, TranslationContext context) {
@@ -473,7 +494,7 @@ public final class PacketTranslator {
     }
 
     private static ClientboundOpenSignEditorPacket openSignEditor(ClientboundOpenSignEditorPacket packet, TranslationContext context) {
-        return new ClientboundOpenSignEditorPacket(context.toClient(packet.getPos()), packet.isFrontText());
+        return new ClientboundOpenSignEditorPacket(context.toClient(packet.pos()), packet.slot());
     }
 
     private static ClientboundSoundPacket sound(ClientboundSoundPacket packet, TranslationContext context) {
@@ -487,13 +508,15 @@ public final class PacketTranslator {
 
     private static ClientboundLevelParticlesPacket levelParticles(ClientboundLevelParticlesPacket packet, TranslationContext context) {
         Vec3 clientOrigin = context.toClientMeasured(
-                new Vec3(packet.getX(), packet.getY(), packet.getZ()),
-                packet.isOverrideLimiter() ? FORCED_PARTICLE_KIND : PARTICLE_KIND);
+                new Vec3(packet.x(), packet.y(), packet.z()),
+                packet.overrideLimiter() ? FORCED_PARTICLE_KIND : PARTICLE_KIND);
         return new ClientboundLevelParticlesPacket(
-                toClientParticle(context, packet.getParticle(), clientOrigin),
-                packet.isOverrideLimiter(), packet.alwaysShow(),
+                toClientParticle(context, packet.particle(), clientOrigin),
+                packet.overrideLimiter(), packet.alwaysShow(),
                 clientOrigin.x, clientOrigin.y, clientOrigin.z,
-                packet.getXDist(), packet.getYDist(), packet.getZDist(), packet.getMaxSpeed(), packet.getCount());
+                packet.xDist(), packet.yDist(), packet.zDist(),
+                packet.xMaxSpeed(), packet.yMaxSpeed(), packet.zMaxSpeed(),
+                packet.count(), packet.randomizationType());
     }
 
     private static ClientboundExplodePacket explode(ClientboundExplodePacket packet, TranslationContext context) {
@@ -502,7 +525,8 @@ public final class PacketTranslator {
                 clientCenter, packet.radius(), packet.blockCount(), packet.playerKnockback(),
                 toClientParticle(context, packet.explosionParticle(), clientCenter),
                 packet.explosionSound(),
-                toClientBlockParticles(context, packet.blockParticles(), clientCenter));
+                toClientBlockParticles(context, packet.blockParticles(), clientCenter),
+                packet.playSound());
     }
 
     private static ParticleOptions toClientParticle(TranslationContext context, ParticleOptions particle,
@@ -547,7 +571,7 @@ public final class PacketTranslator {
 
     private static ClientboundTrackedWaypointPacket trackedWaypoint(ClientboundTrackedWaypointPacket packet, TranslationContext context) {
         if (packet.waypoint() instanceof Vec3iWaypointAccessor waypoint) {
-            waypoint.toroidal$setVector(nearestCopyBlock(context, new BlockPos(waypoint.toroidal$getVector())));
+            waypoint.toroidal$setVector(nearestCopyBlock(context, BlockPos.ZERO.offset(waypoint.toroidal$getVector())));
         } else if (packet.waypoint() instanceof ChunkWaypointAccessor waypoint) {
             waypoint.toroidal$setChunkPos(context.nearestCopy(waypoint.toroidal$getChunkPos()));
         }
@@ -630,11 +654,11 @@ public final class PacketTranslator {
     }
 
     private static ServerboundUseItemOnPacket useItemOn(ServerboundUseItemOnPacket packet, TranslationContext context) {
-        BlockHitResult hit = packet.getHitResult();
+        BlockHitResult hit = packet.hitResult();
         BlockHitResult wrapped = SeamHit.reseat(hit, context.toServerOriented(hit.getBlockPos()));
         return wrapped == hit
                 ? packet
-                : new ServerboundUseItemOnPacket(packet.getHand(), wrapped, packet.getSequence());
+                : new ServerboundUseItemOnPacket(packet.hand(), wrapped, packet.sequence());
     }
 
     private static ServerboundPlayerActionPacket playerAction(ServerboundPlayerActionPacket packet, TranslationContext context) {
@@ -649,9 +673,7 @@ public final class PacketTranslator {
     }
 
     private static ServerboundSignUpdatePacket signUpdate(ServerboundSignUpdatePacket packet, TranslationContext context) {
-        String[] lines = packet.getLines();
-        return new ServerboundSignUpdatePacket(context.toServer(packet.getPos()),
-                packet.isFrontText(), lines[0], lines[1], lines[2], lines[3]);
+        return new ServerboundSignUpdatePacket(context.toServer(packet.pos()), packet.lines(), packet.slot());
     }
 
     private static ServerboundBlockEntityTagQueryPacket blockEntityTagQuery(ServerboundBlockEntityTagQueryPacket packet, TranslationContext context) {
