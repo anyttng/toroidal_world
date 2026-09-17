@@ -5,7 +5,9 @@
   "compatibilityLevel": "JAVA_25",
   "plugin": "com.toroidalworld.compat.scalablelux.ScalableLuxMixinPlugin",
   "mixins": [
-    "StarLightInterfaceMixin"
+    "SchedulingUtilLockMixin",
+    "StarLightInterfaceMixin",
+    "ThreadedLevelLightEngineVanillaInterfaceMixin"
   ],
   "injectors": {
     "defaultRequire": 1
