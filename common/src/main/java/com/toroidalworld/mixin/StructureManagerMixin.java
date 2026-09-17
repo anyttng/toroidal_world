@@ -7,7 +7,6 @@ import java.util.function.Predicate;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
 
 import com.toroidalworld.accessors.FramedStructureStart;
 import com.toroidalworld.accessors.LevelHolder;
@@ -15,14 +14,11 @@ import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WorldLoopAttachments;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.StructureManager;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 
@@ -56,25 +52,5 @@ public class StructureManagerMixin {
         }
 
         return starts;
-    }
-
-    @WrapOperation(
-            method = "fillStartsForStructure",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/LevelAccessor;getChunk(IILnet/minecraft/world/level/chunk/status/ChunkStatus;)Lnet/minecraft/world/level/chunk/ChunkAccess;"))
-    private ChunkAccess toroidal$startChunkNearestTheGeneratingChunk(
-            LevelAccessor level, int chunkX, int chunkZ, ChunkStatus status, Operation<ChunkAccess> original) {
-        if (!(level instanceof WorldGenRegion region)) {
-            return original.call(level, chunkX, chunkZ, status);
-        }
-
-        WorldFold transformer = WorldLoopAttachments.wrappedTransformerOf(((LevelHolder) region).toroidal$level());
-        if (transformer == null) {
-            return original.call(level, chunkX, chunkZ, status);
-        }
-
-        ChunkPos nearest = transformer.nearestCopy(region.getCenter(), new ChunkPos(chunkX, chunkZ));
-        return original.call(level, nearest.x, nearest.z, status);
     }
 }
