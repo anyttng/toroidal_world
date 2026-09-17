@@ -5,7 +5,8 @@
   "compatibilityLevel": "JAVA_21",
   "plugin": "com.toroidalworld.compat.mekanism.MekanismMixinPlugin",
   "mixins": [
-    "TeleporterFrequencyMixin"
+    "TeleporterFrequencyMixin",
+    "TileEntityTeleporterMixin"
   ],
   "injectors": {
     "defaultRequire": 1
