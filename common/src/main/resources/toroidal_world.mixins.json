@@ -241,6 +241,7 @@
     "UseBonemealMixin",
     "ValidateNearbyPoiMixin",
     "Vec3iWaypointAccessor",
+    "VexChargeAttackGoalMixin",
     "VexYawMixin",
     "VibrationSystemListenerMixin",
     "VibrationSystemTickerMixin",
