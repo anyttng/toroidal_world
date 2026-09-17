@@ -10,6 +10,7 @@
     "NewChunkHolderVanillaInterfaceMixin",
     "NewChunkStatusMixin",
     "PlayerNoTickLoaderMixin",
+    "SchedulingUtilLockMixin",
     "SchedulingManagerMixin",
     "ServerAccessibleChunkSendingMixin",
     "ServerBlockTickingMixin",

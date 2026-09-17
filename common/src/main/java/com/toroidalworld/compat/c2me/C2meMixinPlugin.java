@@ -8,6 +8,8 @@ import com.toroidalworld.MixinGatePlugin;
 public class C2meMixinPlugin extends MixinGatePlugin {
     private static final String AQUIFER_MIXIN = "AquiferSeamMixin";
 
+    private static final String LIGHTING_LOCK_MIXIN = "SchedulingUtilLockMixin";
+
     private static final String[] NO_TICK_VD_MIXINS = {
             "PlayerNoTickLoaderMixin",
             "ServerAccessibleChunkSendingMixin"
@@ -23,6 +25,10 @@ public class C2meMixinPlugin extends MixinGatePlugin {
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (mixinClassName.endsWith(AQUIFER_MIXIN)) {
             return C2meAquifer.optimizesAquifer();
+        }
+
+        if (mixinClassName.endsWith(LIGHTING_LOCK_MIXIN)) {
+            return C2meLightingLock.present();
         }
 
         for (String noTickVdMixin : NO_TICK_VD_MIXINS) {
