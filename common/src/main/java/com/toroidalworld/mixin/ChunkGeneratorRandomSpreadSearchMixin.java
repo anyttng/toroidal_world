@@ -1,5 +1,6 @@
 package com.toroidalworld.mixin;
 
+import java.util.List;
 import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
@@ -8,18 +9,23 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 import com.toroidalworld.InjectionTargets;
+import com.toroidalworld.api.v1.gen.StructureStarts;
+import com.toroidalworld.core.CarriedShape;
 import com.toroidalworld.core.ShapedChunkGenerator;
 import com.toroidalworld.core.WorldFold;
+import com.toroidalworld.engine.gen.AddedStructureStarts;
 import com.toroidalworld.engine.gen.SectorGridAxis;
 import com.toroidalworld.engine.seam.SeamRange;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.datafixers.util.Pair;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Vec3i;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.StructureManager;
@@ -44,12 +50,17 @@ public class ChunkGeneratorRandomSpreadSearchMixin {
             boolean createReference,
             long seed,
             RandomSpreadStructurePlacement placement,
-            Operation<@Nullable Pair<BlockPos, Holder<Structure>>> original) {
-        WorldFold transformer = ShapedChunkGenerator.wrappedTransformerOf((ChunkGenerator) (Object) this);
-        if (transformer == null) {
+            Operation<@Nullable Pair<BlockPos, Holder<Structure>>> original,
+            @Local(argsOnly = true) ServerLevel serverLevel) {
+        CarriedShape carried = ShapedChunkGenerator.carriedShapeOf((ChunkGenerator) (Object) this);
+        if (carried == null) {
             return original.call(structures, level, structureManager, chunkOriginX, chunkOriginZ, radius,
                     createReference, seed, placement);
         }
+
+        WorldFold transformer = carried.fold();
+        List<StructureStarts.Added> added = AddedStructureStarts.of(serverLevel.getChunkSource().getGeneratorState(),
+                ((StructureManagerAccessor) structureManager).toroidal$structureCheck(), carried).of(placement);
 
         SectorGridAxis xCells =
                 SectorGridAxis.of(transformer.chunkDomain(Direction.Axis.X), placement.spacing(), chunkOriginX);
@@ -74,16 +85,45 @@ public class ChunkGeneratorRandomSpreadSearchMixin {
                     continue;
                 }
 
-                ChunkPos candidate = placement.getPotentialStructureChunk(seed, xCells.probeChunk(x), zCells.probeChunk(z));
-                if (transformer.isOver(candidate)) {
-                    continue;
+                int probeX = xCells.probeChunk(x);
+                int probeZ = zCells.probeChunk(z);
+                ChunkPos candidate = placement.getPotentialStructureChunk(seed, probeX, probeZ);
+                if (!transformer.isOver(candidate)) {
+                    Pair<BlockPos, Holder<Structure>> generating =
+                            ChunkGeneratorAccessor.toroidal$structureGeneratingAt(
+                                    structures, level, structureManager, createReference, placement, candidate);
+                    if (generating != null) {
+                        return generating;
+                    }
                 }
 
-                Pair<BlockPos, Holder<Structure>> generating = ChunkGeneratorAccessor.toroidal$structureGeneratingAt(
-                        structures, level, structureManager, createReference, placement, candidate);
-                if (generating != null) {
-                    return generating;
+                Pair<BlockPos, Holder<Structure>> addedGenerating = toroidal$addedStartIn(added, structures, level,
+                        structureManager, createReference, placement, probeX, probeZ);
+                if (addedGenerating != null) {
+                    return addedGenerating;
                 }
+            }
+        }
+
+        return null;
+    }
+
+    @Unique
+    private static @Nullable Pair<BlockPos, Holder<Structure>> toroidal$addedStartIn(List<StructureStarts.Added> added,
+            Set<Holder<Structure>> structures, LevelReader level, StructureManager structureManager,
+            boolean createReference, RandomSpreadStructurePlacement placement, int probeX, int probeZ) {
+        int spacing = placement.spacing();
+        for (StructureStarts.Added start : added) {
+            if (!structures.contains(start.structure())
+                    || Math.floorDiv(start.chunk().x(), spacing) != Math.floorDiv(probeX, spacing)
+                    || Math.floorDiv(start.chunk().z(), spacing) != Math.floorDiv(probeZ, spacing)) {
+                continue;
+            }
+
+            Pair<BlockPos, Holder<Structure>> generating = ChunkGeneratorAccessor.toroidal$structureGeneratingAt(
+                    Set.of(start.structure()), level, structureManager, createReference, placement, start.chunk());
+            if (generating != null) {
+                return generating;
             }
         }
 
