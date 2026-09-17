@@ -112,6 +112,7 @@
     "InitializeBorderPacketAccessor",
     "InteractPacketAccessor",
     "InteractWithDoorMixin",
+    "LandOnOwnersShoulderGoalMixin",
     "LandRandomPosMixin",
     "LayerLightSectionStorageMixin",
     "LeapAtTargetGoalMixin",
