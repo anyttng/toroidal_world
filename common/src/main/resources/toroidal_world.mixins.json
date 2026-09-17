@@ -77,6 +77,7 @@
     "DualNoiseProviderMixin",
     "EnderDragonMixin",
     "EnderManMixin",
+    "EndermanTeleportTowardsMixin",
     "EntityGetterMixin",
     "EntityMixin",
     "EntityPortalPositionMixin",
