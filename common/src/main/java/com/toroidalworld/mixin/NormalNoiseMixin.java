@@ -1,5 +1,7 @@
 package com.toroidalworld.mixin;
 
+import java.util.Map;
+
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -7,6 +9,7 @@ import org.spongepowered.asm.mixin.Unique;
 
 import com.toroidalworld.accessors.ClimateFieldMark;
 import com.toroidalworld.accessors.CoastLiftCache;
+import com.toroidalworld.accessors.NoiseScaleRungs;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
 import com.toroidalworld.engine.noise.GenerationTransformerContext.Context;
 import com.toroidalworld.engine.noise.NoiseConstants;
@@ -17,7 +20,7 @@ import net.minecraft.world.level.levelgen.synth.NormalNoise;
 import net.minecraft.world.level.levelgen.synth.PerlinNoise;
 
 @Mixin(NormalNoise.class)
-public class NormalNoiseMixin implements ClimateFieldMark, CoastLiftCache {
+public class NormalNoiseMixin implements ClimateFieldMark, CoastLiftCache, NoiseScaleRungs {
     @Shadow
     @Final
     private PerlinNoise first;
@@ -33,6 +36,9 @@ public class NormalNoiseMixin implements ClimateFieldMark, CoastLiftCache {
     @Unique
     private volatile double toroidal$coastLift;
 
+    @Unique
+    private volatile Map<Double, Double> toroidal$scaleRungs = Map.of();
+
     @Override
     public void toroidal$markClimateField() {
         ((ClimateFieldMark) (Object) this.first).toroidal$markClimateField();
@@ -47,6 +53,16 @@ public class NormalNoiseMixin implements ClimateFieldMark, CoastLiftCache {
     @Override
     public void toroidal$coastLift(double lift) {
         this.toroidal$coastLift = lift;
+    }
+
+    @Override
+    public Map<Double, Double> toroidal$scaleRungs() {
+        return this.toroidal$scaleRungs;
+    }
+
+    @Override
+    public void toroidal$scaleRungs(Map<Double, Double> rungs) {
+        this.toroidal$scaleRungs = rungs;
     }
 
     @WrapMethod(method = "getValue(DDD)D")
