@@ -30,6 +30,8 @@ class MultiblockSyncedTagTest {
     private static final BlockPos RENDER_Y = new BlockPos(255, 317, 0);
     private static final BlockPos VALVE = new BlockPos(257, 316, 1);
     private static final BlockPos COIL = new BlockPos(256, 316, 2);
+    private static final BlockPos COMPLEX = new BlockPos(256, 316, 1);
+    private static final BlockPos ASSEMBLY = new BlockPos(256, 316, 0);
     private static final BlockPos TILE_PAST_THE_EDGE = new BlockPos(-256, 315, 0);
     private static final BlockPos TILE_ON_THE_CANONICAL_MIN = new BlockPos(255, 315, 0);
 
@@ -41,6 +43,8 @@ class MultiblockSyncedTagTest {
         tag.put(MultiblockSyncedTag.RENDER_Y_KEY, NbtUtils.writeBlockPos(RENDER_Y));
         tag.put(MultiblockSyncedTag.VALVE_KEY, positions(VALVE));
         tag.put(MultiblockSyncedTag.COILS_KEY, positions(COIL));
+        tag.put(MultiblockSyncedTag.COMPLEX_KEY, NbtUtils.writeBlockPos(COMPLEX));
+        tag.put(MultiblockSyncedTag.ASSEMBLIES_KEY, positions(ASSEMBLY));
         return tag;
     }
 
@@ -77,6 +81,10 @@ class MultiblockSyncedTagTest {
                     readFirst(seated, MultiblockSyncedTag.VALVE_KEY), "valve in " + fold);
             assertEquals(fold.nearestCopy(TILE_PAST_THE_EDGE, COIL),
                     readFirst(seated, MultiblockSyncedTag.COILS_KEY), "coil in " + fold);
+            assertEquals(fold.nearestCopy(TILE_PAST_THE_EDGE, COMPLEX), read(seated, MultiblockSyncedTag.COMPLEX_KEY),
+                    "complex in " + fold);
+            assertEquals(fold.nearestCopy(TILE_PAST_THE_EDGE, ASSEMBLY),
+                    readFirst(seated, MultiblockSyncedTag.ASSEMBLIES_KEY), "assembly in " + fold);
             assertNotEquals(MIN, read(seated, MultiblockSyncedTag.MIN_KEY), "the rig moved nothing in " + fold);
         }
     }

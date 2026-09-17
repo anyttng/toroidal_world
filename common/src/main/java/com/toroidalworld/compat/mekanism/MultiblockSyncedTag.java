@@ -20,12 +20,15 @@ public final class MultiblockSyncedTag {
     static final String RENDER_Y_KEY = "render_y";
     static final String VALVE_KEY = "valve";
     static final String COILS_KEY = "coils";
+    static final String COMPLEX_KEY = "complex";
+    static final String ASSEMBLIES_KEY = "assemblies";
     static final String POSITION_KEY = "position";
 
-    private static final List<String> POSITION_KEYS = List.of(RENDER_LOCATION_KEY, RENDER_Y_KEY);
+    private static final List<String> POSITION_KEYS = List.of(RENDER_LOCATION_KEY, RENDER_Y_KEY, COMPLEX_KEY);
     private static final Map<String, String> LIST_POSITION_KEYS = Map.of(
             VALVE_KEY, POSITION_KEY,
-            COILS_KEY, POSITION_KEY);
+            COILS_KEY, POSITION_KEY,
+            ASSEMBLIES_KEY, POSITION_KEY);
 
     public static CompoundTag seat(WorldFold fold, BlockPos anchor, CompoundTag tag) {
         Optional<BlockPos> min = NbtUtils.readBlockPos(tag, MIN_KEY);
