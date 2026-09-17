@@ -6,6 +6,8 @@ import com.toroidalworld.core.WorldLoopAttachments;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public final class MekanismSeam {
     private static final long NO_POSITION = Long.MAX_VALUE;
@@ -28,6 +30,14 @@ public final class MekanismSeam {
 
     public static BlockPos nearestCopy(@Nullable Level level, BlockPos anchor, BlockPos target) {
         return WorldLoopAttachments.transformerOfReader(level).nearestCopy(anchor, target);
+    }
+
+    public static Vec3 nearestCopy(@Nullable Level level, Vec3 anchor, Vec3 target) {
+        return WorldLoopAttachments.transformerOfReader(level).nearestCopy(anchor, target);
+    }
+
+    public static AABB nearestCopy(@Nullable Level level, Vec3 anchor, AABB box) {
+        return WorldLoopAttachments.transformerOfReader(level).foldBox(anchor, box).value();
     }
 
     private MekanismSeam() {
