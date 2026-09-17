@@ -4,7 +4,7 @@ import com.toroidalworld.core.CarriedShape;
 import com.toroidalworld.core.FlatShape;
 import com.toroidalworld.core.ShapedChunkGenerator;
 import com.toroidalworld.shape.WorldOptionSetup;
-import com.toroidalworld.shape.torus.CompactBiomes;
+import com.toroidalworld.shape.climate.CompactBiomes;
 import com.toroidalworld.shape.torus.TorusDimensions;
 import com.toroidalworld.shape.torus.TorusSettings;
 import static com.toroidalworld.engine.gen.BakeStampFixture.foreignGenerator;

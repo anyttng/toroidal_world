@@ -14,7 +14,7 @@ import com.toroidalworld.engine.noise.GenerationTransformerContext;
 import com.toroidalworld.engine.noise.NoiseConstants;
 import com.toroidalworld.engine.noise.SlotAxes;
 import com.toroidalworld.engine.noise.SlotAxis;
-import com.toroidalworld.shape.torus.ClimateCompression;
+import com.toroidalworld.shape.climate.ClimateCompression;
 import com.ishland.c2me.opts.dfc.common.ast.AstNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.AddNode;
 import com.ishland.c2me.opts.dfc.common.ast.binary.MulNode;

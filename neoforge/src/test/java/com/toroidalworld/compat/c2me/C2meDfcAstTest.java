@@ -4,7 +4,7 @@ import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.engine.noise.ContextScaledNoise;
 import com.toroidalworld.engine.noise.DomainWarp;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
-import com.toroidalworld.shape.torus.ClimateCompression;
+import com.toroidalworld.shape.climate.ClimateCompression;
 import static com.toroidalworld.engine.noise.DensityFunctionFixture.CLIMATE_AMPLITUDES;
 import static com.toroidalworld.engine.noise.DensityFunctionFixture.CLIMATE_FIRST_OCTAVE;
 import static com.toroidalworld.engine.noise.DensityFunctionFixture.CLIMATE_NOISE_DATA;

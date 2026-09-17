@@ -12,7 +12,7 @@ import com.toroidalworld.engine.noise.DomainWarp;
 import com.toroidalworld.engine.noise.DomainWarp.Divisor;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
 import com.toroidalworld.engine.noise.GenerationTransformerContext.Context;
-import com.toroidalworld.shape.torus.ClimateCompression;
+import com.toroidalworld.shape.climate.ClimateCompression;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.function.IntFunction;
 
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
+import com.toroidalworld.api.v1.option.GenerationOptions;
 import com.toroidalworld.core.NetherScales;
 import com.toroidalworld.core.WorldLoopBounds;
 import com.toroidalworld.api.v1.option.WorldOption;
@@ -33,7 +35,8 @@ class WorldLoopPresetsJsonTest {
     @Test
     void everyPresetShipsATorusWorldPresetMatchingItsConfiguration() throws IOException {
         for (WorldLoopPresets preset : WorldLoopPresets.values()) {
-            assertPreset(preset.id(), preset, WorldLoopBounds::ofWidth, true);
+            assertPreset(preset.id(), preset, WorldLoopBounds::ofWidth, TorusSettings.OFFERED_OPTIONS,
+                    TorusSettings.DEFAULT.generationOptions());
         }
     }
 
@@ -42,27 +45,28 @@ class WorldLoopPresetsJsonTest {
         Direction.Axis axis = CylinderSettings.DEFAULT.axis();
         for (WorldLoopPresets preset : WorldLoopPresets.values()) {
             assertPreset(CYLINDER_PRESET_PREFIX + preset.id(), preset, width -> WorldLoopBounds.ofWidth(axis, width),
-                    false);
+                    CylinderSettings.OFFERED_OPTIONS, CylinderSettings.DEFAULT.generationOptions());
         }
     }
 
     private static void assertPreset(String presetId, WorldLoopPresets preset, IntFunction<WorldLoopBounds> boundsOfWidth,
-            boolean torus) throws IOException {
+            List<WorldOption<?>> offered, GenerationOptions defaults) throws IOException {
         JsonObject dimensions = readPresetJson(presetId).getAsJsonObject("dimensions");
         assertNotNull(dimensions, presetId + ": no dimensions object");
         assertEquals(3, dimensions.size(), presetId + ": expected exactly the three vanilla dimensions");
 
         assertDimension(presetId, dimensions, "minecraft:overworld", "minecraft:overworld",
-                boundsOfWidth.apply(preset.chunkWidth()), torus);
+                boundsOfWidth.apply(preset.chunkWidth()), offered, defaults);
         assertDimension(presetId, dimensions, "minecraft:the_nether", "minecraft:nether",
                 boundsOfWidth.apply(NetherScales.netherChunkWidth(preset.chunkWidth(), preset.netherScale())),
-                torus);
+                offered, defaults);
         assertDimension(presetId, dimensions, "minecraft:the_end", "minecraft:end",
-                boundsOfWidth.apply(preset.endChunkWidth()), torus);
+                boundsOfWidth.apply(preset.endChunkWidth()), offered, defaults);
     }
 
     private static void assertDimension(String presetId, JsonObject dimensions, String dimensionId,
-            String noiseSettingsId, WorldLoopBounds expected, boolean torus) {
+            String noiseSettingsId, WorldLoopBounds expected, List<WorldOption<?>> offered,
+            GenerationOptions defaults) {
         String context = presetId + " " + dimensionId;
         JsonObject dimension = dimensions.getAsJsonObject(dimensionId);
         assertNotNull(dimension, context + ": dimension missing");
@@ -77,21 +81,22 @@ class WorldLoopPresetsJsonTest {
         assertEquals(expected, wrapping, context + ": wrapping");
 
         for (WorldOption<?> option : WorldOptions.all()) {
-            if (torus) {
-                assertStatedOption(context, generator, option);
+            if (offered.contains(option)) {
+                assertStatedOption(context, generator, option, defaults);
             } else {
-                assertFalse(generator.has(option.key()), context + ": a cylinder states no " + option.key());
+                assertFalse(generator.has(option.key()), context + ": the shape offers no " + option.key());
             }
         }
     }
 
-    private static <V> void assertStatedOption(String context, JsonObject generator, WorldOption<V> option) {
+    private static <V> void assertStatedOption(String context, JsonObject generator, WorldOption<V> option,
+            GenerationOptions defaults) {
         JsonElement stated = generator.get(option.key());
         assertNotNull(stated, context + ": " + option.key() + " is not stated");
 
         V value = option.codec().parse(JsonOps.INSTANCE, stated)
                 .getOrThrow(message -> new AssertionError(context + ": " + option.key() + " does not parse: " + message));
-        assertEquals(TorusSettings.DEFAULT.generationOptions().get(option), value, context + ": " + option.key());
+        assertEquals(defaults.get(option), value, context + ": " + option.key());
     }
 
     private static JsonObject readPresetJson(String presetId) throws IOException {

@@ -32,7 +32,7 @@ class ImportRulesTest {
             Set.of("WorldLoop", "WorldLoopNetwork", "ToroidalWorldNeoForge", "ToroidalWorldFabric",
                     "ToroidalWorldFabricClient", "VanillaBootstrapListener");
     private static final Set<String> EXCEPTIONS = Set.of(
-            "shape.torus.ClimateCompression -> engine.noise.ClimateScaleCompression",
+            "shape.climate.ClimateCompression -> engine.noise.ClimateScaleCompression",
             "shape.torus.CoastFieldLift -> engine.noise.GenerationTransformerContext",
             "api.v1.shape.ShapeDimensions -> engine.gen.ShapedDimensions",
             "api.v1.net.PacketRewriters -> engine.net.PacketTranslator",

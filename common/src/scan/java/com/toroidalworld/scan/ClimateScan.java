@@ -13,7 +13,7 @@ import static com.toroidalworld.engine.noise.ClimateScanFixture.SCAN_Y_BLOCKS;
 import static com.toroidalworld.engine.noise.ClimateScanFixture.SEED_BASE;
 import static com.toroidalworld.engine.noise.ClimateScanFixture.TYPES;
 import static com.toroidalworld.engine.noise.ClimateScanFixture.biomeSource;
-import static com.toroidalworld.engine.noise.ClimateScanFixture.cylinderOfWidth;
+import static com.toroidalworld.engine.noise.ClimateScanFixture.uncompressedCylinderOfWidth;
 import static com.toroidalworld.engine.noise.ClimateScanFixture.guaranteedTorusOfWidth;
 import static com.toroidalworld.engine.noise.ClimateScanFixture.randomState;
 import static com.toroidalworld.engine.noise.ClimateScanFixture.settingsOf;
@@ -115,7 +115,8 @@ class ClimateScan {
             new Shape("torus", ClimateScanFixture::torusOfWidth, true),
             new Shape("torus, strong", ClimateScanFixture::strongTorusOfWidth, true),
             new Shape("torus, uncompressed", ClimateScanFixture::uncompressedTorusOfWidth, false),
-            new Shape("cylinder", ClimateScanFixture::cylinderOfWidth, false));
+            new Shape("cylinder", ClimateScanFixture::cylinderOfWidth, true),
+            new Shape("cylinder, uncompressed", ClimateScanFixture::uncompressedCylinderOfWidth, false));
 
     private record Scan(double distinctBiomes, double topShare, double temperatureSpread, double landShare) {
     }
@@ -151,9 +152,9 @@ class ClimateScan {
                 .append("min is the narrowest world the game will create; the nether is the overworld width")
                 .append(" divided by the nether scale that width allows, and carries five biomes in all, so it is")
                 .append(" reported and not gated.").append(System.lineSeparator())
-                .append("A torus that declined compression and a cylinder are never compressed, so one lap of")
+                .append("A torus or a cylinder that declined compression is never compressed, so one lap of")
                 .append(" either is vanilla's own window of that size; the one-biome gate applies to the")
-                .append(" compressed torus alone.")
+                .append(" compressed shapes alone.")
                 .append(System.lineSeparator())
                 .append("Criterion: the distribution clause. The empty-control check is a blindness guard and")
                 .append(" the one-biome check a feature gate on compression; every number in the table is a")
@@ -557,7 +558,8 @@ class ClimateScan {
     @Test
     void theCylinderCarriesVanillaClimateAlongItsUnboundedAxis() {
         StringBuilder report = new StringBuilder();
-        report.append("Cylinder, climate along the unbounded axis - the axis that carries no lap and so is")
+        report.append("Cylinder that declined compression, climate along the unbounded axis - the axis that")
+                .append(" carries no lap and so is")
                 .append(" starved of nothing.").append(System.lineSeparator())
                 .append(GRID).append(" lines, spread across the ring and across ")
                 .append(CONTROL_LINE_SPREAD_BLOCKS).append(" blocks for the control, which has no ring; each is ")
@@ -586,7 +588,7 @@ class ClimateScan {
 
             for (Width width : WIDTHS) {
                 int widthBlocks = width.widthBlocks(type);
-                AxisScan folded = meanAlongZ(type, source, widthBlocks, cylinderOfWidth(widthBlocks));
+                AxisScan folded = meanAlongZ(type, source, widthBlocks, uncompressedCylinderOfWidth(widthBlocks));
                 AxisScan control = meanAlongZ(type, source, CONTROL_LINE_SPREAD_BLOCKS, WorldFolds.NOOP);
 
                 report.append(String.format(Locale.ROOT, "    %-8s %-14s %6.2f biomes %8.4f %6.2f biomes %8.4f%n",
