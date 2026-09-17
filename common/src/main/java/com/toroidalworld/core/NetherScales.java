@@ -3,6 +3,8 @@ package com.toroidalworld.core;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.math.IntMath;
+
 public final class NetherScales {
     public static final int DEFAULT = 8;
 
@@ -19,7 +21,7 @@ public final class NetherScales {
         }
 
         List<Integer> scales = new ArrayList<>();
-        for (int divisor : Divisors.of(greatestCommonDivisor(overworldXChunkWidth, overworldZChunkWidth))) {
+        for (int divisor : Divisors.of(IntMath.gcd(overworldXChunkWidth, overworldZChunkWidth))) {
             if (divisor > maxScale) {
                 break;
             }
@@ -63,18 +65,6 @@ public final class NetherScales {
 
     public static int netherChunkWidth(int overworldChunkWidth, int scale) {
         return overworldChunkWidth / scale;
-    }
-
-    private static int greatestCommonDivisor(int first, int second) {
-        int a = first;
-        int b = second;
-        while (b != 0) {
-            int remainder = a % b;
-            a = b;
-            b = remainder;
-        }
-
-        return a;
     }
 
     private NetherScales() {

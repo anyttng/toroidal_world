@@ -64,12 +64,10 @@ public final class NoiseScaleLadder {
     private static Map<Holder<NormalNoise>, SortedSet<Double>> scalesOf(List<DensityFunction> roots) {
         Map<Holder<NormalNoise>, SortedSet<Double>> scales = new HashMap<>();
         for (DensityFunction root : roots) {
-            DensityFunctionNodes.first(root, node -> {
+            DensityFunctionNodes.forEach(root, node -> {
                 if (node instanceof NoiseFunction noise) {
                     scales.computeIfAbsent(noise.noise(), unused -> new TreeSet<>()).add(noise.xzScale());
                 }
-
-                return false;
             });
         }
 

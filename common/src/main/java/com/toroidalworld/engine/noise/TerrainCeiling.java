@@ -51,10 +51,6 @@ public final class TerrainCeiling {
                         settings.debugFunctions());
     }
 
-    public static DensityFunction finalDensity(NoiseRouter router) {
-        return withCeiling(router).finalDensity();
-    }
-
     public static @Nullable DensityFunction ceiling(NoiseGeneratorSettings settings) {
         return ceilingOf(settings.noiseRouter());
     }

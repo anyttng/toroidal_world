@@ -2,18 +2,16 @@ package com.toroidalworld.mixin;
 
 import java.util.Set;
 
-import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 import com.toroidalworld.core.ShapedChunkGenerator;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
-import com.toroidalworld.engine.noise.TerrainCeiling;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.sugar.Local;
 
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.WorldGenRegion;
@@ -30,28 +28,18 @@ import net.minecraft.world.level.levelgen.material.rule.MaterialRule;
 
 @Mixin(NoiseBasedChunkGenerator.class)
 public class NoiseBasedChunkGeneratorMixin {
-    @Unique
-    private volatile @Nullable DensityFunction toroidal$ceilingedFinalDensity;
-
     @ModifyExpressionValue(
             method = {"doFill", "iterateNoiseColumn"},
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/level/levelgen/NoiseRouter;finalDensity()"
                             + "Lnet/minecraft/world/level/levelgen/densityfunction/DensityFunction;"))
-    private DensityFunction toroidal$fillUnderTheCeiling(DensityFunction finalDensity) {
-        NoiseBasedChunkGenerator generator = (NoiseBasedChunkGenerator) (Object) this;
-        if (ShapedChunkGenerator.wrappedTransformerOf(generator) == null) {
+    private DensityFunction toroidal$fillUnderTheCeiling(DensityFunction finalDensity, @Local NoiseChunk noiseChunk) {
+        if (ShapedChunkGenerator.wrappedTransformerOf((NoiseBasedChunkGenerator) (Object) this) == null) {
             return finalDensity;
         }
 
-        DensityFunction ceilinged = this.toroidal$ceilingedFinalDensity;
-        if (ceilinged == null) {
-            ceilinged = TerrainCeiling.finalDensity(generator.generatorSettings().value().noiseRouter());
-            this.toroidal$ceilingedFinalDensity = ceilinged;
-        }
-
-        return ceilinged;
+        return ((NoiseChunkAccessor) noiseChunk).toroidal$randomState().router.finalDensity();
     }
 
     @WrapMethod(method = "doFill")

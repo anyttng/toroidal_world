@@ -1,8 +1,5 @@
 package com.toroidalworld.compat.c2me.mixin;
 
-import java.util.ArrayList;
-import java.util.function.IntFunction;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
@@ -25,15 +22,5 @@ public class SchedulingUtilLockMixin {
             Operation<Long> original,
             @Local(argsOnly = true, ordinal = 0) int ownerTag) {
         return LightLockFolds.foldKey(ownerTag, original.call(chunkX, chunkZ));
-    }
-
-    @WrapOperation(
-            method = "scheduleTask",
-            at = @At(value = "INVOKE", target = InjectionTargets.ARRAY_LIST_TO_ARRAY_GENERATOR))
-    private static Object[] toroidal$dropDuplicateTokens(
-            ArrayList<Object> tokens,
-            IntFunction<Object[]> generator,
-            Operation<Object[]> original) {
-        return original.call(LightLockFolds.distinct(tokens), generator);
     }
 }

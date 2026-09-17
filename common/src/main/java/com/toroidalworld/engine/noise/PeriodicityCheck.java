@@ -48,6 +48,8 @@ public final class PeriodicityCheck {
         }
 
         RandomState randomState = level.getChunkSource().randomState();
+        Climate.Sampler sampler = randomState.createClimateSampler(SamplerContext.EMPTY_UNCACHED);
+        BiomeResolver biomes = generator.getBiomeSource().createResolver(sampler);
         Direction.Axis lapAxis = transformer.bounds().loops(Direction.Axis.X) ? Direction.Axis.X : Direction.Axis.Z;
         int widthBlocks = transformer.blockDomain(lapAxis).domainLength;
         String axisName = lapAxis.getName().toUpperCase(Locale.ROOT);
@@ -69,14 +71,12 @@ public final class PeriodicityCheck {
                 int lapAwayQuartX = QuartPos.fromBlock(xLapAway);
                 int lapAwayQuartZ = QuartPos.fromBlock(zLapAway);
 
-                Climate.Sampler sampler = randomState.createClimateSampler(SamplerContext.EMPTY_UNCACHED);
                 Climate.TargetPoint climateHere = GenerationTransformerContext.withTransformer(transformer,
                         () -> sampler.sample(quartX, quartY, quartZ));
                 Climate.TargetPoint climateLapAway = GenerationTransformerContext.withTransformer(transformer,
                         () -> sampler.sample(lapAwayQuartX, quartY, lapAwayQuartZ));
                 broken |= collectClimate(brokenFields, climateHere, climateLapAway);
 
-                BiomeResolver biomes = generator.getBiomeSource().createResolver(sampler);
                 Holder<Biome> biomeHere = GenerationTransformerContext.withTransformer(transformer,
                         () -> biomes.getNoiseBiome(quartX, quartY, quartZ));
                 Holder<Biome> biomeLapAway = GenerationTransformerContext.withTransformer(transformer,

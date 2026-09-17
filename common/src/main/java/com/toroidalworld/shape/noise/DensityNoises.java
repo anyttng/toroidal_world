@@ -14,12 +14,10 @@ import net.minecraft.world.level.levelgen.synth.NormalNoise;
 public final class DensityNoises {
     public static List<NoiseFunction> matching(DensityFunction function, Predicate<ResourceKey<NormalNoise>> key) {
         List<NoiseFunction> found = new ArrayList<>();
-        DensityFunctionNodes.first(function, node -> {
+        DensityFunctionNodes.forEach(function, node -> {
             if (node instanceof NoiseFunction noise && noise.noise().unwrapKey().filter(key).isPresent()) {
                 found.add(noise);
             }
-
-            return false;
         });
         return found;
     }

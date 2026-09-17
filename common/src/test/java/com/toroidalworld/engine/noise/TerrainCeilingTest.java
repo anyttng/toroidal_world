@@ -184,23 +184,6 @@ class TerrainCeilingTest {
     }
 
     @Nested
-    class TheFinalDensityTheFillReads {
-        @Test
-        void aRouterWithoutAJaggednessNodeFillsWithItsOwnFinalDensity() {
-            NoiseRouter source = router(DensityFunctions.zero());
-            assertSame(source.finalDensity(), TerrainCeiling.finalDensity(source));
-        }
-
-        @Test
-        void itCarriesTheFullPenaltyOnceTheRampIsWalked() {
-            assertEquals(undisturbed(0.0) - PENALTY,
-                    CompiledDensity.valueAt(TerrainCeiling.finalDensity(routerWithJaggedness(0.0)), 0,
-                            ceilingY(0.0) + (int) RAMP_BLOCKS, 0),
-                    TOLERANCE);
-        }
-    }
-
-    @Nested
     class TheHeadroomNode {
         @Test
         void aSplineThatCannotGoNegativeIsNotWrappedInAMax() {

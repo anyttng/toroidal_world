@@ -152,6 +152,7 @@
     "NoiseBasedChunkGeneratorCarversMixin",
     "NoiseBasedChunkGeneratorMixin",
     "NoiseBasedStateProviderMixin",
+    "NoiseChunkAccessor",
     "NoiseChunkAquiferCellsMixin",
     "NoiseFunctionCompileMixin",
     "ParrotMixin",

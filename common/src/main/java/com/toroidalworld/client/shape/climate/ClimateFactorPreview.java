@@ -16,7 +16,6 @@ import com.toroidalworld.shape.noise.DensityNoises;
 
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
-import net.minecraft.core.Direction;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
@@ -28,8 +27,6 @@ final class ClimateFactorPreview {
 
     private static final double HORIZONTAL_SHARE = 0.0;
 
-    private static final Direction.Axis[] HORIZONTAL_AXES = {Direction.Axis.X, Direction.Axis.Z};
-
     static OptionalDouble temperatureFactor(Screen parent, GenerationOptions generationOptions, LoopSpans spans) {
         NoiseFunction temperature = temperatureNoise(parent);
         if (temperature == null) {
@@ -37,7 +34,7 @@ final class ClimateFactorPreview {
         }
 
         return OptionalDouble.of(ClimateCompression.factor(
-                WorldFolds.of(new FlatShape(boundsOf(spans), FlatShape.NO_SKEW, null), generationOptions),
+                WorldFolds.of(new FlatShape(WorldLoopBounds.of(spans), FlatShape.NO_SKEW, null), generationOptions),
                 temperature.noise(),
                 CLIMATE_XZ_SCALE,
                 HORIZONTAL_SHARE));
@@ -57,18 +54,6 @@ final class ClimateFactorPreview {
         }
 
         return climateNoiseOf(noise.generatorSettings().value().noiseRouter().temperature());
-    }
-
-    private static WorldLoopBounds boundsOf(LoopSpans spans) {
-        WorldLoopBounds bounds = WorldLoopBounds.UNBOUNDED;
-        for (Direction.Axis axis : HORIZONTAL_AXES) {
-            if (spans.loops(axis)) {
-                bounds = bounds.with(axis, new WorldLoopBounds.AxisBounds.Looped(spans.minChunk(axis),
-                        spans.maxChunk(axis)));
-            }
-        }
-
-        return bounds;
     }
 
     static @Nullable NoiseFunction climateNoiseOf(DensityFunction function) {

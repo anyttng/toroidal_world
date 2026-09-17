@@ -17,6 +17,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.StructureManager;
+import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
@@ -44,6 +45,12 @@ public class ChunkGeneratorAddedStartsMixin {
         ChunkPos chunk = centerChunk.getPos();
         List<StructureSet.StructureSelectionEntry> added = AddedStructureStarts.of(state,
                 ((StructureManagerAccessor) structureManager).toroidal$structureCheck(), carried).at(chunk);
+        if (added.isEmpty()) {
+            return;
+        }
+
+        Climate.Sampler climateSampler =
+                state.randomState().createClimateSampler(SamplerContext.builder().enableCaches().build());
         for (StructureSet.StructureSelectionEntry entry : added) {
             StructureStart existing = structureManager.getStartForStructure(entry.structure().value(), centerChunk);
             if (existing != null && existing.isValid()) {
@@ -52,7 +59,7 @@ public class ChunkGeneratorAddedStartsMixin {
 
             ((ChunkGeneratorAccessor) generator).toroidal$tryGenerateStructure(entry, structureManager, registryAccess,
                     state.randomState(), structureTemplateManager, state.getLevelSeed(), centerChunk, chunk, level,
-                    state.randomState().createClimateSampler(SamplerContext.builder().enableCaches().build()));
+                    climateSampler);
         }
     }
 }
