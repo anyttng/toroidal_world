@@ -214,6 +214,7 @@
     "SonicBoomAimMixin",
     "SpreadPlayersCommandMixin",
     "SpreadPositionAccessor",
+    "SquidFleeAimMixin",
     "StayCloseToTargetMixin",
     "StrollAroundPoiMixin",
     "StrollThroughVillageGoalMixin",
