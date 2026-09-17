@@ -10,9 +10,13 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 
+import org.jspecify.annotations.Nullable;
+
+import com.toroidalworld.accessors.AddedStartsHolder;
 import com.toroidalworld.accessors.TransformerHolder;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WorldFolds;
+import com.toroidalworld.engine.gen.AddedStructureStarts;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -21,7 +25,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
 
 @Mixin(ChunkGeneratorStructureState.class)
-public abstract class ChunkGeneratorStructureStateMixin implements TransformerHolder {
+public abstract class ChunkGeneratorStructureStateMixin implements TransformerHolder, AddedStartsHolder {
     // Vanilla searches a radius of 112 blocks, so the answer lies in [centre*16 - 104, centre*16 + 120].
     @Unique
     private static final int toroidal$BIOME_SEARCH_REACH_CHUNKS = 7;
@@ -37,6 +41,19 @@ public abstract class ChunkGeneratorStructureStateMixin implements TransformerHo
 
     @Unique
     private WorldFold toroidal$transformer = WorldFolds.NOOP;
+
+    @Unique
+    private volatile @Nullable AddedStructureStarts toroidal$addedStarts;
+
+    @Override
+    public @Nullable AddedStructureStarts toroidal$addedStarts() {
+        return this.toroidal$addedStarts;
+    }
+
+    @Override
+    public void toroidal$addedStarts(AddedStructureStarts starts) {
+        this.toroidal$addedStarts = starts;
+    }
 
     @Override
     public WorldFold toroidal$transformer() {

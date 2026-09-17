@@ -14,7 +14,8 @@ import net.minecraft.core.Direction;
 
 public record TorusSettings(LoopSpans overworld, int netherScale, LoopSpans end,
         GenerationOptions generationOptions) {
-    public static final List<WorldOption<?>> OFFERED_OPTIONS = List.of(CompactBiomes.OPTION, GuaranteedLand.OPTION);
+    public static final List<WorldOption<?>> OFFERED_OPTIONS =
+            List.of(CompactBiomes.OPTION, GuaranteedLand.OPTION, GuaranteedNetherComplexes.OPTION);
 
     private static final GenerationOptions DEFAULT_GENERATION_OPTIONS =
             GenerationOptions.DEFAULT.with(CompactBiomes.OPTION, ClimateScale.OFF);
