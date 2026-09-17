@@ -34,7 +34,8 @@
     "toroidal_world.compat.distanthorizons.mixins.json",
     "toroidal_world.compat.create.mixins.json",
     "toroidal_world.compat.sable.mixins.json",
-    "toroidal_world.compat.aeronautics.mixins.json"
+    "toroidal_world.compat.aeronautics.mixins.json",
+    "toroidal_world.compat.terrablender.mixins.json"
   ],
   "accessWidener": "toroidal_world.accesswidener",
   "custom": {

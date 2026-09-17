@@ -131,4 +131,7 @@ config="toroidal_world.compat.simpleclouds.client.mixins.json"
 config="toroidal_world.compat.mekanism.mixins.json"
 
 [[mixins]]
+config="toroidal_world.compat.terrablender.mixins.json"
+
+[[mixins]]
 config="toroidal_world.neoforge.mixins.json"

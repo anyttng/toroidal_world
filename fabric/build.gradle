@@ -247,6 +247,8 @@ dependencies {
     compileOnly "maven.modrinth:simple-clouds:${simpleclouds_version}"
     // Mekanism publishes no fabric build on this game line: plain compileOnly on the neoforge flavor, gated off at runtime.
     compileOnly "maven.modrinth:mekanism:${mekanism_version}"
+    // TerraBlender: plain compileOnly on the neoforge flavor; its layer types carry no game names to remap.
+    compileOnly "maven.modrinth:terrablender:${terrablender_version}"
 }
 
 // Two jars on this game version, and only the second one ships. Minecraft is obfuscated here, so Loom compiles into a
