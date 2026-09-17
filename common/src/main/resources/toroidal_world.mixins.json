@@ -155,6 +155,7 @@
     "PathNavigationAccessor",
     "PathNavigationMixin",
     "PathNavigationRegionMixin",
+    "PathTypeCacheMixin",
     "PathfinderMobMixin",
     "PhantomMoveControlMixin",
     "PhantomMoveTargetGoalMixin",
