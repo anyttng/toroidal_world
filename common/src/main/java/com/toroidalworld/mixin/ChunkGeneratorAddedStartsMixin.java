@@ -13,6 +13,7 @@ import com.toroidalworld.engine.gen.AddedStructureStarts;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -20,7 +21,6 @@ import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
-import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
@@ -42,17 +42,18 @@ public class ChunkGeneratorAddedStartsMixin {
         }
 
         ChunkPos chunk = centerChunk.getPos();
+        SectionPos section = SectionPos.bottomOf(centerChunk);
         List<StructureSet.StructureSelectionEntry> added = AddedStructureStarts.of(state,
                 ((StructureManagerAccessor) structureManager).toroidal$structureCheck(), carried).at(chunk);
         for (StructureSet.StructureSelectionEntry entry : added) {
-            StructureStart existing = structureManager.getStartForStructure(entry.structure().value(), centerChunk);
+            StructureStart existing = structureManager.getStartForStructure(section, entry.structure().value(),
+                    centerChunk);
             if (existing != null && existing.isValid()) {
                 continue;
             }
 
             ((ChunkGeneratorAccessor) generator).toroidal$tryGenerateStructure(entry, structureManager, registryAccess,
-                    state.randomState(), structureTemplateManager, state.getLevelSeed(), centerChunk, chunk, level,
-                    state.randomState().createClimateSampler(SamplerContext.builder().enableCaches().build()));
+                    state.randomState(), structureTemplateManager, state.getLevelSeed(), centerChunk, chunk, section, level);
         }
     }
 }
