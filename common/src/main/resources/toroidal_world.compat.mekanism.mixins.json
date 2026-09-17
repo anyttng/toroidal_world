@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_21",
   "plugin": "com.toroidalworld.compat.mekanism.MekanismMixinPlugin",
   "mixins": [
+    "OrphanPathFinderMixin",
     "TeleporterFrequencyMixin",
     "TileEntityTeleporterMixin"
   ],
