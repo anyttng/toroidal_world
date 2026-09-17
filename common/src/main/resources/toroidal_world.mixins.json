@@ -245,6 +245,7 @@
     "WallClimberNavigationMixin",
     "WanderToPositionGoalMixin",
     "WardenSpawnTrackerMixin",
+    "WitherApproachMixin",
     "WorkAtPoiMixin",
     "WorldBorderCommandMixin",
     "WorldBorderMixin",
