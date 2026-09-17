@@ -247,6 +247,7 @@
     "ValidateNearbyPoiMixin",
     "Vec3iWaypointAccessor",
     "VerticalGradientSeamMixin",
+    "VexChargeAttackGoalMixin",
     "VexYawMixin",
     "VibrationSystemListenerMixin",
     "VibrationSystemTickerMixin",
