@@ -11,12 +11,12 @@ import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.StructureManager;
-import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.RandomState;
@@ -48,6 +48,6 @@ public interface ChunkGeneratorAccessor {
             long seed,
             ChunkAccess centerChunk,
             ChunkPos sourceChunkPos,
-            ResourceKey<Level> level,
-            Climate.Sampler climateSampler);
+            SectionPos sectionPos,
+            ResourceKey<Level> level);
 }
