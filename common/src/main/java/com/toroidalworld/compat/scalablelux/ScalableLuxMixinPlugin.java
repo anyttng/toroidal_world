@@ -6,9 +6,12 @@ import com.mojang.logging.LogUtils;
 import com.toroidalworld.compat.ModPresence;
 import com.toroidalworld.compat.ModPresenceGatePlugin;
 import com.toroidalworld.compat.ModSymbol;
+import com.toroidalworld.compat.c2me.C2meLightingLock;
 
 public class ScalableLuxMixinPlugin extends ModPresenceGatePlugin {
     private static final Logger LOGGER = LogUtils.getLogger();
+
+    private static final String SCHEDULING_LOCK_MIXIN = "SchedulingUtilLockMixin";
 
     static final ModSymbol ANY_CHUNK_NOW = new ModSymbol(
             "ca/spottedleaf/starlight/common/light/StarLightInterface", "getAnyChunkNow",
@@ -20,5 +23,14 @@ public class ScalableLuxMixinPlugin extends ModPresenceGatePlugin {
 
     public ScalableLuxMixinPlugin() {
         super(SCALABLELUX);
+    }
+
+    @Override
+    public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        if (mixinClassName.endsWith(SCHEDULING_LOCK_MIXIN)) {
+            return SCALABLELUX.present() && !ModPresence.probe(C2meLightingLock.OVERWRITE_RESOURCE);
+        }
+
+        return super.shouldApplyMixin(targetClassName, mixinClassName);
     }
 }
