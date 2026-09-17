@@ -27,7 +27,7 @@ import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.WorldDimensions;
 
 class TorusDimensionsTest {
-    private static final HolderLookup.Provider WORLDGEN = VanillaRegistries.createWorldLookup();
+    private static final HolderLookup.Provider WORLDGEN = VanillaRegistries.createLookup();
 
     private static final TorusSettings RECTANGLE_64_BY_128 = new TorusSettings(
             LoopSpans.ofWidths(64, 128), 4, LoopSpans.ofWidth(320), TorusSettings.DEFAULT.generationOptions());
