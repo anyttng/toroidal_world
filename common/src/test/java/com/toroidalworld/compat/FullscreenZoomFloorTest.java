@@ -54,6 +54,22 @@ class FullscreenZoomFloorTest {
     }
 
     @Test
+    void ftbChunksCoversTheWindow() {
+        assertEquals(685, FullscreenZoomFloor.ftbChunksCoverZoom(512, 1369), "ceil(1369 * 256 / 512) is 685");
+        assertEquals(43, FullscreenZoomFloor.ftbChunksCoverZoom(8192, 1369), "ceil(1369 * 256 / 8192) is 43");
+        assertEquals(1024, FullscreenZoomFloor.ftbChunksCoverZoom(64, 2560),
+                "a floor past FTB Chunks' deepest zoom is not held at 1024");
+    }
+
+    @Test
+    void ftbChunksReadsEachLoopedAxisAgainstItsOwnWindowSide() {
+        assertEquals(685, FullscreenZoomFloor.ftbChunksCoverZoom(torus(1024, 512), 2560, 1369),
+                "X of 1024 over 2560 px needs 640 and Z of 512 over 1369 px needs 685, the larger holds");
+        assertEquals(86, FullscreenZoomFloor.ftbChunksCoverZoom(cylinder(4096), 2560, 1369),
+                "a cylinder reads its Z width against the window height alone: ceil(1369 * 256 / 4096) = 86");
+    }
+
+    @Test
     void xaeroCoversTheWindow() {
         assertEquals(5.0, FullscreenZoomFloor.xaeroCoverScale(512, 1.0, 2560), 1e-12, "2560 px over 512 blocks at multiplier 1");
         assertEquals(1369 / (512 * 1.2676), FullscreenZoomFloor.xaeroCoverScale(512, 1.2676, 1369), 1e-12,

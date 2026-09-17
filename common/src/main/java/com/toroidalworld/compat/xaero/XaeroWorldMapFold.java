@@ -11,6 +11,7 @@ import com.toroidalworld.compat.AxisCopies;
 import com.toroidalworld.compat.ClientShapes;
 import com.toroidalworld.compat.FullscreenZoomFloor;
 import com.toroidalworld.compat.MapCopies;
+import com.toroidalworld.compat.MapCopyBudget;
 import com.toroidalworld.core.CoordinateConstants;
 import com.toroidalworld.engine.seam.MapSurfaceCopies.Copies;
 
@@ -154,18 +155,7 @@ public final class XaeroWorldMapFold {
     }
 
     public static int[] drawnLaps(AxisCopies copies, int spanMin, int spanMax, MapCopies mapCopies) {
-        int[] laps = copies.laps(spanMin, spanMax);
-        if (mapCopies != MapCopies.SINGLE) {
-            return laps;
-        }
-
-        for (int lap : laps) {
-            if (lap == 0) {
-                return new int[] {0};
-            }
-        }
-
-        return new int[0];
+        return MapCopyBudget.drawnLaps(copies, spanMin, spanMax, mapCopies);
     }
 
     public static double zoomFloorScale(double scaleMultiplier, MapCopies mapCopies, int windowWidth, int windowHeight) {

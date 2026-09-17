@@ -57,6 +57,21 @@ public final class MapCopyBudget {
         return Math.min(copiesToCover(periodPixels, viewportPixels), copyRangeCap(loopedAxes, tilesWithContent));
     }
 
+    public static int[] drawnLaps(AxisCopies copies, int spanMin, int spanMax, MapCopies mapCopies) {
+        int[] laps = copies.laps(spanMin, spanMax);
+        if (mapCopies != MapCopies.SINGLE) {
+            return laps;
+        }
+
+        for (int lap : laps) {
+            if (lap == 0) {
+                return new int[] {0};
+            }
+        }
+
+        return new int[0];
+    }
+
     public static Copies painted(AxisCopies x, int rangeX, AxisCopies z, int rangeZ) {
         return new Copies(Math.max(rangeX, rangeZ), new BoundingBox(
                 paintedMin(x, rangeX), Integer.MIN_VALUE, paintedMin(z, rangeZ),

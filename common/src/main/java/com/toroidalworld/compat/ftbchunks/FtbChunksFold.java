@@ -12,6 +12,7 @@ import com.toroidalworld.api.v1.ToroidalShape;
 import com.toroidalworld.compat.AxisCopies;
 import com.toroidalworld.compat.ClientShapes;
 import com.toroidalworld.compat.FullscreenZoomFloor;
+import com.toroidalworld.compat.MapCopies;
 import com.toroidalworld.compat.MapCopyBudget;
 import com.toroidalworld.engine.seam.MapSurfaceCopies.Copies;
 
@@ -124,9 +125,15 @@ public final class FtbChunksFold {
         return pixels;
     }
 
-    public static int zoomFloor() {
+    public static int zoomFloor(int windowWidth, int windowHeight) {
         ToroidalShape shape = ClientShapes.current();
-        return shape == null ? 0 : FullscreenZoomFloor.ftbChunksZoom(shape);
+        if (shape == null) {
+            return 0;
+        }
+
+        return MapCopies.current() == MapCopies.SINGLE
+                ? FullscreenZoomFloor.ftbChunksCoverZoom(shape, windowWidth, windowHeight)
+                : FullscreenZoomFloor.ftbChunksZoom(shape);
     }
 
     public static void recordLargeMapCopyRange(int rangeX, int rangeZ) {

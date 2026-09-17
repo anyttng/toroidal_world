@@ -12,6 +12,8 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.toroidalworld.compat.MapCopies;
+import com.toroidalworld.compat.MapCopyBudget;
 import com.toroidalworld.compat.ftbchunks.FtbChunksFold;
 import com.toroidalworld.compat.ftbchunks.FtbChunksFold.SeamView;
 import com.toroidalworld.compat.ftbchunks.FtbChunksFold.TileBlit;
@@ -75,10 +77,11 @@ public abstract class RegionMapPanelMixin {
         double pixelsPerBlock = tilePixels / (double) REGION_BLOCKS;
         int originX = panel.getX() - this.regionMinX * tilePixels;
         int originY = panel.getY() - this.regionMinZ * tilePixels;
-        int[] lapsX = FtbChunksFold.copies(Direction.Axis.X).laps(
-                Mth.floor((x - originX) / pixelsPerBlock), Mth.ceil((x + w - originX) / pixelsPerBlock));
-        int[] lapsZ = FtbChunksFold.copies(Direction.Axis.Z).laps(
-                Mth.floor((y - originY) / pixelsPerBlock), Mth.ceil((y + h - originY) / pixelsPerBlock));
+        MapCopies mapCopies = MapCopies.current();
+        int[] lapsX = MapCopyBudget.drawnLaps(FtbChunksFold.copies(Direction.Axis.X),
+                Mth.floor((x - originX) / pixelsPerBlock), Mth.ceil((x + w - originX) / pixelsPerBlock), mapCopies);
+        int[] lapsZ = MapCopyBudget.drawnLaps(FtbChunksFold.copies(Direction.Axis.Z),
+                Mth.floor((y - originY) / pixelsPerBlock), Mth.ceil((y + h - originY) / pixelsPerBlock), mapCopies);
         int reachX = 0;
         int reachZ = 0;
 
