@@ -18,6 +18,7 @@
     "Pos3DMixin",
     "RadiationLevelDataMixin",
     "RadiationManagerMixin",
+    "SPSMultiblockDataMixin",
     "StructureHelperMixin",
     "StructureMixin",
     "TeleporterFrequencyMixin",
