@@ -31,7 +31,7 @@ class RegionLayerFoldTest {
     private static final int FIXED_ZOOMS = 3;
 
     private static final int DEFAULT_REGION_SIZE = 3;
-    private static final int[] REGION_SIZES = {2, 3, 6};
+    private static final int[] REGION_SIZES = {2, 3, 4, 6};
     private static final int[] CHUNK_WIDTHS = {32, 48, 64, 128, 750, 2500};
 
     private static final int SAMPLE_LINES = 5;
