@@ -1,6 +1,6 @@
 # Supported Mods
 
-Toroidal World ships for Minecraft 26.2, 26.1.2 and 1.21.1, on NeoForge and Fabric. The mods below are grouped by what they do, and inside each group they run in this order: **supported**; **partially supported**, where the mod is folded across the seam and the limits left are named beside it; **no seam support**, where the mod runs but nothing folds it across the seam; and **not tested**, where nobody has run it against a shaped world yet.
+Toroidal World ships for Minecraft 26.3, 26.2, 26.1.2 and 1.21.1, on NeoForge and Fabric. The mods below are grouped by what they do, and inside each group they run in this order: **supported**; **partially supported**, where the mod is folded across the seam and the limits left are named beside it; **no seam support**, where the mod runs but nothing folds it across the seam; and **not tested**, where nobody has run it against a shaped world yet.
 
 ## Rendering and performance
 
@@ -9,14 +9,14 @@ Toroidal World ships for Minecraft 26.2, 26.1.2 and 1.21.1, on NeoForge and Fabr
 | [Sodium](https://modrinth.com/mod/sodium) and [Iris Shaders](https://modrinth.com/mod/iris) | All | NeoForge, Fabric | Supported | |
 | [Lithium](https://modrinth.com/mod/lithium) | All | NeoForge, Fabric | Supported | |
 | [C2ME](https://modrinth.com/mod/c2me-fabric) | All | NeoForge, Fabric | Supported | |
-| Simple Clouds | 1.21.1 | NeoForge | Partially supported | clouds and local weather do not carry across the world's edge |
-| ScalableLux | All | NeoForge, Fabric | No seam support | |
+| ScalableLux | All | NeoForge, Fabric | Supported | |
+| [Simple Clouds](https://modrinth.com/mod/simple-clouds) | 1.21.1 | NeoForge | Supported | |
 
 ## Distant terrain
 
 | Mod | Minecraft | Loaders | Status | Notes |
 | --- | --- | --- | --- | --- |
-| [Distant Horizons](https://modrinth.com/mod/distanthorizons) | All | NeoForge, Fabric | Supported | |
+| [Distant Horizons](https://modrinth.com/mod/distanthorizons) | 26.2, 26.1.2, 1.21.1 | NeoForge, Fabric | Supported | |
 | [Voxy](https://modrinth.com/mod/voxy) | All | Fabric | No seam support | |
 | Bobby | — | — | Not tested | |
 
@@ -24,7 +24,7 @@ Toroidal World ships for Minecraft 26.2, 26.1.2 and 1.21.1, on NeoForge and Fabr
 
 | Mod | Minecraft | Loaders | Status | Notes |
 | --- | --- | --- | --- | --- |
-| [JourneyMap](https://modrinth.com/mod/journeymap) | All | NeoForge, Fabric | Supported | Needs 6.0.5 or newer. |
+| [JourneyMap](https://modrinth.com/mod/journeymap) | All | NeoForge, Fabric | Supported | |
 | [Xaero's Minimap](https://modrinth.com/mod/xaeros-minimap) | All | NeoForge, Fabric | Supported | |
 | [Xaero's World Map](https://modrinth.com/mod/xaeros-world-map) | All | NeoForge, Fabric | Supported | |
 | FTB Chunks x Xaero's Map Compat | 1.21.1 | NeoForge | Supported | |
@@ -38,15 +38,15 @@ Toroidal World ships for Minecraft 26.2, 26.1.2 and 1.21.1, on NeoForge and Fabr
 | [Create](https://modrinth.com/mod/create) | 1.21.1 | NeoForge | Supported | |
 | [Sable](https://modrinth.com/mod/sable) | 1.21.1 | NeoForge, Fabric | Supported | |
 | [Create Aeronautics](https://modrinth.com/mod/create-aeronautics) | 1.21.1 | NeoForge | Supported | |
+| [Mekanism](https://modrinth.com/mod/mekanism) | 1.21.1 | NeoForge | Partially supported | Multiblocks, the laser and radiation stop at the world's edge |
 | Create Electroenergetics | — | — | No seam support | |
-| Mekanism | 1.21.1 | NeoForge | No seam support | |
 | Astikor Carts | — | — | No seam support | |
 
 ## Content and server side
 
 | Mod | Minecraft | Loaders | Status | Notes |
 | --- | --- | --- | --- | --- |
-| [Polymer](https://modrinth.com/mod/polymer)-based mods, such as [Lootr](https://modrinth.com/mod/lootr) | All | NeoForge, Fabric | Supported | |
+| [Polymer](https://modrinth.com/mod/polymer)-based mods, such as [Lootr](https://modrinth.com/mod/lootr) | 26.2, 26.1.2, 1.21.1 | NeoForge, Fabric | Supported | |
 
 ## World generation
 
