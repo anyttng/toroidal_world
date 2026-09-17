@@ -101,6 +101,7 @@
     "GhastFacingAimMixin",
     "GhastFireballAimMixin",
     "GiveGiftToHeroMixin",
+    "GlobalPosMixin",
     "GoAndGiveItemsToTargetMixin",
     "GoToTargetLocationMixin",
     "GoalUtilsMixin",
