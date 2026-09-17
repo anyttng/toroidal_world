@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.toroidalworld.InjectionTargets;
@@ -171,6 +172,11 @@ public class ChunkMapMixin implements LevelHolder, ChunkResender, SeamDriveSched
         }
 
         this.toroidal$driveRequests.add(new SeamDriveRequest(holder, status));
+    }
+
+    @ModifyVariable(method = "getLatestStatus", at = @At("HEAD"), argsOnly = true)
+    private long toroidal$foldLatestStatusKey(long key) {
+        return WorldLoopAttachments.transformerOf(this.level).foldChunkKey(key);
     }
 
     @Inject(method = "runGenerationTasks", at = @At("HEAD"))
