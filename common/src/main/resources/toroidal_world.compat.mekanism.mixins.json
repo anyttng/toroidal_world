@@ -1,0 +1,13 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.toroidalworld.compat.mekanism.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "plugin": "com.toroidalworld.compat.mekanism.MekanismMixinPlugin",
+  "mixins": [
+    "TeleporterFrequencyMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

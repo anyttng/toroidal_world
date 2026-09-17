@@ -198,6 +198,7 @@ dependencies {
     compileOnly "maven.modrinth:create:${create_version}"
     compileOnly "maven.modrinth:sable:${sable_version}"
     compileOnly "maven.modrinth:simple-clouds:${simpleclouds_version}"
+    compileOnly "maven.modrinth:mekanism:${mekanism_version}"
     // Non-transitive: the FTB poms ask for Architectury, whose types no map fold names — pulling its maven in would
     // put a whole mod on the compile classpath to satisfy a reference nothing makes.
     compileOnly("dev.ftb.mods:ftb-chunks-neoforge:${ftbchunks_version}") { transitive = false }
