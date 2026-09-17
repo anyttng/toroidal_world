@@ -74,6 +74,10 @@ public final class DensityFunctionFixture {
         });
     }
 
+    public static NoiseScaleLadder ladderOf(DensityFunction function, WorldFold fold) {
+        return NoiseScaleLadder.of(fold, List.of(function));
+    }
+
     public static int blockIn(Random random, WrapDomain domain) {
         return domain.lowerBound + random.nextInt(domain.domainLength);
     }

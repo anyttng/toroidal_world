@@ -9,6 +9,7 @@ Toroidal World ships for Minecraft 26.2, 26.1.2 and 1.21.1, on NeoForge and Fabr
 | [Sodium](https://modrinth.com/mod/sodium) and [Iris Shaders](https://modrinth.com/mod/iris) | All | NeoForge, Fabric | Supported | |
 | [Lithium](https://modrinth.com/mod/lithium) | All | NeoForge, Fabric | Supported | |
 | [C2ME](https://modrinth.com/mod/c2me-fabric) | All | NeoForge, Fabric | Supported | |
+| Simple Clouds | 1.21.1 | NeoForge | Partially supported | clouds and local weather do not carry across the world's edge |
 | ScalableLux | All | NeoForge, Fabric | No seam support | |
 
 ## Distant terrain
@@ -52,6 +53,7 @@ Toroidal World ships for Minecraft 26.2, 26.1.2 and 1.21.1, on NeoForge and Fabr
 | Mod | Minecraft | Loaders | Status | Notes |
 | --- | --- | --- | --- | --- |
 | [Old Continents](https://www.curseforge.com/minecraft/mc-mods/old-continents) | 26.2 | NeoForge | Supported | |
+| Continents | — | — | Supported | |
 | Tectonic | — | — | Not tested | |
 | One Dimension | — | — | Not tested | |
 | BetterEnd and BetterNether | — | — | Not tested | |

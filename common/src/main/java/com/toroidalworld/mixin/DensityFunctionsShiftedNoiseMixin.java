@@ -12,6 +12,7 @@ import com.toroidalworld.engine.noise.DomainWarp;
 import com.toroidalworld.engine.noise.DomainWarp.Divisor;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
 import com.toroidalworld.engine.noise.GenerationTransformerContext.Context;
+import com.toroidalworld.engine.noise.NoiseScaleLadder;
 import com.toroidalworld.shape.climate.ClimateCompression;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -56,27 +57,28 @@ public class DensityFunctionsShiftedNoiseMixin {
             return original.call(context);
         }
 
+        double xzScale = NoiseScaleLadder.installedScale(this.noise, this.xzScale);
         double x = context.blockX();
         double y = context.blockY() * this.yScale + this.shiftY.compute(context);
         double z = context.blockZ();
-        if (this.xzScale != 0.0) {
-            double divisor = this.toroidal$warpDivisor(transformer);
+        if (xzScale != 0.0) {
+            double divisor = this.toroidal$warpDivisor(transformer, xzScale);
             x = DomainWarp.apply(transformer.blockDomain(Direction.Axis.X), context.blockX(),
                     this.shiftX.compute(context), divisor);
             z = DomainWarp.apply(transformer.blockDomain(Direction.Axis.Z), context.blockZ(),
                     this.shiftZ.compute(context), divisor);
         }
 
-        return ContextScaledNoise.sample(generation, this.noise, x, y, z, this.xzScale,
-                GenerationTransformerContext.verticalShare(this.xzScale, this.yScale));
+        return ContextScaledNoise.sample(generation, this.noise, x, y, z, xzScale,
+                GenerationTransformerContext.verticalShare(xzScale, this.yScale));
     }
 
     @Unique
-    private double toroidal$warpDivisor(WorldFold transformer) {
+    private double toroidal$warpDivisor(WorldFold transformer, double xzScale) {
         Divisor divisor = this.toroidal$warpDivisor;
         if (divisor == null || divisor.fold() != transformer) {
             divisor = new Divisor(transformer, ClimateCompression.warpDivisor(this.noise, transformer,
-                    this.xzScale, GenerationTransformerContext.verticalShare(this.xzScale, this.yScale)));
+                    xzScale, GenerationTransformerContext.verticalShare(xzScale, this.yScale)));
             this.toroidal$warpDivisor = divisor;
         }
 
