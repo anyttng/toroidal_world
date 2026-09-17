@@ -37,7 +37,7 @@ public class TorusSettingsScreen extends LoopSettingsScreen<TorusSettings> {
                 current.chunkWidth(Direction.Axis.Z), current.netherScale(), current.endChunkWidth(), onChange),
                 onDone);
         this.generationOptions = current.generationOptions();
-        this.optionControls = WorldOptionControls.createAll(new ScreenContext());
+        this.optionControls = WorldOptionControls.createAll(new ScreenContext(), TorusSettings.OFFERED_OPTIONS);
     }
 
     @Override

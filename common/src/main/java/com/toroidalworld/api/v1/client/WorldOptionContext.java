@@ -3,6 +3,7 @@ package com.toroidalworld.api.v1.client;
 import org.jspecify.annotations.Nullable;
 
 import com.toroidalworld.api.v1.option.GenerationOptions;
+import com.toroidalworld.api.v1.shape.LoopSpans;
 
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.Direction;
@@ -28,6 +29,17 @@ public interface WorldOptionContext {
      */
     default @Nullable Integer loopChunkWidth(Direction.Axis axis) {
         return loopChunkWidth();
+    }
+
+    /**
+     * The shape the screen currently states — which axes loop and over how many chunks — or {@code null} while it
+     * states no width. The default reads both axes as looping over {@link #loopChunkWidth(Direction.Axis)}, so a
+     * screen whose shape leaves an axis unbounded overrides it.
+     */
+    default @Nullable LoopSpans loopSpans() {
+        Integer xChunkWidth = loopChunkWidth(Direction.Axis.X);
+        Integer zChunkWidth = loopChunkWidth(Direction.Axis.Z);
+        return xChunkWidth == null || zChunkWidth == null ? null : LoopSpans.ofWidths(xChunkWidth, zChunkWidth);
     }
 
     /** The options the screen was opened with. */

@@ -2,7 +2,6 @@ package com.toroidalworld.shape.cylinder;
 
 import org.jspecify.annotations.Nullable;
 
-import com.toroidalworld.api.v1.option.GenerationOptions;
 import com.toroidalworld.api.v1.shape.LoopSpans;
 import com.toroidalworld.api.v1.shape.ShapeDimensions;
 import com.toroidalworld.core.WorldLoopSizes;
@@ -19,7 +18,7 @@ public final class CylinderDimensions {
                 settings.overworld(),
                 ShapeStems.netherSpans(settings.overworld(), settings.netherScale()),
                 settings.end(),
-                GenerationOptions.DEFAULT);
+                settings.generationOptions());
     }
 
     public static @Nullable CylinderSettings read(WorldDimensions dimensions) {
@@ -32,7 +31,8 @@ public final class CylinderDimensions {
         return new CylinderSettings(
                 overworld,
                 ShapeStems.readNetherScale(dimensions, CylinderSettings::isCylinder, overworld, axis),
-                readEndSpans(dimensions, axis));
+                readEndSpans(dimensions, axis),
+                ShapeDimensions.optionsOf(dimensions, LevelStem.OVERWORLD));
     }
 
     private static LoopSpans readEndSpans(WorldDimensions dimensions, Direction.Axis axis) {

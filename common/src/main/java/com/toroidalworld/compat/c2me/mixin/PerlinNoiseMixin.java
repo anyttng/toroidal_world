@@ -9,7 +9,7 @@ import com.toroidalworld.accessors.ClimateFieldMark;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
 import com.toroidalworld.engine.noise.GenerationTransformerContext.Context;
 import com.toroidalworld.engine.noise.PeriodicOctaveSampler;
-import com.toroidalworld.shape.torus.ClimateCompression;
+import com.toroidalworld.shape.climate.ClimateCompression;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 

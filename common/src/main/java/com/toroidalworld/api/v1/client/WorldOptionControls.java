@@ -1,6 +1,7 @@
 package com.toroidalworld.api.v1.client;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -37,11 +38,20 @@ public final class WorldOptionControls {
      * shape's settings screen lays out. An option with no control registered is skipped.
      */
     public static List<WorldOptionControl> createAll(WorldOptionContext context) {
+        return createAll(context, WorldOptions.all());
+    }
+
+    /**
+     * A control for every option in {@code offered} that has one, still in the order {@link WorldOptions#all} states
+     * — what the settings screen of a shape offering only some of the registered options lays out.
+     */
+    public static List<WorldOptionControl> createAll(WorldOptionContext context,
+            Collection<? extends WorldOption<?>> offered) {
         Map<String, Factory> factories = FACTORIES.entries();
         List<WorldOptionControl> controls = new ArrayList<>();
         for (WorldOption<?> option : WorldOptions.all()) {
             Factory factory = factories.get(option.key());
-            if (factory != null) {
+            if (factory != null && offered.contains(option)) {
                 controls.add(factory.create(context));
             }
         }

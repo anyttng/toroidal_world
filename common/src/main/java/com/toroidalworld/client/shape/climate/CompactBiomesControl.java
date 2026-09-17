@@ -1,4 +1,4 @@
-package com.toroidalworld.client.shape.torus;
+package com.toroidalworld.client.shape.climate;
 
 import java.util.Locale;
 import java.util.OptionalDouble;
@@ -10,8 +10,9 @@ import com.toroidalworld.api.v1.client.WorldOptionControl;
 import com.toroidalworld.client.shape.DigitsEditBox;
 import com.toroidalworld.client.shape.LoopSizeControls;
 import com.toroidalworld.api.v1.option.GenerationOptions;
-import com.toroidalworld.shape.torus.ClimateScale;
-import com.toroidalworld.shape.torus.CompactBiomes;
+import com.toroidalworld.api.v1.shape.LoopSpans;
+import com.toroidalworld.shape.climate.ClimateScale;
+import com.toroidalworld.shape.climate.CompactBiomes;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.CycleButton;
@@ -19,7 +20,6 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.layouts.CommonLayouts;
 import net.minecraft.client.gui.layouts.LinearLayout;
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
@@ -108,14 +108,13 @@ public final class CompactBiomesControl implements WorldOptionControl {
     }
 
     private String previewedFactor() {
-        Integer xChunkWidth = this.context.loopChunkWidth(Direction.Axis.X);
-        Integer zChunkWidth = this.context.loopChunkWidth(Direction.Axis.Z);
-        if (xChunkWidth == null || zChunkWidth == null) {
+        LoopSpans spans = this.context.loopSpans();
+        if (spans == null) {
             return UNKNOWN_FACTOR;
         }
 
         OptionalDouble factor = ClimateFactorPreview.temperatureFactor(this.context.parent(),
-                this.context.options().with(CompactBiomes.OPTION, this.climateScale), xChunkWidth, zChunkWidth);
+                this.context.options().with(CompactBiomes.OPTION, this.climateScale), spans);
         return factor.isPresent() ? display(factor.getAsDouble()) : UNKNOWN_FACTOR;
     }
 

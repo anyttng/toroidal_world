@@ -14,8 +14,8 @@ import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapCodec;
 import com.toroidalworld.ToroidalWorld;
 import com.toroidalworld.api.v1.option.GenerationOptions;
-import com.toroidalworld.shape.torus.ClimateScale;
-import com.toroidalworld.shape.torus.CompactBiomes;
+import com.toroidalworld.shape.climate.ClimateScale;
+import com.toroidalworld.shape.climate.CompactBiomes;
 
 class CarriedShapeTest {
     private static final WorldLoopBounds SQUARE = WorldLoopBounds.ofWidth(32);
