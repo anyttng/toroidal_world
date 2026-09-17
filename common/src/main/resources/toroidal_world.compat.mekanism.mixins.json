@@ -6,16 +6,20 @@
   "plugin": "com.toroidalworld.compat.mekanism.MekanismMixinPlugin",
   "mixins": [
     "DynamicNetworkMixin",
+    "FormationProtocolMixin",
     "IdlePathMixin",
     "LogisticalTransporterBaseMixin",
     "NetworkAcceptorCacheMixin",
     "OrphanPathFinderMixin",
+    "StructureHelperMixin",
+    "StructureMixin",
     "TeleporterFrequencyMixin",
     "TileEntityTeleporterMixin",
     "TransporterManagerMixin",
     "TransporterPathfinderMixin",
     "TransporterPathfinderPathfinderMixin",
-    "TransporterStackMixin"
+    "TransporterStackMixin",
+    "VoxelPlaneAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
