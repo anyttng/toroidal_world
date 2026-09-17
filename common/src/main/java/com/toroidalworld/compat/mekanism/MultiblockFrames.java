@@ -46,6 +46,7 @@ public final class MultiblockFrames {
         }
 
         WorldFold fold = WorldLoopAttachments.transformerOfReader(((MultiblockStructureFrame) structure).toroidal$level());
+        ((MultiblockBoundsFrame) cuboid).toroidal$setFold(fold);
         BlockPos min = cuboid.getMinPos();
         DeckTransformation move = fold.nearestCopyTransformation(fold.fold(min), min);
         if (move.isIdentity()) {
@@ -59,6 +60,16 @@ public final class MultiblockFrames {
         cuboid.setMaxPos(new BlockPos(Math.max(a.getX(), b.getX()), Math.max(a.getY(), b.getY()),
                 Math.max(a.getZ(), b.getZ())));
         return cuboid;
+    }
+
+    public static BlockPos seatOnto(VoxelCuboid bounds, BlockPos pos) {
+        BlockPos copy = ((MultiblockBoundsFrame) bounds).toroidal$fold().nearestCopy(bounds.getMinPos(), pos);
+        return copy.equals(pos) ? pos : copy;
+    }
+
+    public static Object seatOnto(Object data, Object pos) {
+        return pos instanceof BlockPos blockPos ? seatOnto(((MultiblockDataFrame) data).toroidal$bounds(), blockPos)
+                : pos;
     }
 
     public static BlockPos fold(Structure structure, BlockPos pos) {

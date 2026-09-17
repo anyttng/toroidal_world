@@ -81,6 +81,8 @@ public final class InjectionTargets {
     public static final String POSITIONAL_RANDOM_FACTORY_AT =
             "Lnet/minecraft/world/level/levelgen/PositionalRandomFactory;at(III)Lnet/minecraft/util/RandomSource;";
 
+    public static final String SET_CONTAINS = "Ljava/util/Set;contains(Ljava/lang/Object;)Z";
+
     public static final String STATIC_CACHE_2D_CREATE =
             "Lnet/minecraft/util/StaticCache2D;create(IIILnet/minecraft/util/StaticCache2D$Initializer;)Lnet/minecraft/util/StaticCache2D;";
 

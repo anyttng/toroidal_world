@@ -10,6 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.toroidalworld.InjectionTargets;
 import com.toroidalworld.compat.mekanism.MekanismSeam;
 
 import mekanism.common.lib.multiblock.FormationProtocol;
@@ -24,7 +25,7 @@ public class FormationProtocolMixin {
     private IMultiblock<?> pointer;
 
     @WrapOperation(method = "doUpdate",
-            at = @At(value = "INVOKE", target = "Ljava/util/Set;contains(Ljava/lang/Object;)Z"))
+            at = @At(value = "INVOKE", target = InjectionTargets.SET_CONTAINS))
     private boolean toroidal$pointerInCuboidFrame(Set<BlockPos> locations, Object pointerPos,
             Operation<Boolean> original) {
         Iterator<BlockPos> any = locations.iterator();
