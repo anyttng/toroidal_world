@@ -145,7 +145,7 @@ public abstract class MapRendererMixin implements JourneyMapSeamPass {
         }
 
         Window window = Minecraft.getInstance().getWindow();
-        int flooredZoom = Math.max(zoom, JourneyMapFold.fullscreenZoomFloor(window.getWidth(), window.getHeight()));
+        int flooredZoom = Math.max(zoom, JourneyMapFold.fullscreenZoomFloor());
         return original.call(worldDir, mapType,
                 JourneyMapFold.seatSingleCenter(Direction.Axis.X, blockX, flooredZoom, window.getWidth()),
                 JourneyMapFold.seatSingleCenter(Direction.Axis.Z, blockZ, flooredZoom, window.getHeight()),
@@ -215,8 +215,7 @@ public abstract class MapRendererMixin implements JourneyMapSeamPass {
             return zoom;
         }
 
-        Window window = Minecraft.getInstance().getWindow();
-        return Math.max(zoom, JourneyMapFold.fullscreenZoomFloor(window.getWidth(), window.getHeight()));
+        return Math.max(zoom, JourneyMapFold.fullscreenZoomFloor());
     }
 
     @Override

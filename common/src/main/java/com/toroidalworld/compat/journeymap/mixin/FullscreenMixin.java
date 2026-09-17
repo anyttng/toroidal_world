@@ -29,8 +29,7 @@ public abstract class FullscreenMixin {
             return zoom;
         }
 
-        Window window = Minecraft.getInstance().getWindow();
-        return Math.max(Integer.highestOneBit(zoom), JourneyMapFold.fullscreenZoomFloor(window.getWidth(), window.getHeight()));
+        return Math.max(Integer.highestOneBit(zoom), JourneyMapFold.fullscreenZoomFloor());
     }
 
     @ModifyReturnValue(method = "getMouseDrag", at = @At("RETURN"))
