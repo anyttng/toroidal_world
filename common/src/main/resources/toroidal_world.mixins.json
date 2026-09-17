@@ -224,6 +224,7 @@
     "StrollThroughVillageGoalMixin",
     "StrollToPoiListMixin",
     "StrollToPoiMixin",
+    "StoringChunkProgressListenerMixin",
     "StructureBlockEntityMixin",
     "StructureCheckAccessor",
     "StructureCheckBiomeMixin",
