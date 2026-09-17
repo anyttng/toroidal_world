@@ -47,9 +47,6 @@ public final class InjectionTargets {
     public static final String ENTITY_POSITION =
             "Lnet/minecraft/world/entity/Entity;position()Lnet/minecraft/world/phys/Vec3;";
 
-    public static final String LIGHT_CHUNK_GETTER_GET_CHUNK_FOR_LIGHTING =
-            "Lnet/minecraft/world/level/chunk/LightChunkGetter;getChunkForLighting(II)Lnet/minecraft/world/level/chunk/LightChunk;";
-
     public static final String LIVING_ENTITY_GET_X = "Lnet/minecraft/world/entity/LivingEntity;getX()D";
 
     public static final String LIVING_ENTITY_GET_Z = "Lnet/minecraft/world/entity/LivingEntity;getZ()D";
