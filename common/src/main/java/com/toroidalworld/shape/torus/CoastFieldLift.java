@@ -9,6 +9,7 @@ import com.toroidalworld.api.v1.gen.GenerationHooks;
 import com.toroidalworld.api.v1.option.GenerationOptions;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
+import com.toroidalworld.shape.noise.DensityNoises;
 
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.levelgen.DensityFunction;

@@ -1,14 +1,21 @@
 package com.toroidalworld.shape.torus;
 
+import java.util.List;
+
 import com.toroidalworld.api.v1.option.GenerationOptions;
+import com.toroidalworld.api.v1.option.WorldOption;
 import com.toroidalworld.api.v1.shape.LoopSpans;
 import com.toroidalworld.core.NetherScales;
 import com.toroidalworld.core.WorldLoopSizes;
+import com.toroidalworld.shape.climate.ClimateScale;
+import com.toroidalworld.shape.climate.CompactBiomes;
 
 import net.minecraft.core.Direction;
 
 public record TorusSettings(LoopSpans overworld, int netherScale, LoopSpans end,
         GenerationOptions generationOptions) {
+    public static final List<WorldOption<?>> OFFERED_OPTIONS = List.of(CompactBiomes.OPTION, GuaranteedLand.OPTION);
+
     private static final GenerationOptions DEFAULT_GENERATION_OPTIONS =
             GenerationOptions.DEFAULT.with(CompactBiomes.OPTION, ClimateScale.OFF);
 

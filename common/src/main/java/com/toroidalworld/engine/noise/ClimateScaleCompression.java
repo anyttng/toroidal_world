@@ -27,9 +27,15 @@ public final class ClimateScaleCompression {
     private static int lapBlocks(WorldFold fold) {
         WrapDomain xDomain = fold.blockDomain(Direction.Axis.X);
         WrapDomain zDomain = fold.blockDomain(Direction.Axis.Z);
-        return xDomain.loops() && zDomain.loops()
-                ? Math.min(xDomain.domainLength, zDomain.domainLength)
-                : UNBOUNDED_LAP;
+        if (xDomain.loops() && zDomain.loops()) {
+            return Math.min(xDomain.domainLength, zDomain.domainLength);
+        }
+
+        if (xDomain.loops()) {
+            return xDomain.domainLength;
+        }
+
+        return zDomain.loops() ? zDomain.domainLength : UNBOUNDED_LAP;
     }
 
     private static double fittedFactor(DoubleList amplitudes, double lowestOctaveCells) {

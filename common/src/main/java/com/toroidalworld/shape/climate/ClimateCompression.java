@@ -1,4 +1,4 @@
-package com.toroidalworld.shape.torus;
+package com.toroidalworld.shape.climate;
 
 import com.toroidalworld.accessors.ClimateCompressionCache;
 import com.toroidalworld.core.WorldFold;

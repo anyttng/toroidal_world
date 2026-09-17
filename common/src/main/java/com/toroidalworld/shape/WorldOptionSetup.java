@@ -1,7 +1,7 @@
 package com.toroidalworld.shape;
 
 import com.toroidalworld.platform.Platforms;
-import com.toroidalworld.shape.torus.CompactBiomes;
+import com.toroidalworld.shape.climate.CompactBiomes;
 import com.toroidalworld.shape.torus.GuaranteedLand;
 
 public final class WorldOptionSetup {

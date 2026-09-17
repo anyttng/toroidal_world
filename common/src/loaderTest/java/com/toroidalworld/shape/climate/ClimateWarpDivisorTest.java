@@ -1,4 +1,4 @@
-package com.toroidalworld.shape.torus;
+package com.toroidalworld.shape.climate;
 
 import static com.toroidalworld.engine.noise.DensityFunctionFixture.CLIMATE_AMPLITUDES;
 import static com.toroidalworld.engine.noise.DensityFunctionFixture.CLIMATE_FIRST_OCTAVE;
