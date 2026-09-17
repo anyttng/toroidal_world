@@ -144,6 +144,7 @@
     "MoveThroughVillageGoalMixin",
     "MoveToBlockGoalMixin",
     "MoveToTargetSinkMixin",
+    "NaturalSpawnerMixin",
     "NetherPortalBlockMixin",
     "NodeMixin",
     "NoiseBasedChunkGeneratorCarversMixin",
