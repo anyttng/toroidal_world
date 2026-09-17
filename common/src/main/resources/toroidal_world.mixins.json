@@ -106,6 +106,7 @@
     "GoToTargetLocationMixin",
     "GoalUtilsMixin",
     "HarvestFarmlandMixin",
+    "HoglinBaseMixin",
     "HoneyBlockMixin",
     "HopperBlockEntityMixin",
     "ImprovedNoiseMixin",
