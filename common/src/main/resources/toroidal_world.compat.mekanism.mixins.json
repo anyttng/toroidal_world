@@ -5,9 +5,17 @@
   "compatibilityLevel": "JAVA_21",
   "plugin": "com.toroidalworld.compat.mekanism.MekanismMixinPlugin",
   "mixins": [
+    "DynamicNetworkMixin",
+    "IdlePathMixin",
+    "LogisticalTransporterBaseMixin",
+    "NetworkAcceptorCacheMixin",
     "OrphanPathFinderMixin",
     "TeleporterFrequencyMixin",
-    "TileEntityTeleporterMixin"
+    "TileEntityTeleporterMixin",
+    "TransporterManagerMixin",
+    "TransporterPathfinderMixin",
+    "TransporterPathfinderPathfinderMixin",
+    "TransporterStackMixin"
   ],
   "injectors": {
     "defaultRequire": 1
