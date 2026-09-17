@@ -249,6 +249,7 @@
     "WaypointAzimuthConnectionMixin",
     "WaypointBlockConnectionMixin",
     "WaypointChunkConnectionMixin",
+    "WitherApproachMixin",
     "WorkAtPoiMixin",
     "WorldBorderCommandMixin",
     "WorldBorderMixin",
