@@ -76,6 +76,14 @@ Circumnavigate the world — walk, sail or fly past the border and come out on t
     ordering="NONE"
     side="CLIENT"
 
+# Simple Clouds dependency — the precipitation folds wrap members the compat was written against in 0.7.3.
+[[dependencies.${mod_id}]]
+    modId="simpleclouds"
+    type="optional"
+    versionRange="[0.7.3,)"
+    ordering="NONE"
+    side="BOTH"
+
 [[mixins]]
 config="toroidal_world.mixins.json"
 
@@ -111,6 +119,9 @@ config="toroidal_world.compat.sable.mixins.json"
 
 [[mixins]]
 config="toroidal_world.compat.aeronautics.mixins.json"
+
+[[mixins]]
+config="toroidal_world.compat.simpleclouds.mixins.json"
 
 [[mixins]]
 config="toroidal_world.neoforge.mixins.json"
