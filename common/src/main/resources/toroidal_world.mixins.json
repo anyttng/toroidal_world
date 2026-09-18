@@ -144,6 +144,8 @@
     "MaceSmashKnockbackMixin",
     "MapItemMixin",
     "MapItemSavedDataMixin",
+    "MinecartFurnaceFuelMixin",
+    "MinecartPushMixin",
     "MinecraftServerMixin",
     "MobEffectUtilMixin",
     "MobMixin",
