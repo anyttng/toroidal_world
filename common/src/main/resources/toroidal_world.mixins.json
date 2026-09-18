@@ -221,6 +221,7 @@
     "ShiftNoiseFunctionCompileMixin",
     "ShootTongueMixin",
     "ShulkerBulletMixin",
+    "SignFacingMixin",
     "SleepInBedMixin",
     "SnifferMixin",
     "SocializeAtBellMixin",
