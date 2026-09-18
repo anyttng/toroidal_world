@@ -249,6 +249,9 @@ dependencies {
     compileOnly "maven.modrinth:mekanism:${mekanism_version}"
     // TerraBlender: plain compileOnly on the neoforge flavor; its layer types carry no game names to remap.
     compileOnly "maven.modrinth:terrablender:${terrablender_version}"
+    // Astikor Carts Redux publishes no fabric build at all: plain compileOnly on the neoforge flavor, and the fabric
+    // jar lists the config nowhere, so the mixin is compiled and never loaded here.
+    compileOnly "maven.modrinth:astikorcarts-redux:${astikorcarts_version}"
 }
 
 // Two jars on this game version, and only the second one ships. Minecraft is obfuscated here, so Loom compiles into a

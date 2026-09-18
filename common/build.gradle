@@ -204,6 +204,7 @@ dependencies {
     compileOnly("dev.ftb.mods:ftb-chunks-neoforge:${ftbchunks_version}") { transitive = false }
     compileOnly("dev.ftb.mods:ftb-library-neoforge:${ftblibrary_version}") { transitive = false }
     compileOnly "maven.modrinth:terrablender:${terrablender_version}"
+    compileOnly "maven.modrinth:astikorcarts-redux:${astikorcarts_version}"
     compileOnly "com.github.bawnorton.mixinsquared:mixinsquared-common:${mixinsquared_version}"
 }
 
