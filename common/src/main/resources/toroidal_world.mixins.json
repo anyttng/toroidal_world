@@ -103,6 +103,8 @@
     "FluidStateInsideMixin",
     "FollowMobGoalMixin",
     "ForceLoadCommandMixin",
+    "FoxPathClearMixin",
+    "FoxPounceGoalMixin",
     "GameEventDispatcherMixin",
     "GameEventListenerInfoMixin",
     "GenerationChunkHolderMixin",
