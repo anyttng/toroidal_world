@@ -58,6 +58,7 @@
     "CloneCommandsMixin",
     "CommandCoordinatesMixin",
     "CommandSourceStackMixin",
+    "ConduitBlockEntityMixin",
     "ConnectionMixin",
     "CreakingMixin",
     "CrossbowItemAimMixin",
