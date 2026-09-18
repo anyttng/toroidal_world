@@ -149,6 +149,8 @@
     "MaterialRuleContextMixin",
     "MaterialRuleContextNoiseMixin",
     "MaterialSystemMixin",
+    "MinecartFurnaceFuelMixin",
+    "MinecartPushMixin",
     "MinecraftServerMixin",
     "MobEffectUtilMixin",
     "MobMixin",
