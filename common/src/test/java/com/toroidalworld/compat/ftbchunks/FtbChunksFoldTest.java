@@ -164,6 +164,32 @@ class FtbChunksFoldTest {
         assertSame(selection, FtbChunksFold.foldedChunks(null, selection), "an unwrapped world was rebuilt");
     }
 
+    @Test
+    void aViewInsideTheWorldKeepsItsScroll() {
+        assertEquals(48.0, FtbChunksFold.clampScroll(AxisCopies.looped(-256, 512), 48.0, -1, 64, 32), 1e-9,
+                "the 256-block view already sits on the world's centre, half a view from either edge");
+    }
+
+    @Test
+    void aViewDraggedPastTheEdgeComesBackToIt() {
+        assertEquals(64.0, FtbChunksFold.clampScroll(AxisCopies.looped(-256, 512), 100.0, -1, 64, 32), 1e-9,
+                "a drag east puts the view centre at block 416, and the eastern edge allows 128");
+        assertEquals(32.0, FtbChunksFold.clampScroll(AxisCopies.looped(-256, 512), 0.0, -1, 64, 32), 1e-9,
+                "a drag west puts the view centre at block -384, and the western edge allows -128");
+    }
+
+    @Test
+    void aWorldNarrowerThanTheViewIsCentred() {
+        assertEquals(48.0, FtbChunksFold.clampScroll(AxisCopies.looped(-64, 128), 200.0, -1, 64, 32), 1e-9,
+                "a 128-block world cannot fill a 256-block view, so the view sits on its centre, block 0");
+    }
+
+    @Test
+    void anAxisThatDoesNotLoopKeepsItsScroll() {
+        assertEquals(100.0, FtbChunksFold.clampScroll(AxisCopies.UNBOUNDED, 100.0, -1, 64, 32), 1e-9,
+                "an unbounded axis has no edge to stop at");
+    }
+
     private static ToroidalShape torus(int widthBlocks) {
         return shape(looped(widthBlocks), looped(widthBlocks));
     }

@@ -29,6 +29,7 @@ public final class FtbChunksFold {
     static final int REGION_CHUNKS = 32;
     private static final int REGION_BLOCKS = 512;
     private static final int CHUNK_BLOCKS = 16;
+    private static final int TILE_PIXELS_PER_ZOOM = 2;
 
     private static final int MINIMAP_CHUNKS = 15;
     private static final int MINIMAP_CENTRE_CHUNK = 7;
@@ -123,6 +124,22 @@ public final class FtbChunksFold {
         }
 
         return pixels;
+    }
+
+    public static double clampScroll(Direction.Axis axis, double scroll, int regionMin, int regionTilePixels,
+            int panelPixels) {
+        return clampScroll(copies(axis), scroll, regionMin, regionTilePixels, panelPixels);
+    }
+
+    static double clampScroll(AxisCopies copies, double scroll, int regionMin, int regionTilePixels, int panelPixels) {
+        double pixelsPerBlock = regionTilePixels / (double) REGION_BLOCKS;
+        double centre = regionMin * (double) REGION_BLOCKS + (scroll + panelPixels / 2.0) / pixelsPerBlock;
+        double clamped = copies.clampView(centre, panelPixels / 2.0 / pixelsPerBlock);
+        return scroll + (clamped - centre) * pixelsPerBlock;
+    }
+
+    public static int tileFloor(int windowWidth, int windowHeight) {
+        return zoomFloor(windowWidth, windowHeight) * TILE_PIXELS_PER_ZOOM;
     }
 
     public static int zoomFloor(int windowWidth, int windowHeight) {

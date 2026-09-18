@@ -7,6 +7,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -51,6 +53,21 @@ public abstract class RegionMapPanelMixin {
 
     @Unique
     private @Nullable SeamView toroidal$seamView;
+
+    @Inject(method = "draw", at = @At("HEAD"))
+    private void toroidal$stopScrollAtTheEdge(GuiGraphics graphics, Theme theme, int x, int y, int w, int h,
+            CallbackInfo ci) {
+        if (MapCopies.current() != MapCopies.SINGLE) {
+            return;
+        }
+
+        RegionMapPanel panel = (RegionMapPanel) (Object) this;
+        int tilePixels = this.largeMap.getRegionTileSize();
+        panel.setScrollX(FtbChunksFold.clampScroll(Direction.Axis.X, panel.getScrollX(), this.regionMinX, tilePixels,
+                panel.width));
+        panel.setScrollY(FtbChunksFold.clampScroll(Direction.Axis.Z, panel.getScrollY(), this.regionMinZ, tilePixels,
+                panel.height));
+    }
 
     // A copy is the same tile blitted again at a lap's offset — never a second pass through Panel.draw, which drags
     // the icons, their pose changes and a fresh texture-id round trip along with it.
@@ -112,7 +129,9 @@ public abstract class RegionMapPanelMixin {
         panel.setOffset(false);
         FtbChunksFold.recordLargeMapCopyRange(reachX, reachZ);
 
-        toroidal$seamView = new SeamView(originX, originY, tilePixels, x, y, w, h);
+        toroidal$seamView = mapCopies == MapCopies.SINGLE
+                ? null
+                : new SeamView(originX, originY, tilePixels, x, y, w, h);
         original.call(panel, graphics, theme, x, y, w, h);
     }
 
