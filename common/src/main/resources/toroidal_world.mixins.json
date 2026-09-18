@@ -91,6 +91,7 @@
     "EyeOfEnderMixin",
     "FillBiomeCommandMixin",
     "FillCommandMixin",
+    "FireworkRocketEntityMixin",
     "FishingHookMixin",
     "FluidStateInsideMixin",
     "FollowMobGoalMixin",
