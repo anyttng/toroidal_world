@@ -215,6 +215,7 @@
     "ShulkerBulletMixin",
     "SimplexNoiseAccessor",
     "SleepInBedMixin",
+    "SnifferMixin",
     "SocializeAtBellMixin",
     "SonicBoomAimMixin",
     "SpreadPlayersCommandMixin",
