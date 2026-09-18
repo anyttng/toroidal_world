@@ -60,6 +60,7 @@
     "CommandSourceStackMixin",
     "ConduitBlockEntityMixin",
     "ConnectionMixin",
+    "CreakingHeartBlockEntityMixin",
     "CreakingHomeNodeMixin",
     "CreakingMixin",
     "CrossbowItemAimMixin",
