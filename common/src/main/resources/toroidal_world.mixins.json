@@ -107,6 +107,7 @@
     "GoAndGiveItemsToTargetMixin",
     "GoToTargetLocationMixin",
     "GoalUtilsMixin",
+    "HappyGhastMixin",
     "HarvestFarmlandMixin",
     "HoglinBaseMixin",
     "HoneyBlockMixin",
