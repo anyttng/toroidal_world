@@ -220,6 +220,7 @@
     "SetWorldSpawnCommandMixin",
     "ShootTongueMixin",
     "ShulkerBulletMixin",
+    "SignFacingMixin",
     "SimplexNoiseAccessor",
     "SleepInBedMixin",
     "SnifferMixin",
