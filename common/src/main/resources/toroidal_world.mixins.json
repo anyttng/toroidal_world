@@ -59,6 +59,7 @@
     "CommandSourceStackMixin",
     "ConduitBlockEntityMixin",
     "ConnectionMixin",
+    "CreakingHomeNodeMixin",
     "CreakingMixin",
     "CrossbowItemAimMixin",
     "DedicatedServerMixin",
