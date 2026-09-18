@@ -35,8 +35,7 @@ public class StrollThroughVillageGoalMixin {
 
     @ModifyExpressionValue(
             method = "tick",
-            at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/world/phys/Vec3;atBottomCenterOf(Lnet/minecraft/core/Vec3i;)Lnet/minecraft/world/phys/Vec3;"))
+            at = @At(value = "INVOKE", target = InjectionTargets.VEC3_AT_BOTTOM_CENTER_OF))
     private Vec3 toroidal$strollTargetThroughSeam(Vec3 strollTarget) {
         return SeamSteering.nearestCopy(this.mob, strollTarget);
     }
