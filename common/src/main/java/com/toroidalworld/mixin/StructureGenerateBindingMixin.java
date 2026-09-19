@@ -4,6 +4,7 @@ import java.util.function.Predicate;
 
 import org.spongepowered.asm.mixin.Mixin;
 
+import com.toroidalworld.BinderOrder;
 import com.toroidalworld.core.ShapedChunkGenerator;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
@@ -26,7 +27,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 
 @Mixin(Structure.class)
 public class StructureGenerateBindingMixin {
-    @WrapMethod(method = "generate")
+    @WrapMethod(method = "generate", order = BinderOrder.FOLD)
     private StructureStart toroidal$generateOnThisWorldsNoise(
             Holder<Structure> selected,
             ResourceKey<Level> dimension,
