@@ -133,6 +133,61 @@ class WrapDomainTest {
     }
 
     @Nested
+    class TooFarToLap {
+        @Test
+        void infinitiesComeBackUntouched() {
+            for (WrapDomain domain : DOMAINS) {
+                assertEquals(Double.POSITIVE_INFINITY, domain.wrap(Double.POSITIVE_INFINITY), in(domain));
+                assertEquals(Double.NEGATIVE_INFINITY, domain.wrap(Double.NEGATIVE_INFINITY), in(domain));
+                assertEquals(0, domain.lapsOver(Double.POSITIVE_INFINITY), in(domain));
+                assertEquals(0, domain.lapsOver(Double.NEGATIVE_INFINITY), in(domain));
+            }
+        }
+
+        @Test
+        void notANumberComesBackUntouched() {
+            for (WrapDomain domain : DOMAINS) {
+                assertEquals(Double.NaN, domain.wrap(Double.NaN), in(domain));
+                assertEquals(0, domain.lapsOver(Double.NaN), in(domain));
+            }
+        }
+
+        @Test
+        void aCoordinateTooFarToLapComesBackUntouched() {
+            for (WrapDomain domain : DOMAINS) {
+                double beyond = domain.lowerBound + (double) domain.domainLength * ((double) Integer.MAX_VALUE + 2.0);
+                assertEquals(beyond, domain.wrap(beyond), in(domain));
+                assertEquals(0, domain.lapsOver(beyond), in(domain));
+                assertEquals(-beyond, domain.wrap(-beyond), in(domain));
+                assertEquals(0, domain.lapsOver(-beyond), in(domain));
+            }
+        }
+
+        @Test
+        void theLastLappableCoordinateStillFolds() {
+            for (WrapDomain domain : DOMAINS) {
+                double reachable = domain.lowerBound + (double) domain.domainLength * (Integer.MAX_VALUE - 1);
+                double wrapped = domain.wrap(reachable);
+                assertFalse(domain.isOver(wrapped), () -> "wrap(" + reachable + ") = " + wrapped + " " + in(domain));
+                assertEquals(Integer.MAX_VALUE - 1, domain.lapsOver(reachable), in(domain));
+            }
+        }
+
+        @Test
+        void shiftTowardStandsStillWhenItsShiftDoesNotFit() {
+            for (WrapDomain domain : DOMAINS) {
+                assertEquals(0, domain.shiftToward(0.0, Double.POSITIVE_INFINITY), in(domain));
+                assertEquals(0, domain.shiftToward(0.0, Double.NEGATIVE_INFINITY), in(domain));
+                assertEquals(0, domain.shiftToward(0.0, Double.NaN), in(domain));
+
+                double beyond = (double) domain.domainLength * ((double) Integer.MAX_VALUE + 2.0);
+                assertEquals(0, domain.shiftToward(0.0, beyond), in(domain));
+                assertEquals(0, domain.shiftToward(Integer.MIN_VALUE, Integer.MAX_VALUE), in(domain));
+            }
+        }
+    }
+
+    @Nested
     class WidthVariants {
         @Test
         void oddWidthFoldsBothWays() {
