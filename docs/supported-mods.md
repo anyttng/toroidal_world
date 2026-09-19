@@ -1,12 +1,12 @@
 # Supported Mods
 
-Toroidal World ships for Minecraft 26.3, 26.2, 26.1.2 and 1.21.1, on NeoForge and Fabric. The mods below are grouped by what they do, and inside each group they run in this order: **supported**; **partially supported**, where the mod is folded across the seam and the limits left are named beside it; **no seam support**, where the mod runs but nothing folds it across the seam; and **not tested**, where nobody has run it against a shaped world yet.
+Toroidal World ships for Minecraft 26.3, 26.2, 26.1.2 and 1.21.1, on NeoForge and Fabric. The mods below are grouped by what they do, and inside each group they run in this order: **no patch needed**, where the mod already works on a toroidal world and Toroidal World carries no code for it; **supported**, where it works because Toroidal World carries code for it; **partially supported**, where the mod is folded across the seam and the limits left are named beside it; **no seam support**, where the mod runs but nothing folds it across the seam; and **not tested**, where nobody has run it against a shaped world yet.
 
 ## Rendering and performance
 
 | Mod | Minecraft | Loaders | Status | Notes |
 | --- | --- | --- | --- | --- |
-| [Sodium](https://modrinth.com/mod/sodium) and [Iris Shaders](https://modrinth.com/mod/iris) | All | NeoForge, Fabric | Supported | |
+| [Sodium](https://modrinth.com/mod/sodium) and [Iris Shaders](https://modrinth.com/mod/iris) | All | NeoForge, Fabric | No patch needed | |
 | [Lithium](https://modrinth.com/mod/lithium) | All | NeoForge, Fabric | Supported | |
 | [C2ME](https://modrinth.com/mod/c2me-fabric) | All | NeoForge, Fabric | Supported | |
 | ScalableLux | All | NeoForge, Fabric | Supported | |
@@ -47,15 +47,16 @@ Toroidal World ships for Minecraft 26.3, 26.2, 26.1.2 and 1.21.1, on NeoForge an
 
 | Mod | Minecraft | Loaders | Status | Notes |
 | --- | --- | --- | --- | --- |
-| [Polymer](https://modrinth.com/mod/polymer)-based mods, such as [Lootr](https://modrinth.com/mod/lootr) | 26.2, 26.1.2, 1.21.1 | NeoForge, Fabric | Supported | |
+| [Polymer](https://modrinth.com/mod/polymer)-based mods, such as [Lootr](https://modrinth.com/mod/lootr) | 26.2, 26.1.2, 1.21.1 | NeoForge, Fabric | No patch needed | |
 
 ## World generation
 
 | Mod | Minecraft | Loaders | Status | Notes |
 | --- | --- | --- | --- | --- |
-| [Old Continents](https://www.curseforge.com/minecraft/mc-mods/old-continents) | 26.2 | NeoForge | Supported | |
-| Continents | 26.2, 26.1.2, 1.21.1 | NeoForge | Supported | |
-| Streams Reflowing | All | NeoForge | Supported | |
-| Tectonic | All | NeoForge, Fabric | Supported | |
+| [Old Continents](https://www.curseforge.com/minecraft/mc-mods/old-continents) | 26.2 | NeoForge | No patch needed | |
+| Continents | 26.2, 26.1.2, 1.21.1 | NeoForge | No patch needed | |
+| Streams Reflowing | All | NeoForge | No patch needed | |
+| Tectonic | All | NeoForge, Fabric | No patch needed | |
+| Fast Noise | 26.3, 26.2, 1.21.1 | NeoForge, Fabric | No patch needed | |
 | One Dimension | — | — | Not tested | |
 | BetterEnd and BetterNether | — | — | Not tested | |
