@@ -170,6 +170,7 @@
     "NoiseChunkAquiferCellsMixin",
     "NoiseFunctionCompileMixin",
     "NoiseThresholdCountPlacementMixin",
+    "OfferFlowerGoalMixin",
     "ParrotMixin",
     "PathMixin",
     "PathNavigationAccessor",
