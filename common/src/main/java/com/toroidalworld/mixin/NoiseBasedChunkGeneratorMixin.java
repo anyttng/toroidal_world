@@ -2,6 +2,7 @@ package com.toroidalworld.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
 
+import com.toroidalworld.BinderOrder;
 import com.toroidalworld.core.ShapedChunkGenerator;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
@@ -15,7 +16,7 @@ import net.minecraft.world.level.levelgen.blending.Blender;
 
 @Mixin(NoiseBasedChunkGenerator.class)
 public class NoiseBasedChunkGeneratorMixin {
-    @WrapMethod(method = "doFill")
+    @WrapMethod(method = "doFill", order = BinderOrder.FOLD)
     private ChunkAccess toroidal$bindWhileFilling(
             Blender blender,
             StructureManager structureManager,
@@ -29,7 +30,7 @@ public class NoiseBasedChunkGeneratorMixin {
                 () -> original.call(blender, structureManager, randomState, centerChunk, cellYMin, cellCountY));
     }
 
-    @WrapMethod(method = "doCreateBiomes")
+    @WrapMethod(method = "doCreateBiomes", order = BinderOrder.FOLD)
     private void toroidal$bindWhileCreatingBiomes(
             Blender blender,
             RandomState randomState,
