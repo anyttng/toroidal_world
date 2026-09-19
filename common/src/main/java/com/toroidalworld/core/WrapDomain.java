@@ -8,6 +8,7 @@ public class WrapDomain {
     public final int domainLength;
 
     private final int seamRadius;
+    private final int maxShiftLaps;
 
     private final double halfLength;
 
@@ -16,6 +17,7 @@ public class WrapDomain {
         this.upperBound = upperBound;
         this.domainLength = Math.abs(upperBound - lowerBound);
         this.seamRadius = this.domainLength / 2;
+        this.maxShiftLaps = Integer.MAX_VALUE / Math.max(this.domainLength, 1);
         this.halfLength = this.domainLength / 2.0;
     }
 
@@ -24,7 +26,12 @@ public class WrapDomain {
             return 0;
         }
 
-        long laps = (long) Math.floor((coord - lowerBound) / domainLength);
+        double quotient = Math.floor((coord - lowerBound) / domainLength);
+        if (!(quotient > Integer.MIN_VALUE && quotient <= Integer.MAX_VALUE)) {
+            return 0;
+        }
+
+        long laps = (long) quotient;
         if (coord - (double) laps * domainLength < lowerBound) {
             laps--;
         }
@@ -37,7 +44,12 @@ public class WrapDomain {
             return coord;
         }
 
-        double wrapped = coord - (double) lapsOver(coord) * domainLength;
+        int laps = lapsOver(coord);
+        if (laps == 0) {
+            return coord;
+        }
+
+        double wrapped = coord - (double) laps * domainLength;
         return wrapped >= upperBound ? lowerBound : wrapped;
     }
 
@@ -68,7 +80,11 @@ public class WrapDomain {
     }
 
     private int lapShift(long laps) {
-        return laps == 0 ? 0 : Math.toIntExact(Math.multiplyExact(-laps, (long) domainLength));
+        if (laps == 0 || laps > maxShiftLaps || laps < -maxShiftLaps) {
+            return 0;
+        }
+
+        return (int) (-laps * domainLength);
     }
 
     private double lapsToward(double refCoord, double coord) {
