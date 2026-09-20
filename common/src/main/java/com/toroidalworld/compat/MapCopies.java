@@ -1,12 +1,24 @@
 package com.toroidalworld.compat;
 
-import com.toroidalworld.platform.Platforms;
+import java.util.Optional;
+
+import com.toroidalworld.settings.SettingsService;
 
 public enum MapCopies {
     REPEATED,
     SINGLE;
 
     public static MapCopies current() {
-        return Platforms.get().mapCopies();
+        return SettingsService.get().settings().mapCopies();
+    }
+
+    public static Optional<MapCopies> fromName(String name) {
+        for (MapCopies copies : values()) {
+            if (copies.name().equalsIgnoreCase(name.strip())) {
+                return Optional.of(copies);
+            }
+        }
+
+        return Optional.empty();
     }
 }

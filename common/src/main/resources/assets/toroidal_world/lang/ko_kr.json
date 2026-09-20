@@ -59,8 +59,9 @@
   "gui.toroidal_world.cylinder_settings.axis": "순환 축",
   "gui.toroidal_world.cylinder_settings.axis_hint": "세계는 이 축을 따라 순환하고, 다른 축을 따라서는 끝없이 이어집니다.",
 
-  "toroidal_world.configuration.mapCopies": "전체 화면 지도의 세계 복사본",
-  "toroidal_world.configuration.mapCopies.tooltip": "지도 모드가 순환하는 세계를 전체 화면으로 보여 주는 방식입니다. '반복'은 창 전체를 세계의 복사본으로 채우고, '하나만'은 세계를 한 번만 보여 주며 가장자리 너머로 지도를 옮기거나 축소할 수 없게 합니다. 미니맵은 항상 반복해서 보여 줍니다.",
-  "toroidal_world.configuration.mapCopies.repeated": "반복",
-  "toroidal_world.configuration.mapCopies.single": "하나만"
+  "gui.toroidal_world.settings.title": "토로이드형 세계 설정",
+  "gui.toroidal_world.settings.map_copies": "전체 화면 지도의 세계 복사본",
+  "gui.toroidal_world.settings.map_copies_hint": "지도 모드가 순환하는 세계를 전체 화면으로 보여 주는 방식입니다. '반복'은 창 전체를 세계의 복사본으로 채우고, '하나만'은 세계를 한 번만 보여 주며 가장자리 너머로 지도를 옮기거나 축소할 수 없게 합니다. 미니맵은 항상 반복해서 보여 줍니다.",
+  "gui.toroidal_world.settings.map_copies.repeated": "반복",
+  "gui.toroidal_world.settings.map_copies.single": "하나만"
 }
