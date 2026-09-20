@@ -18,11 +18,13 @@ import net.minecraft.world.level.levelgen.synth.PerlinNoise;
 public final class ReplacementNoiseFold {
     public static final double NOT_FOLDED = Double.NaN;
 
-    private static final double OPEN_SIMPLEX_FLAT_AMPLITUDE = 1.848;
+    private static final double OPEN_SIMPLEX_FLAT_AMPLITUDE = 1.971;
 
-    private static final double OPEN_SIMPLEX_VOLUME_AMPLITUDE = 1.315;
+    private static final double OPEN_SIMPLEX_VOLUME_AMPLITUDE = 1.489;
 
-    private static final double OPEN_SIMPLEX_COLUMN_RATE = 0.5087;
+    private static final double OPEN_SIMPLEX_ROW_RATE = 0.667;
+
+    private static final double OPEN_SIMPLEX_COLUMN_RATE = 0.707;
 
     private static final int FLAT_QUART_Y = 0;
 
@@ -76,7 +78,8 @@ public final class ReplacementNoiseFold {
         double sum = 0.0;
         for (int octave = 0; octave < this.weights.length; octave++) {
             ImprovedNoise noise = resolved.noises()[octave];
-            double scale = 1.0 / (scaleQuarts[this.horizontalScaleSlots[octave]] * BLOCKS_PER_QUART);
+            double horizontalQuarts = scaleQuarts[this.horizontalScaleSlots[octave]] * OPEN_SIMPLEX_ROW_RATE;
+            double scale = 1.0 / (horizontalQuarts * BLOCKS_PER_QUART);
             double verticalQuarts = scaleQuarts[this.verticalScaleSlots[octave]] * OPEN_SIMPLEX_COLUMN_RATE;
             double verticalScale = 1.0 / (verticalQuarts * BLOCKS_PER_QUART);
             try (Context.ScaleScope scope = context.withScale(scale)) {
