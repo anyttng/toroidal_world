@@ -48,7 +48,7 @@ public final class PeriodicNoiseSampler {
                 fudgeYScale, LapFloor.of(transformer));
     }
 
-    static float sample(byte[] permutations, double xOffset, double yOffset, double zOffset,
+    public static float sample(byte[] permutations, double xOffset, double yOffset, double zOffset,
             WorldFold transformer, NoiseFrame frame, double scale, double x, double y, double z, LapFloor floor) {
         return sample(permutations, xOffset, yOffset, zOffset, transformer, frame, scale, x, y, z, y, NO_FUDGE,
                 floor);

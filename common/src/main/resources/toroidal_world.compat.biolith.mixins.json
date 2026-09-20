@@ -1,0 +1,13 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.toroidalworld.compat.biolith.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "plugin": "com.toroidalworld.compat.biolith.BiolithMixinPlugin",
+  "mixins": [
+    "OverworldBiomePlacementMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

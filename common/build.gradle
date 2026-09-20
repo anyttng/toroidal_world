@@ -100,6 +100,7 @@ dependencies {
     compileOnly "maven.modrinth:xaeros-minimap:${xaero_minimap_version}"
     compileOnly "maven.modrinth:xaeros-world-map:${xaero_worldmap_version}"
     compileOnly "maven.modrinth:distanthorizons:${distanthorizons_version}"
+    compileOnly "maven.modrinth:biolith:${biolith_version}"
     compileOnly files(xaeroLibJars).asFileTree.matching { include '*.jar' }
     compileOnly "com.github.bawnorton.mixinsquared:mixinsquared-common:${mixinsquared_version}"
 }
@@ -114,6 +115,8 @@ dependencies {
     testRuntimeOnly files(c2meModuleJars).asFileTree.matching { include '*.jar' }
     testCompileOnly "maven.modrinth:distanthorizons:${distanthorizons_version}"
     testRuntimeOnly "maven.modrinth:distanthorizons:${distanthorizons_version}"
+    testCompileOnly "maven.modrinth:biolith:${biolith_version}"
+    testRuntimeOnly "maven.modrinth:biolith:${biolith_version}"
     // The compat jars and Mixin on the test runtime alone: what the gate-symbol tests read is the class file each
     // gate names, and a config plugin cannot even load without IMixinConfigPlugin.
     testRuntimeOnly "maven.modrinth:journeymap:${journeymap_version}"
