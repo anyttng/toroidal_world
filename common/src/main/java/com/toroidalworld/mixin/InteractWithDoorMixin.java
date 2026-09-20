@@ -2,10 +2,12 @@ package com.toroidalworld.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 import com.toroidalworld.InjectionTargets;
 import com.toroidalworld.accessors.TransformerSource;
 import com.toroidalworld.core.WorldFold;
+import com.toroidalworld.core.WorldLoopAttachments;
 import com.toroidalworld.engine.fold.NearestCopy;
 import com.toroidalworld.engine.seam.SeamRange;
 import com.toroidalworld.engine.seam.SeamSteering;
@@ -16,6 +18,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Position;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.Brain;
 import net.minecraft.world.entity.ai.behavior.InteractWithDoor;
@@ -50,5 +53,11 @@ public class InteractWithDoorMixin {
     private static boolean toroidal$otherMobsDoorwayThroughSeam(Brain<?> otherBrain, BlockPos doorPos,
             Operation<Boolean> original, @Local(argsOnly = true) LivingEntity otherMob) {
         return original.call(otherBrain, SeamSteering.nearestCopy(otherMob, doorPos));
+    }
+
+    @ModifyVariable(method = "rememberDoorToClose", at = @At("HEAD"), argsOnly = true)
+    private static BlockPos toroidal$rememberedDoorCanonical(BlockPos doorPos,
+            @Local(argsOnly = true) ServerLevel level) {
+        return WorldLoopAttachments.transformerOf(level).fold(doorPos);
     }
 }
