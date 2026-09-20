@@ -5,12 +5,13 @@ import com.toroidalworld.compat.ModPresence;
 import com.toroidalworld.compat.ModSymbol;
 
 public final class C2meOctaveNoise {
-    static final ModSymbol OCTAVE_SAMPLER_VALUE = new ModSymbol(
-            "com/ishland/c2me/opts/math/mixin/MixinOctavePerlinNoiseSampler", "getValue", "(DDD)D");
+    private static final String OCTAVE_SAMPLER = "com/ishland/c2me/opts/math/mixin/MixinOctavePerlinNoiseSampler";
 
-    private static final ModPresence GATE = ModPresence.of(LogUtils.getLogger(),
-            "com/ishland/c2me/opts/math/mixin/MixinOctavePerlinNoiseSampler.class",
-            "[c2me-compat] gate octave_noise_present", OCTAVE_SAMPLER_VALUE);
+    static final ModSymbol OCTAVE_SAMPLER_INIT_HANDLER = new ModSymbol(OCTAVE_SAMPLER, "onInit",
+            "(Lorg/spongepowered/asm/mixin/injection/callback/CallbackInfo;)V");
+
+    private static final ModPresence GATE = ModPresence.of(LogUtils.getLogger(), OCTAVE_SAMPLER + ".class",
+            "[c2me-compat] gate octave_noise_present", OCTAVE_SAMPLER_INIT_HANDLER);
 
     public static boolean present() {
         return GATE.present();
