@@ -195,6 +195,7 @@
     "PoiManagerMixin",
     "PortalForcerMixin",
     "PrepareRamNearestTargetMixin",
+    "ProjectileMixin",
     "ProjectileUtilMixin",
     "ProtoChunkMixin",
     "RaidMixin",
