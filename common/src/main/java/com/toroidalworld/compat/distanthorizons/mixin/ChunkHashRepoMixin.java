@@ -20,13 +20,8 @@ public class ChunkHashRepoMixin {
         return original.call(statement, index, DhKeys.foldChunk(DhRepoLevel.shapeOf(this), pos));
     }
 
-    @WrapMethod(method = "createInsertStatement(Lcom/seibel/distanthorizons/core/sql/dto/ChunkHashDTO;)Ljava/sql/PreparedStatement;")
-    private PreparedStatement toroidal$foldInsert(ChunkHashDTO dto, Operation<PreparedStatement> original) {
-        return DhKeys.withFoldedKey(DhRepoLevel.shapeOf(this), dto, () -> original.call(dto));
-    }
-
-    @WrapMethod(method = "createUpdateStatement(Lcom/seibel/distanthorizons/core/sql/dto/ChunkHashDTO;)Ljava/sql/PreparedStatement;")
-    private PreparedStatement toroidal$foldUpdate(ChunkHashDTO dto, Operation<PreparedStatement> original) {
+    @WrapMethod(method = "createUpsertStatement(Lcom/seibel/distanthorizons/core/sql/dto/ChunkHashDTO;)Ljava/sql/PreparedStatement;")
+    private PreparedStatement toroidal$foldUpsert(ChunkHashDTO dto, Operation<PreparedStatement> original) {
         return DhKeys.withFoldedKey(DhRepoLevel.shapeOf(this), dto, () -> original.call(dto));
     }
 }

@@ -142,8 +142,6 @@ sourceSets.test.java.srcDir '../common/src/loaderTest/java'
 // The scans are measurements over the same folded router, run by the scan tool rather than by the gate.
 sourceSets.test.java.srcDir '../common/src/scan/java'
 
-sourceSets.test.java.exclude(rootProject.unportedCompat)
-
 test {
     useJUnitPlatform()
     filter {
