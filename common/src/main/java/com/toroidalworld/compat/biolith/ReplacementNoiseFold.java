@@ -20,7 +20,9 @@ public final class ReplacementNoiseFold {
 
     private static final double OPEN_SIMPLEX_FLAT_AMPLITUDE = 1.848;
 
-    private static final double OPEN_SIMPLEX_VOLUME_AMPLITUDE = 1.281;
+    private static final double OPEN_SIMPLEX_VOLUME_AMPLITUDE = 1.315;
+
+    private static final double OPEN_SIMPLEX_COLUMN_RATE = 0.5087;
 
     private static final int FLAT_QUART_Y = 0;
 
@@ -75,7 +77,8 @@ public final class ReplacementNoiseFold {
         for (int octave = 0; octave < this.weights.length; octave++) {
             ImprovedNoise noise = resolved.noises()[octave];
             double scale = 1.0 / (scaleQuarts[this.horizontalScaleSlots[octave]] * BLOCKS_PER_QUART);
-            double verticalScale = 1.0 / (scaleQuarts[this.verticalScaleSlots[octave]] * BLOCKS_PER_QUART);
+            double verticalQuarts = scaleQuarts[this.verticalScaleSlots[octave]] * OPEN_SIMPLEX_COLUMN_RATE;
+            double verticalScale = 1.0 / (verticalQuarts * BLOCKS_PER_QUART);
             try (Context.ScaleScope scope = context.withScale(scale)) {
                 sum += this.weights[octave] * PeriodicNoiseSampler.sample(noise.p, noise.xo, noise.yo, noise.zo,
                         fold, context, x, PerlinNoise.wrap(y * verticalScale), z, NO_Y_SCALE, NO_FUDGE);
