@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_25",
   "plugin": "com.toroidalworld.compat.biolith.BiolithMixinPlugin",
   "mixins": [
+    "NetherBiomePlacementMixin",
     "OverworldBiomePlacementMixin"
   ],
   "injectors": {
