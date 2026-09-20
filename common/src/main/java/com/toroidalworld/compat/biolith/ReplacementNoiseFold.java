@@ -1,5 +1,7 @@
 package com.toroidalworld.compat.biolith;
 
+import java.util.stream.IntStream;
+
 import org.jspecify.annotations.Nullable;
 
 import com.toroidalworld.core.WorldFold;
@@ -11,6 +13,7 @@ import com.toroidalworld.engine.noise.PeriodicNoiseSampler;
 import net.minecraft.core.QuartPos;
 import net.minecraft.world.level.levelgen.LegacyRandomSource;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
+import net.minecraft.world.level.levelgen.synth.GradientNoise;
 import net.minecraft.world.level.levelgen.synth.PerlinNoise;
 
 public final class ReplacementNoiseFold {
@@ -18,18 +21,30 @@ public final class ReplacementNoiseFold {
 
     private static final NoiseFrame UNDAMPED_FRAME = NoiseFrame.UNDECLARED;
 
-    private static final double OPEN_SIMPLEX_AMPLITUDE = 1.848;
+    private static final double OPEN_SIMPLEX_FLAT_AMPLITUDE = 1.848;
 
-    private static final double FLAT_Y = 0.0;
+    private static final double OPEN_SIMPLEX_VOLUME_AMPLITUDE = 1.281;
+
+    private static final int FLAT_QUART_Y = 0;
 
     private static final double BLOCKS_PER_QUART = 4.0;
 
     private final double[] weights;
 
+    private final int[] horizontalScaleSlots;
+
+    private final int[] verticalScaleSlots;
+
     private volatile @Nullable Octaves octaves;
 
     public ReplacementNoiseFold(double... weights) {
+        this(weights, IntStream.range(0, weights.length).toArray(), IntStream.range(0, weights.length).toArray());
+    }
+
+    public ReplacementNoiseFold(double[] weights, int[] horizontalScaleSlots, int[] verticalScaleSlots) {
         this.weights = weights.clone();
+        this.horizontalScaleSlots = horizontalScaleSlots.clone();
+        this.verticalScaleSlots = verticalScaleSlots.clone();
     }
 
     public static boolean folded(double sum) {
@@ -37,6 +52,14 @@ public final class ReplacementNoiseFold {
     }
 
     public double sum(long seed, double[] scaleQuarts, int quartX, int quartZ) {
+        return sum(seed, scaleQuarts, quartX, FLAT_QUART_Y, quartZ, OPEN_SIMPLEX_FLAT_AMPLITUDE);
+    }
+
+    public double sum(long seed, double[] scaleQuarts, int quartX, int quartY, int quartZ) {
+        return sum(seed, scaleQuarts, quartX, quartY, quartZ, OPEN_SIMPLEX_VOLUME_AMPLITUDE);
+    }
+
+    private double sum(long seed, double[] scaleQuarts, int quartX, int quartY, int quartZ, double amplitude) {
         WorldFold fold = GenerationTransformerContext.context().wrappedTransformer();
         if (fold == null) {
             return NOT_FOLDED;
@@ -44,16 +67,19 @@ public final class ReplacementNoiseFold {
 
         Octaves resolved = octavesFor(seed);
         double x = QuartPos.toBlock(quartX);
+        double y = QuartPos.toBlock(quartY);
         double z = QuartPos.toBlock(quartZ);
         double sum = 0.0;
         for (int octave = 0; octave < this.weights.length; octave++) {
             PerlinNoise noise = resolved.noises()[octave];
-            double scale = 1.0 / (scaleQuarts[octave] * BLOCKS_PER_QUART);
+            double scale = 1.0 / (scaleQuarts[this.horizontalScaleSlots[octave]] * BLOCKS_PER_QUART);
+            double verticalScale = 1.0 / (scaleQuarts[this.verticalScaleSlots[octave]] * BLOCKS_PER_QUART);
             sum += this.weights[octave] * PeriodicNoiseSampler.sample(noise.perms, noise.offsetX, noise.offsetY,
-                    noise.offsetZ, fold, UNDAMPED_FRAME, scale, x, FLAT_Y, z, LapFloor.of(fold));
+                    noise.offsetZ, fold, UNDAMPED_FRAME, scale, x, GradientNoise.wrap(y * verticalScale), z,
+                    LapFloor.of(fold));
         }
 
-        return sum * OPEN_SIMPLEX_AMPLITUDE;
+        return sum * amplitude;
     }
 
     private Octaves octavesFor(long seed) {
