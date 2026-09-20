@@ -45,7 +45,23 @@ class ReplacementNoiseFoldTest {
 
     private static final int COLUMNS_PER_AXIS = 16;
 
-    private static final double NETHER_COLUMN_RATE = 1.0;
+    private static final double REGION_SIZE_RATIO = 1.0;
+
+    private static final double REGION_TOLERANCE = 0.1;
+
+    private static final int REGION_LINES = 384;
+
+    private static final int OVERWORLD_LINE_SAMPLES = 1024;
+
+    private static final int OVERWORLD_LINE_STRIDE_QUARTS = 8;
+
+    private static final int NETHER_LINE_SAMPLES = 2048;
+
+    private static final int NETHER_ROW_STRIDE_QUARTS = 4;
+
+    private static final int NETHER_COLUMN_STRIDE_QUARTS = 1;
+
+    private static final int LINE_QUART_Y_BOUND = 4096;
 
     private static final double NORMALIZE_GAIN = 0.5375;
 
@@ -66,6 +82,8 @@ class ReplacementNoiseFoldTest {
     private static final WorldFold HUGE = torus(-256, 256);
 
     private static final WorldFold NETHER_SCALED = torus(-32, 32);
+
+    private static final WorldFold UNFLOORED = torus(-2048, 2048);
 
     private static WorldFold torus(int chunkMin, int chunkMax) {
         return WorldFolds.of(FlatShape.torus(new WorldLoopBounds(chunkMin, chunkMax, chunkMin, chunkMax)));
@@ -149,6 +167,10 @@ class ReplacementNoiseFoldTest {
         double at(int quartX, int quartY, int quartZ);
     }
 
+    private interface Line {
+        double at(int quartX, int quartY, int quartZ, int offset);
+    }
+
     private static Field foldedField(WorldFold transformer) {
         ReplacementNoiseFold fold = fold();
         return (quartX, quartZ) -> normalize(folded(fold, transformer, quartX, quartZ));
@@ -174,15 +196,6 @@ class ReplacementNoiseFoldTest {
     private static Column netherColumn(WorldFold transformer) {
         ReplacementNoiseFold fold = netherFold();
         return (quartX, quartY, quartZ) -> foldedNether(fold, transformer, quartX, quartY, quartZ);
-    }
-
-    private static Column biolithNetherColumn() {
-        OpenSimplexNoise2 noise = new OpenSimplexNoise2(WORLD_SEED);
-        return (quartX, quartY, quartZ) -> biolithNetherSum(noise, quartX, quartY, quartZ);
-    }
-
-    private static double mean(double[] values) {
-        return Arrays.stream(values).average().orElseThrow();
     }
 
     private static Spread spread(WorldFold transformer, Field field) {
@@ -214,6 +227,34 @@ class ReplacementNoiseFoldTest {
         }
 
         return (double) below / (SAMPLES_PER_AXIS * SAMPLES_PER_AXIS);
+    }
+
+    private static double crossingsPerQuart(WorldFold transformer, Line line, int samples, int strideQuarts) {
+        int lapQuarts = transformer.blockDomain(Direction.Axis.X).domainLength / 4;
+        int minQuart = transformer.blockDomain(Direction.Axis.X).lowerBound / 4;
+        Random random = new Random(WORLD_SEED);
+        long crossed = 0L;
+        for (int index = 0; index < REGION_LINES; index++) {
+            int quartX = minQuart + random.nextInt(lapQuarts);
+            int quartZ = minQuart + random.nextInt(lapQuarts);
+            int quartY = random.nextInt(LINE_QUART_Y_BOUND);
+            boolean above = line.at(quartX, quartY, quartZ, 0) > 0.0;
+            for (int sample = 1; sample < samples; sample++) {
+                boolean now = line.at(quartX, quartY, quartZ, sample * strideQuarts) > 0.0;
+                if (now != above) {
+                    crossed++;
+                    above = now;
+                }
+            }
+        }
+
+        return (double) crossed / ((double) REGION_LINES * samples * strideQuarts);
+    }
+
+    private static void assertRegionSize(double ours, double biolith) {
+        double ratio = ours / biolith;
+        assertTrue(Math.abs(ratio - REGION_SIZE_RATIO) <= REGION_TOLERANCE,
+                "crossings per quart ours=" + ours + ", biolith=" + biolith + ", ratio=" + ratio);
     }
 
     private static double[] columnDeviations(WorldFold transformer, Column column) {
@@ -282,6 +323,19 @@ class ReplacementNoiseFoldTest {
         }
 
         @Test
+        void regionsRunAsWideAsBiolithsWhereNoOctaveIsFloored() {
+            ReplacementNoiseFold fold = fold();
+            OpenSimplexNoise2 noise = new OpenSimplexNoise2(WORLD_SEED);
+            double ours = crossingsPerQuart(UNFLOORED, (quartX, quartY, quartZ, offset) ->
+                    folded(fold, UNFLOORED, quartX + offset, quartZ),
+                    OVERWORLD_LINE_SAMPLES, OVERWORLD_LINE_STRIDE_QUARTS);
+            double biolith = crossingsPerQuart(UNFLOORED, (quartX, quartY, quartZ, offset) ->
+                    biolithSum(noise, quartX + offset, quartZ),
+                    OVERWORLD_LINE_SAMPLES, OVERWORLD_LINE_STRIDE_QUARTS);
+            assertRegionSize(ours, biolith);
+        }
+
+        @Test
         void splitsTheReplacementRangeOnAHugeWorld() {
             assertSplitHolds(HUGE);
         }
@@ -328,12 +382,29 @@ class ReplacementNoiseFoldTest {
         }
 
         @Test
-        void columnsMoveWithYAtBiolithsRate() {
-            double ours = mean(columnDeviations(HUGE, netherColumn(HUGE)));
-            double biolith = mean(columnDeviations(HUGE, biolithNetherColumn()));
-            double rate = ours / biolith;
-            assertTrue(Math.abs(rate - NETHER_COLUMN_RATE) <= SPREAD_RATIO_TOLERANCE * NETHER_COLUMN_RATE,
-                    "ours=" + ours + ", biolith=" + biolith + ", rate=" + rate);
+        void regionsRunAsWideAsBiolithsWhereNoOctaveIsFloored() {
+            ReplacementNoiseFold fold = netherFold();
+            OpenSimplexNoise2 noise = new OpenSimplexNoise2(WORLD_SEED);
+            double ours = crossingsPerQuart(UNFLOORED, (quartX, quartY, quartZ, offset) ->
+                    foldedNether(fold, UNFLOORED, quartX + offset, quartY, quartZ),
+                    NETHER_LINE_SAMPLES, NETHER_ROW_STRIDE_QUARTS);
+            double biolith = crossingsPerQuart(UNFLOORED, (quartX, quartY, quartZ, offset) ->
+                    biolithNetherSum(noise, quartX + offset, quartY, quartZ),
+                    NETHER_LINE_SAMPLES, NETHER_ROW_STRIDE_QUARTS);
+            assertRegionSize(ours, biolith);
+        }
+
+        @Test
+        void regionsStandAsTallAsBiolithsWhereNoOctaveIsFloored() {
+            ReplacementNoiseFold fold = netherFold();
+            OpenSimplexNoise2 noise = new OpenSimplexNoise2(WORLD_SEED);
+            double ours = crossingsPerQuart(UNFLOORED, (quartX, quartY, quartZ, offset) ->
+                    foldedNether(fold, UNFLOORED, quartX, quartY + offset, quartZ),
+                    NETHER_LINE_SAMPLES, NETHER_COLUMN_STRIDE_QUARTS);
+            double biolith = crossingsPerQuart(UNFLOORED, (quartX, quartY, quartZ, offset) ->
+                    biolithNetherSum(noise, quartX, quartY + offset, quartZ),
+                    NETHER_LINE_SAMPLES, NETHER_COLUMN_STRIDE_QUARTS);
+            assertRegionSize(ours, biolith);
         }
 
         @Test
