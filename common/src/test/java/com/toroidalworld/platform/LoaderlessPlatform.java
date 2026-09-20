@@ -1,10 +1,10 @@
 package com.toroidalworld.platform;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.function.IntFunction;
 
-import com.toroidalworld.compat.MapCopies;
 import com.toroidalworld.core.FlatShape;
 import com.toroidalworld.engine.net.TagPositions;
 
@@ -61,7 +61,7 @@ public final class LoaderlessPlatform implements Platform {
     }
 
     @Override
-    public MapCopies mapCopies() {
+    public Path configDir() {
         throw new UnsupportedOperationException(NO_LOADER);
     }
 }

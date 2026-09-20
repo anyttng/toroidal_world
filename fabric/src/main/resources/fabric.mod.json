@@ -16,6 +16,9 @@
     ],
     "client": [
       "com.toroidalworld.client.ToroidalWorldFabricClient"
+    ],
+    "modmenu": [
+      "com.toroidalworld.client.ToroidalWorldModMenu"
     ]
   },
   "mixins": [
@@ -24,7 +27,9 @@
     "toroidal_world.compat.journeymap.mixins.json",
     "toroidal_world.compat.xaero.mixins.json",
     "toroidal_world.compat.c2me.mixins.json",
-    "toroidal_world.compat.scalablelux.mixins.json"
+    "toroidal_world.compat.distanthorizons.mixins.json",
+    "toroidal_world.compat.scalablelux.mixins.json",
+    "toroidal_world.compat.biolith.mixins.json"
   ],
   "accessWidener": "toroidal_world.accesswidener",
   "custom": {
@@ -37,6 +42,9 @@
     "fabricloader": ">=0.19.5",
     "fabric-api": "*",
     "minecraft": "26.3"
+  },
+  "suggests": {
+    "modmenu": "*"
   },
   "breaks": {
     "journeymap": "<${journeymap_min_version}"

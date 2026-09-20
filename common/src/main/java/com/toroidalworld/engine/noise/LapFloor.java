@@ -4,7 +4,7 @@ import com.toroidalworld.core.WorldFold;
 
 import net.minecraft.core.Direction;
 
-enum LapFloor {
+public enum LapFloor {
     FOUR_CELLS(4L),
     TWO_CELLS(2L),
     HELD(PeriodicNoiseSampler.HELD_PERIOD);
@@ -15,7 +15,7 @@ enum LapFloor {
         this.period = period;
     }
 
-    static LapFloor of(WorldFold transformer) {
+    public static LapFloor of(WorldFold transformer) {
         boolean bothLoop = transformer.blockDomain(Direction.Axis.X).loops()
                 && transformer.blockDomain(Direction.Axis.Z).loops();
         return bothLoop ? TWO_CELLS : HELD;
