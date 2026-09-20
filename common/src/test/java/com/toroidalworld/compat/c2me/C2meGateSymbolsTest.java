@@ -15,8 +15,8 @@ class C2meGateSymbolsTest {
     private static final String GAME_PACKAGE = "net/minecraft/";
 
     private static final List<ModSymbol> GATE_SYMBOLS = List.of(C2meChunkSystem.CHUNK_SYSTEM_SCHEDULING_MANAGER,
-            C2meNoTickVd.NO_TICK_LOADER_VIEW_DISTANCE, C2meDfc.AST_ENTRY, C2meOctaveNoise.OCTAVE_SAMPLER_VALUE,
-            C2meAquifer.SAMPLER_INIT_HANDLER);
+            C2meNoTickVd.NO_TICK_LOADER_VIEW_DISTANCE, C2meDfc.AST_REGISTRY,
+            C2meOctaveNoise.OCTAVE_SAMPLER_INIT_HANDLER, C2meAquifer.SAMPLER_INIT_HANDLER);
 
     @Test
     void everyC2meGateNamesASymbolTheCompiledAgainstModulesCarry() {
