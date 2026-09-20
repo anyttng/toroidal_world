@@ -25,13 +25,8 @@ public class BeaconBeamRepoMixin {
         return original.call(statement, index, DhKeys.foldBlock(DhRepoLevel.shapeOf(this), pos));
     }
 
-    @WrapMethod(method = "createInsertStatement(Lcom/seibel/distanthorizons/core/sql/dto/BeaconBeamDTO;)Ljava/sql/PreparedStatement;")
-    private PreparedStatement toroidal$foldInsert(BeaconBeamDTO dto, Operation<PreparedStatement> original) {
-        return DhKeys.withFoldedKey(DhRepoLevel.shapeOf(this), dto, () -> original.call(dto));
-    }
-
-    @WrapMethod(method = "createUpdateStatement(Lcom/seibel/distanthorizons/core/sql/dto/BeaconBeamDTO;)Ljava/sql/PreparedStatement;")
-    private PreparedStatement toroidal$foldUpdate(BeaconBeamDTO dto, Operation<PreparedStatement> original) {
+    @WrapMethod(method = "createUpsertStatement(Lcom/seibel/distanthorizons/core/sql/dto/BeaconBeamDTO;)Ljava/sql/PreparedStatement;")
+    private PreparedStatement toroidal$foldUpsert(BeaconBeamDTO dto, Operation<PreparedStatement> original) {
         return DhKeys.withFoldedKey(DhRepoLevel.shapeOf(this), dto, () -> original.call(dto));
     }
 

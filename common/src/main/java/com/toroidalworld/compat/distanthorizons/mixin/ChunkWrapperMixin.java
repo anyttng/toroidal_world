@@ -21,7 +21,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 // reason GuiMapMixin names its render override twice: with two targets the remapper resolves neither descriptor.
 @Mixin(targets = {
         "com.seibel.distanthorizons.common.wrappers.chunk.ChunkWrapper_neoforge",
-        "com.seibel.distanthorizons.common.wrappers.chunk.ChunkWrapper_fabric"})
+        "com.seibel.distanthorizons.common.wrappers.chunk.ChunkWrapper"})
 public class ChunkWrapperMixin {
     // Mixin refuses a remappable @Shadow on a multi-target mixin; the field is Distant Horizons' own, never remapped.
     @Shadow(remap = false)
@@ -37,7 +37,7 @@ public class ChunkWrapperMixin {
                         + "Lcom/seibel/distanthorizons/core/wrapperInterfaces/world/ILevelWrapper;)V",
                 "<init>(Lnet/minecraft/class_2791;"
                         + "Lcom/seibel/distanthorizons/core/wrapperInterfaces/world/ILevelWrapper;)V",
-                "getMinBlockX", "getMinBlockZ", "getMaxBlockX", "getMaxBlockZ"},
+                "getMinBlockX", "getMinBlockZ"},
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/level/chunk/ChunkAccess;getPos()Lnet/minecraft/world/level/ChunkPos;"))
