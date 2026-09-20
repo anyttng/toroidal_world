@@ -205,6 +205,7 @@ dependencies {
     compileOnly("dev.ftb.mods:ftb-library-neoforge:${ftblibrary_version}") { transitive = false }
     compileOnly "maven.modrinth:terrablender:${terrablender_version}"
     compileOnly "maven.modrinth:astikorcarts-redux:${astikorcarts_version}"
+    compileOnly "maven.modrinth:biolith:${biolith_version}"
     compileOnly "com.github.bawnorton.mixinsquared:mixinsquared-common:${mixinsquared_version}"
 }
 
@@ -242,6 +243,8 @@ dependencies {
     testRuntimeOnly("dev.ftb.mods:ftb-library-neoforge:${ftblibrary_version}") { transitive = false }
     testCompileOnly "maven.modrinth:terrablender:${terrablender_version}"
     testRuntimeOnly "maven.modrinth:terrablender:${terrablender_version}"
+    testCompileOnly "maven.modrinth:biolith:${biolith_version}"
+    testRuntimeOnly "maven.modrinth:biolith:${biolith_version}"
     // The compat jars and Mixin on the test runtime alone: what the gate-symbol tests read is the class file each
     // gate names, and a config plugin cannot even load without IMixinConfigPlugin.
     testRuntimeOnly "maven.modrinth:journeymap:${journeymap_version}"

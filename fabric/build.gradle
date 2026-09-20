@@ -252,6 +252,9 @@ dependencies {
     // Astikor Carts Redux publishes no fabric build at all: plain compileOnly on the neoforge flavor, and the fabric
     // jar lists the config nowhere, so the mixin is compiled and never loaded here.
     compileOnly "maven.modrinth:astikorcarts-redux:${astikorcarts_version}"
+    // Biolith rides modCompileOnly as the FABRIC flavor, as the Xaero jars do: the placement class the mixin extends
+    // names game types, and only the remapped jar spells them the way this workspace does.
+    modCompileOnly "maven.modrinth:biolith:${biolith_fabric_version}"
 }
 
 // Two jars on this game version, and only the second one ships. Minecraft is obfuscated here, so Loom compiles into a

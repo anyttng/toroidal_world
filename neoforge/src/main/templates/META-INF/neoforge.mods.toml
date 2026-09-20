@@ -140,4 +140,7 @@ config="toroidal_world.compat.astikorcarts.mixins.json"
 config="toroidal_world.compat.scalablelux.mixins.json"
 
 [[mixins]]
+config="toroidal_world.compat.biolith.mixins.json"
+
+[[mixins]]
 config="toroidal_world.neoforge.mixins.json"
