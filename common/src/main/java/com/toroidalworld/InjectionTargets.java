@@ -51,10 +51,15 @@ public final class InjectionTargets {
 
     public static final String LIVING_ENTITY_GET_Z = "Lnet/minecraft/world/entity/LivingEntity;getZ()D";
 
-    public static final String NOISE_GET = "Lnet/minecraft/world/level/levelgen/synth/Noise;get(DDD)F";
+    public static final String MTH_ATAN2 = "Lnet/minecraft/util/Mth;atan2(DD)D";
+
+    public static final String NOISE_GET ="Lnet/minecraft/world/level/levelgen/synth/Noise;get(DDD)F";
 
     public static final String PATHFINDER_MOB_GET_HOME_POSITION =
             "Lnet/minecraft/world/entity/PathfinderMob;getHomePosition()Lnet/minecraft/core/BlockPos;";
+
+    public static final String PATH_GET_TARGET =
+            "Lnet/minecraft/world/level/pathfinder/Path;getTarget()Lnet/minecraft/core/BlockPos;";
 
     public static final String PHANTOM_MOVE_TARGET_POINT =
             "Lnet/minecraft/world/entity/monster/Phantom;moveTargetPoint:Lnet/minecraft/world/phys/Vec3;";
@@ -77,6 +82,9 @@ public final class InjectionTargets {
             "Lnet/minecraft/world/level/storage/TagValueInput;create(Lnet/minecraft/util/ProblemReporter;"
                     + "Lnet/minecraft/core/HolderLookup$Provider;Lnet/minecraft/nbt/CompoundTag;)"
                     + "Lnet/minecraft/world/level/storage/ValueInput;";
+
+    public static final String VEC3_AT_BOTTOM_CENTER_OF =
+            "Lnet/minecraft/world/phys/Vec3;atBottomCenterOf(Lnet/minecraft/core/Vec3i;)Lnet/minecraft/world/phys/Vec3;";
 
     public static final String VEC3_AT_CENTER_OF =
             "Lnet/minecraft/world/phys/Vec3;atCenterOf(Lnet/minecraft/core/Vec3i;)Lnet/minecraft/world/phys/Vec3;";

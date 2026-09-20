@@ -9,15 +9,16 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
 
-@Mixin(targets = "net.minecraft.world.entity.monster.illager.Evoker$EvokerAttackSpellGoal")
-public class EvokerFangsAimMixin {
+@Mixin(SignBlockEntity.class)
+public class SignFacingMixin {
     @WrapOperation(
-            method = "performSpellCasting",
+            method = "getSlotPlayerIsFacing",
             at = @At(value = "INVOKE", target = InjectionTargets.MTH_ATAN2))
-    private double toroidal$fangAngleThroughSeam(double deltaZ, double deltaX, Operation<Double> original,
-            @Local LivingEntity target) {
-        return original.call(SeamAim.foldZ(target, deltaZ), SeamAim.foldX(target, deltaX));
+    private double toroidal$facingAngleThroughSeam(double deltaZ, double deltaX, Operation<Double> original,
+            @Local(argsOnly = true) Player player) {
+        return original.call(SeamAim.foldZ(player, deltaZ), SeamAim.foldX(player, deltaX));
     }
 }

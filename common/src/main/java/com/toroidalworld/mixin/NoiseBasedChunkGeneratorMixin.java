@@ -5,6 +5,7 @@ import java.util.Set;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+import com.toroidalworld.BinderOrder;
 import com.toroidalworld.core.ShapedChunkGenerator;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
@@ -42,14 +43,14 @@ public class NoiseBasedChunkGeneratorMixin {
         return ((NoiseChunkAccessor) noiseChunk).toroidal$randomState().router.finalDensity();
     }
 
-    @WrapMethod(method = "doFill")
+    @WrapMethod(method = "doFill", order = BinderOrder.FOLD)
     private void toroidal$bindWhileFilling(NoiseChunk noiseChunk, ChunkAccess chunk, Operation<Void> original) {
         GenerationTransformerContext.runWithTransformer(
                 ShapedChunkGenerator.transformerOf((NoiseBasedChunkGenerator) (Object) this),
                 () -> original.call(noiseChunk, chunk));
     }
 
-    @WrapMethod(method = "buildSurface")
+    @WrapMethod(method = "buildSurface", order = BinderOrder.FOLD)
     private void toroidal$bindWhileBuildingSurface(ChunkAccess chunk, NoiseChunk noiseChunk, RandomState randomState,
             BiomeManager biomeManager, Set<Holder<Biome>> possibleBiomes, MaterialRule materialRule,
             Operation<Void> original) {
@@ -58,7 +59,7 @@ public class NoiseBasedChunkGeneratorMixin {
                 () -> original.call(chunk, noiseChunk, randomState, biomeManager, possibleBiomes, materialRule));
     }
 
-    @WrapMethod(method = "generateCarvers")
+    @WrapMethod(method = "generateCarvers", order = BinderOrder.FOLD)
     private void toroidal$bindWhileCarving(ChunkAccess chunk, Blender blender, NoiseChunk noiseChunk,
             RandomState randomState, BiomeManager biomeManager, WorldGenRegion carverBiomeRegion,
             MaterialRule materialRule, Operation<Void> original) {

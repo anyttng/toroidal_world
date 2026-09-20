@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
+import com.toroidalworld.BinderOrder;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WorldLoopAttachments;
 import com.toroidalworld.engine.gen.FloatingCrumbs;
@@ -33,7 +34,8 @@ public class ChunkStatusTasksMixin {
                     "generateSpawn",
                     "initializeLight",
                     "light"
-            })
+            },
+            order = BinderOrder.FOLD)
     private static CompletableFuture<ChunkAccess> toroidal$bindTransformer(
             WorldGenContext context,
             ChunkStep step,
