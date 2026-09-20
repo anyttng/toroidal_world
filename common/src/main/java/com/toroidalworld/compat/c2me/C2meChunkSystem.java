@@ -5,13 +5,13 @@ import com.toroidalworld.compat.ModPresence;
 import com.toroidalworld.compat.ModSymbol;
 
 public final class C2meChunkSystem {
-    static final ModSymbol CHUNK_SYSTEM_TACS = new ModSymbol(
-            "com/ishland/c2me/rewrites/chunksystem/common/TheChunkSystem", "tacs",
-            "Lnet/minecraft/server/level/ChunkMap;");
+    private static final String CHUNK_SYSTEM = "com/ishland/c2me/rewrites/chunksystem/common/TheChunkSystem";
 
-    private static final ModPresence GATE = ModPresence.of(LogUtils.getLogger(),
-            "com/ishland/c2me/rewrites/chunksystem/common/TheChunkSystem.class",
-            "[c2me-compat] gate chunk_system_present", CHUNK_SYSTEM_TACS);
+    static final ModSymbol CHUNK_SYSTEM_SCHEDULING_MANAGER = new ModSymbol(CHUNK_SYSTEM, "schedulingManager",
+            "Lcom/ishland/c2me/base/common/scheduler/SchedulingManager;");
+
+    private static final ModPresence GATE = ModPresence.of(LogUtils.getLogger(), CHUNK_SYSTEM + ".class",
+            "[c2me-compat] gate chunk_system_present", CHUNK_SYSTEM_SCHEDULING_MANAGER);
 
     public static boolean present() {
         return GATE.present();
