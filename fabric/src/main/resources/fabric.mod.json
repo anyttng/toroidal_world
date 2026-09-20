@@ -16,6 +16,9 @@
     ],
     "client": [
       "com.toroidalworld.client.ToroidalWorldFabricClient"
+    ],
+    "modmenu": [
+      "com.toroidalworld.client.ToroidalWorldModMenu"
     ]
   },
   "mixins": [
@@ -38,6 +41,9 @@
     "fabricloader": ">=0.19.5",
     "fabric-api": "*",
     "minecraft": "26.3"
+  },
+  "suggests": {
+    "modmenu": "*"
   },
   "breaks": {
     "journeymap": "<${journeymap_min_version}"
