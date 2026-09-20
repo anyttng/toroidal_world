@@ -1,0 +1,24 @@
+name: Feature request
+description: Suggest something the mod should do
+body:
+  - type: textarea
+    id: what-you-want
+    attributes:
+      label: What you want
+      description: What the mod should do that it does not do now.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: Where you ran into this, and what it would let you do.
+    validations:
+      required: true
+  - type: textarea
+    id: other-mod
+    attributes:
+      label: Another mod involved
+      description: If the request is about working together with another mod, give its name and a link to its page.
+    validations:
+      required: false
