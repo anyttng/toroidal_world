@@ -27,13 +27,8 @@ public class FullDataSourceV2RepoMixin {
         return original.call(statement, index, DhKeys.foldSection(DhRepoLevel.shapeOf(this), pos));
     }
 
-    @WrapMethod(method = "createInsertStatement(Lcom/seibel/distanthorizons/core/sql/dto/FullDataSourceV2DTO;)Ljava/sql/PreparedStatement;")
-    private PreparedStatement toroidal$foldInsert(FullDataSourceV2DTO dto, Operation<PreparedStatement> original) {
-        return DhKeys.withFoldedKey(DhRepoLevel.shapeOf(this), dto, () -> original.call(dto));
-    }
-
-    @WrapMethod(method = "createUpdateStatement(Lcom/seibel/distanthorizons/core/sql/dto/FullDataSourceV2DTO;)Ljava/sql/PreparedStatement;")
-    private PreparedStatement toroidal$foldUpdate(FullDataSourceV2DTO dto, Operation<PreparedStatement> original) {
+    @WrapMethod(method = "createUpsertStatement(Lcom/seibel/distanthorizons/core/sql/dto/FullDataSourceV2DTO;)Ljava/sql/PreparedStatement;")
+    private PreparedStatement toroidal$foldUpsert(FullDataSourceV2DTO dto, Operation<PreparedStatement> original) {
         return DhKeys.withFoldedKey(DhRepoLevel.shapeOf(this), dto, () -> original.call(dto));
     }
 
@@ -58,6 +53,11 @@ public class FullDataSourceV2RepoMixin {
         original.call(DhKeys.foldSection(DhRepoLevel.shapeOf(this), pos), applyToChild);
     }
 
+    @WrapMethod(method = "setRegenerate")
+    private void toroidal$foldRegenerate(long pos, boolean regenerate, Operation<Void> original) {
+        original.call(DhKeys.foldSection(DhRepoLevel.shapeOf(this), pos), regenerate);
+    }
+
     @WrapMethod(method = "getColumnGenerationStepForPos")
     private void toroidal$foldGenerationStepPos(long pos, ByteArrayList output, Operation<Void> original) {
         original.call(DhKeys.foldSection(DhRepoLevel.shapeOf(this), pos), output);
@@ -73,15 +73,15 @@ public class FullDataSourceV2RepoMixin {
         return original.call(DhKeys.foldSection(DhRepoLevel.shapeOf(this), pos));
     }
 
-    @WrapMethod(method = "getPositionsToUpdate(IIIZ)Lit/unimi/dsi/fastutil/longs/LongArrayList;")
+    @WrapMethod(method = "getPositionsToUpdate(IIILjava/lang/String;)Lit/unimi/dsi/fastutil/longs/LongArrayList;")
     private LongArrayList toroidal$foldUpdateTarget(int targetBlockX, int targetBlockZ, int returnCount,
-            boolean parentUpdates, Operation<LongArrayList> original) {
+            String sql, Operation<LongArrayList> original) {
         ToroidalShape shape = DhRepoLevel.shapeOf(this);
         if (shape == null) {
-            return original.call(targetBlockX, targetBlockZ, returnCount, parentUpdates);
+            return original.call(targetBlockX, targetBlockZ, returnCount, sql);
         }
 
         return original.call(DhFold.foldBlock(shape, Direction.Axis.X, DhKeys.LEAF, targetBlockX),
-                DhFold.foldBlock(shape, Direction.Axis.Z, DhKeys.LEAF, targetBlockZ), returnCount, parentUpdates);
+                DhFold.foldBlock(shape, Direction.Axis.Z, DhKeys.LEAF, targetBlockZ), returnCount, sql);
     }
 }
