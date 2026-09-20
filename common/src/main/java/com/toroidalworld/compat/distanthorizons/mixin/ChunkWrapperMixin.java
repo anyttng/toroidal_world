@@ -29,7 +29,7 @@ public class ChunkWrapperMixin {
             method = {
                 "<init>(Lnet/minecraft/world/level/chunk/ChunkAccess;"
                         + "Lcom/seibel/distanthorizons/core/wrapperInterfaces/world/ILevelWrapper;)V",
-                "getMinBlockX", "getMinBlockZ", "getMaxBlockX", "getMaxBlockZ"},
+                "getMinBlockX", "getMinBlockZ"},
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/world/level/chunk/ChunkAccess;getPos()Lnet/minecraft/world/level/ChunkPos;"))
