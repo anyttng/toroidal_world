@@ -1,5 +1,6 @@
 package com.toroidalworld.mixin;
 
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -38,5 +39,15 @@ public class StrollThroughVillageGoalMixin {
             at = @At(value = "INVOKE", target = InjectionTargets.VEC3_AT_BOTTOM_CENTER_OF))
     private Vec3 toroidal$strollTargetThroughSeam(Vec3 strollTarget) {
         return SeamSteering.nearestCopy(this.mob, strollTarget);
+    }
+
+    @ModifyExpressionValue(
+            method = "canContinueToUse",
+            at = @At(value = "FIELD",
+                    target = "Lnet/minecraft/world/entity/ai/goal/StrollThroughVillageGoal;"
+                            + "wantedPos:Lnet/minecraft/core/BlockPos;",
+                    opcode = Opcodes.GETFIELD, ordinal = 1))
+    private BlockPos toroidal$strollIdentityThroughSeam(BlockPos wantedPos) {
+        return SeamSteering.nearestCopy(this.mob, wantedPos);
     }
 }
