@@ -1,0 +1,48 @@
+name: Bug report
+description: Report a bug or a crash
+body:
+  - type: input
+    id: game-and-loader
+    attributes:
+      label: Minecraft version and mod loader
+      placeholder: 26.2, NeoForge
+    validations:
+      required: true
+  - type: input
+    id: mod-version
+    attributes:
+      label: Mod version
+      description: The version in the name of the mod's jar file.
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected to see instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: Drag `latest.log` from the `logs` folder of your instance into this field, or paste a link to it. After a crash, add the file from `crash-reports` as well.
+    validations:
+      required: true
+  - type: textarea
+    id: other-setups
+    attributes:
+      label: Where it does not happen
+      description: If the problem goes away without another mod, in singleplayer, or in a new world, say which.
+    validations:
+      required: false
