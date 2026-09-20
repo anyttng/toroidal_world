@@ -193,6 +193,7 @@
     "PortalForcerMixin",
     "PotentSulfurBlockEntityMixin",
     "PrepareRamNearestTargetMixin",
+    "ProjectileMixin",
     "ProjectileUtilMixin",
     "ProtoChunkMixin",
     "RaidMixin",
