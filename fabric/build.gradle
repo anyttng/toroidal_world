@@ -121,6 +121,7 @@ dependencies {
     compileOnly "maven.modrinth:xaeros-world-map:${xaero_worldmap_version}"
     compileOnly "maven.modrinth:distanthorizons:${distanthorizons_version}"
     compileOnly "maven.modrinth:terrablender:${terrablender_version}"
+    compileOnly "maven.modrinth:biolith:${biolith_version}"
     compileOnly files(xaeroLibJars).asFileTree.matching { include '*.jar' }
 }
 
