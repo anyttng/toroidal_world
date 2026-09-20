@@ -62,8 +62,9 @@
   "gui.toroidal_world.cylinder_settings.axis": "循环轴",
   "gui.toroidal_world.cylinder_settings.axis_hint": "世界沿此轴循环，沿另一轴则无限延伸。",
 
-  "toroidal_world.configuration.mapCopies": "全屏地图上的世界副本",
-  "toroidal_world.configuration.mapCopies.tooltip": "地图模组全屏显示循环世界的方式：“重复”用世界的副本铺满窗口，“单个”只显示一次世界，地图无法拖动或缩小到边缘之外。小地图始终重复显示。",
-  "toroidal_world.configuration.mapCopies.repeated": "重复",
-  "toroidal_world.configuration.mapCopies.single": "单个"
+  "gui.toroidal_world.settings.title": "环面世界设置",
+  "gui.toroidal_world.settings.map_copies": "全屏地图上的世界副本",
+  "gui.toroidal_world.settings.map_copies_hint": "地图模组全屏显示循环世界的方式：“重复”用世界的副本铺满窗口，“单个”只显示一次世界，地图无法拖动或缩小到边缘之外。小地图始终重复显示。",
+  "gui.toroidal_world.settings.map_copies.repeated": "重复",
+  "gui.toroidal_world.settings.map_copies.single": "单个"
 }

@@ -71,6 +71,14 @@ repositories {
             includeGroup 'dev.ftb.mods'
         }
     }
+    // ModMenu, for the config-screen entrypoint.
+    maven {
+        name = 'Terraformers'
+        url = 'https://maven.terraformersmc.com/releases'
+        content {
+            includeGroup 'com.terraformersmc'
+        }
+    }
 }
 
 // Same unpack as in common, for the same reason: common's sources compile in this module too, and the chunk-system
@@ -255,6 +263,11 @@ dependencies {
     // Biolith rides modCompileOnly as the FABRIC flavor, as the Xaero jars do: the placement class the mixin extends
     // names game types, and only the remapped jar spells them the way this workspace does.
     modCompileOnly "maven.modrinth:biolith:${biolith_fabric_version}"
+
+    // The 'modmenu' entrypoint class is only ever asked for by ModMenu itself, so it never loads without it.
+    // modCompileOnly: its screen-factory API names the game's Screen, which only the remapped jar spells in this
+    // workspace's names.
+    modCompileOnly "com.terraformersmc:modmenu:${modmenu_version}"
 }
 
 // Two jars on this game version, and only the second one ships. Minecraft is obfuscated here, so Loom compiles into a

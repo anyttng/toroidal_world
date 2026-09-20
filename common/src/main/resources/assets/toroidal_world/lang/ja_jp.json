@@ -62,8 +62,9 @@
   "gui.toroidal_world.cylinder_settings.axis": "ループする軸",
   "gui.toroidal_world.cylinder_settings.axis_hint": "ワールドはこの軸に沿ってループし、もう一方の軸に沿っては無限に続きます。",
 
-  "toroidal_world.configuration.mapCopies": "全画面マップのワールドのコピー",
-  "toroidal_world.configuration.mapCopies.tooltip": "マップMODがループするワールドを全画面でどう表示するか。「繰り返し」はウィンドウ全体をワールドのコピーで埋め、「1つだけ」はワールドを1回だけ表示し、端を越えてマップを動かしたりズームアウトしたりできなくします。ミニマップは常に繰り返し表示します。",
-  "toroidal_world.configuration.mapCopies.repeated": "繰り返し",
-  "toroidal_world.configuration.mapCopies.single": "1つだけ"
+  "gui.toroidal_world.settings.title": "トロイダルワールド設定",
+  "gui.toroidal_world.settings.map_copies": "全画面マップのワールドのコピー",
+  "gui.toroidal_world.settings.map_copies_hint": "マップMODがループするワールドを全画面でどう表示するか。「繰り返し」はウィンドウ全体をワールドのコピーで埋め、「1つだけ」はワールドを1回だけ表示し、端を越えてマップを動かしたりズームアウトしたりできなくします。ミニマップは常に繰り返し表示します。",
+  "gui.toroidal_world.settings.map_copies.repeated": "繰り返し",
+  "gui.toroidal_world.settings.map_copies.single": "1つだけ"
 }

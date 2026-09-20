@@ -62,8 +62,9 @@
   "gui.toroidal_world.cylinder_settings.axis": "Schleifenachse",
   "gui.toroidal_world.cylinder_settings.axis_hint": "Die Welt schließt sich entlang dieser Achse und geht entlang der anderen endlos weiter.",
 
-  "toroidal_world.configuration.mapCopies": "Weltkopien auf der Vollbildkarte",
-  "toroidal_world.configuration.mapCopies.tooltip": "Wie Karten-Mods eine geschlossene Welt im Vollbild zeigen: „Wiederholt“ füllt das Fenster mit ihren Kopien, „Einzeln“ zeigt die Welt einmal und lässt die Karte nicht über ihre Ränder hinaus verschieben oder herauszoomen. Minikarten wiederholen sie immer.",
-  "toroidal_world.configuration.mapCopies.repeated": "Wiederholt",
-  "toroidal_world.configuration.mapCopies.single": "Einzeln"
+  "gui.toroidal_world.settings.title": "Einstellungen der toroidalen Welt",
+  "gui.toroidal_world.settings.map_copies": "Weltkopien auf der Vollbildkarte",
+  "gui.toroidal_world.settings.map_copies_hint": "Wie Karten-Mods eine geschlossene Welt im Vollbild zeigen: „Wiederholt“ füllt das Fenster mit ihren Kopien, „Einzeln“ zeigt die Welt einmal und lässt die Karte nicht über ihre Ränder hinaus verschieben oder herauszoomen. Minikarten wiederholen sie immer.",
+  "gui.toroidal_world.settings.map_copies.repeated": "Wiederholt",
+  "gui.toroidal_world.settings.map_copies.single": "Einzeln"
 }

@@ -1,10 +1,10 @@
 package com.toroidalworld;
 
+import com.toroidalworld.client.settings.SettingsScreen;
 import com.toroidalworld.compat.aeronautics.AeronauticsTranslation;
 import com.toroidalworld.compat.create.CreateTranslation;
 import com.toroidalworld.compat.aeronautics.AeronauticsMod;
 import com.toroidalworld.compat.sable.SableMod;
-import com.toroidalworld.config.WorldLoopConfig;
 import com.toroidalworld.engine.gen.LoopedChunkGenerator;
 import com.toroidalworld.engine.gen.LoopedFlatChunkGenerator;
 import com.toroidalworld.engine.gen.WorldLoopGenerators;
@@ -15,6 +15,7 @@ import com.toroidalworld.engine.seam.circumnavigation.WorldLoopCriteria;
 import com.toroidalworld.shape.WorldOptionSetup;
 import com.toroidalworld.platform.NeoForgePlatform;
 import com.toroidalworld.platform.Platforms;
+import com.toroidalworld.settings.SettingsService;
 import com.toroidalworld.shape.GenerationHookSetup;
 import com.toroidalworld.shape.WorldShapeSetup;
 import com.mojang.serialization.MapCodec;
@@ -24,8 +25,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.config.ModConfig;
-import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -56,10 +55,10 @@ public final class WorldLoop {
         AuxiliaryLightTranslation.register();
         BlockParticleTranslation.register();
         SpawnBufferTranslation.register();
-        modContainer.registerConfig(ModConfig.Type.CLIENT, WorldLoopConfig.SPEC);
-
-        if (Platforms.get().isClient() && !WorldLoopConfig.SPEC.isEmpty()) {
-            modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+        if (Platforms.get().isClient()) {
+            SettingsService.set(SettingsService.load(Platforms.get().configDir()));
+            modContainer.registerExtensionPoint(IConfigScreenFactory.class,
+                    (container, modListScreen) -> new SettingsScreen(modListScreen));
         }
     }
 

@@ -1,11 +1,10 @@
 package com.toroidalworld.platform;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.function.IntFunction;
 
-import com.toroidalworld.compat.MapCopies;
-import com.toroidalworld.config.WorldLoopConfig;
 import com.toroidalworld.core.FlatShape;
 import com.toroidalworld.engine.net.BlockEntityPositionsPayload;
 import com.toroidalworld.engine.net.TagPositions;
@@ -23,6 +22,7 @@ import net.minecraft.world.level.dimension.LevelStem;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.internal.versions.neoforge.NeoForgeVersion;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -80,7 +80,7 @@ public final class NeoForgePlatform implements Platform {
     }
 
     @Override
-    public MapCopies mapCopies() {
-        return WorldLoopConfig.MAP_COPIES.get().copies();
+    public Path configDir() {
+        return FMLPaths.CONFIGDIR.get();
     }
 }

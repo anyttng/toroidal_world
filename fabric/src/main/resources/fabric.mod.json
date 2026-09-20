@@ -19,6 +19,9 @@
     ],
     "journeymap": [
       "com.toroidalworld.compat.journeymap.ToroidalJourneyMapPlugin"
+    ],
+    "modmenu": [
+      "com.toroidalworld.client.ToroidalWorldModMenu"
     ]
   },
   "mixins": [
@@ -50,6 +53,9 @@
     "fabricloader": ">=0.19.3",
     "fabric-api": "*",
     "minecraft": "1.21.1"
+  },
+  "suggests": {
+    "modmenu": "*"
   },
   "breaks": {
     "journeymap": "<${journeymap_min_version}",
