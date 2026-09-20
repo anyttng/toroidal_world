@@ -45,7 +45,7 @@ class ReplacementNoiseFoldTest {
 
     private static final int COLUMNS_PER_AXIS = 16;
 
-    private static final double NETHER_COLUMN_RATE = 0.509;
+    private static final double NETHER_COLUMN_RATE = 1.0;
 
     private static final double NORMALIZE_GAIN = 0.5375;
 
@@ -328,7 +328,7 @@ class ReplacementNoiseFoldTest {
         }
 
         @Test
-        void columnsMoveWithYAtTheGradientLatticesRate() {
+        void columnsMoveWithYAtBiolithsRate() {
             double ours = mean(columnDeviations(HUGE, netherColumn(HUGE)));
             double biolith = mean(columnDeviations(HUGE, biolithNetherColumn()));
             double rate = ours / biolith;
