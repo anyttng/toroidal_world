@@ -1,13 +1,12 @@
 package com.toroidalworld.mixin;
 
 import java.util.Optional;
-import java.util.function.BiPredicate;
+import java.util.stream.StreamSupport;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 import com.toroidalworld.InjectionTargets;
 import com.toroidalworld.accessors.TransformerSource;
@@ -21,7 +20,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.animal.bee.Bee;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 @Mixin(targets = "net.minecraft.world.entity.animal.bee.Bee$BeePollinateGoal")
@@ -30,20 +28,20 @@ public class BeePollinateGoalMixin {
     @Final
     private Bee bee;
 
-    @ModifyArg(
+    @ModifyExpressionValue(
             method = "findNearbyFlower",
             at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/blockscan/OrderedBlockMatcher;findFirst"
-                            + "(Ljava/util/function/BiPredicate;)Ljava/util/Optional;"),
-            index = 0)
-    private BiPredicate<BlockPos, BlockState> toroidal$flowerCandidatesThroughSeam(
-            BiPredicate<BlockPos, BlockState> byRawPos) {
+                    target = "Lnet/minecraft/core/BlockPos;withinManhattan"
+                            + "(Lnet/minecraft/core/BlockPos;III)Ljava/lang/Iterable;"))
+    private Iterable<BlockPos> toroidal$flowerCandidatesThroughSeam(Iterable<BlockPos> candidates) {
         WorldFold transformer = ((TransformerSource) this.bee).toroidal$wrappedTransformer();
         if (transformer == null) {
-            return byRawPos;
+            return candidates;
         }
 
-        return (pos, state) -> byRawPos.test(transformer.fold(pos), state);
+        return () -> StreamSupport.stream(candidates.spliterator(), false)
+                .map(transformer::fold)
+                .iterator();
     }
 
     @ModifyReturnValue(method = "findNearbyFlower", at = @At("RETURN"))
