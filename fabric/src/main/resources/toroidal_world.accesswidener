@@ -20,3 +20,4 @@ accessible class net/minecraft/world/level/levelgen/DensityFunctions$PureTransfo
 accessible class net/minecraft/world/level/levelgen/DensityFunctions$TransformerWithContext
 accessible class net/minecraft/world/level/levelgen/DensityFunctions$RangeChoice
 accessible class net/minecraft/world/level/levelgen/DensityFunctions$FindTopSurface
+accessible field net/minecraft/world/level/levelgen/synth/ImprovedNoise p [B
