@@ -1,6 +1,6 @@
 package com.toroidalworld;
 
-import com.toroidalworld.client.settings.SettingsScreen;
+import com.toroidalworld.client.settings.SettingsScreenFactory;
 import com.toroidalworld.engine.gen.LoopedChunkGenerator;
 import com.toroidalworld.engine.gen.LoopedFlatChunkGenerator;
 import com.toroidalworld.engine.gen.WorldLoopGenerators;
@@ -23,7 +23,6 @@ import net.minecraft.server.level.TicketType;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
-import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class WorldLoop {
@@ -57,8 +56,7 @@ public final class WorldLoop {
         SpawnBufferTranslation.register();
         if (Platforms.get().isClient()) {
             SettingsService.set(SettingsService.load(Platforms.get().configDir()));
-            modContainer.registerExtensionPoint(IConfigScreenFactory.class,
-                    (container, modListScreen) -> new SettingsScreen(modListScreen));
+            SettingsScreenFactory.register(modContainer);
         }
     }
 
