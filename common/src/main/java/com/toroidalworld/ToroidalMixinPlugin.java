@@ -13,7 +13,10 @@ public class ToroidalMixinPlugin extends MixinGatePlugin {
     private static final String GAME_EVENT_LISTENER_RANGE_MIXIN =
             "com.toroidalworld.mixin.EuclideanGameEventListenerRegistryMixin";
 
-    private static final Set<String> SABLE_CLAIMED_MIXINS = Set.of(PARROT_MIXIN, GAME_EVENT_LISTENER_RANGE_MIXIN);
+    private static final String SIGN_FACING_MIXIN = "com.toroidalworld.mixin.SignFacingMixin";
+
+    private static final Set<String> SABLE_CLAIMED_MIXINS =
+            Set.of(PARROT_MIXIN, GAME_EVENT_LISTENER_RANGE_MIXIN, SIGN_FACING_MIXIN);
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
