@@ -34,9 +34,11 @@ tasks.named('jar', Jar) {
 }
 
 // A loader build is 'neoforge:build fabric:build', so ':common' assembles nothing of its own — and the API artifact
-// consumers and the harness compile against is built there. Hung on this module's assemble, it rides every mod build.
+// consumers and the harness compile against is built there. Hung on this module's assemble, it rides every mod build —
+// and so does the root's shell jar for both loaders, the one file that ships.
 tasks.named('assemble') {
     dependsOn ':common:apiJar'
+    dependsOn ':modJar'
 }
 
 repositories {
