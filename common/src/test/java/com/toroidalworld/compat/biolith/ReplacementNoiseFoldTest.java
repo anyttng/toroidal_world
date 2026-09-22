@@ -43,6 +43,16 @@ class ReplacementNoiseFoldTest {
 
     private static final int NETHER_SAMPLE_QUART_Y = 16;
 
+    private static final it.unimi.dsi.fastutil.doubles.DoubleList OVERWORLD_AMPLITUDES =
+            it.unimi.dsi.fastutil.doubles.DoubleArrayList.wrap(new double[]{1.5, 0.0, 1.0, 0.0, 0.0, 0.0});
+
+    private static final double OVERWORLD_LOWEST_FREQ = 1.0 / 1024.0;
+
+    private static final it.unimi.dsi.fastutil.doubles.DoubleList NETHER_AMPLITUDES =
+            it.unimi.dsi.fastutil.doubles.DoubleArrayList.wrap(new double[]{1.0, 1.0});
+
+    private static final double NETHER_LOWEST_FREQ = 1.0 / 128.0;
+
     private static final int COLUMNS_PER_AXIS = 16;
 
     private static final double REGION_SIZE_RATIO = 1.0;
@@ -96,7 +106,8 @@ class ReplacementNoiseFoldTest {
     private static double folded(ReplacementNoiseFold fold, WorldFold transformer, int quartX, int quartZ) {
         double[] sum = new double[1];
         GenerationTransformerContext.withTransformer(transformer,
-                () -> sum[0] = fold.sum(WORLD_SEED, OVERWORLD_SCALE_QUARTS, quartX, quartZ));
+                () -> sum[0] = fold.sum(WORLD_SEED, OVERWORLD_SCALE_QUARTS, quartX, quartZ, OVERWORLD_AMPLITUDES,
+                        OVERWORLD_LOWEST_FREQ));
         return sum[0];
     }
 
@@ -112,7 +123,8 @@ class ReplacementNoiseFoldTest {
             int quartZ) {
         double[] sum = new double[1];
         GenerationTransformerContext.withTransformer(transformer,
-                () -> sum[0] = fold.sum(WORLD_SEED, NETHER_SCALE_QUARTS, quartX, quartY, quartZ));
+                () -> sum[0] = fold.sum(WORLD_SEED, NETHER_SCALE_QUARTS, quartX, quartY, quartZ, NETHER_AMPLITUDES,
+                        NETHER_LOWEST_FREQ));
         return sum[0];
     }
 
@@ -280,9 +292,11 @@ class ReplacementNoiseFoldTest {
 
     @Nested
     class Periodicity {
+        private static final WorldFold CYLINDER = WorldFolds.of(FlatShape.cylinder(new WorldLoopBounds(-16, 16, -16, 16)));
+
         @Test
         void repeatsOneLapAway() {
-            for (WorldFold transformer : new WorldFold[] {TINY, HUGE}) {
+            for (WorldFold transformer : new WorldFold[] {TINY, HUGE, CYLINDER}) {
                 ReplacementNoiseFold fold = fold();
                 int lapQuarts = transformer.blockDomain(Direction.Axis.X).domainLength / 4;
                 Random random = new Random(WORLD_SEED);
@@ -292,16 +306,20 @@ class ReplacementNoiseFoldTest {
                     assertEquals(folded(fold, transformer, quartX, quartZ),
                             folded(fold, transformer, quartX + lapQuarts, quartZ),
                             "X lap at quart " + quartX + ", " + quartZ);
-                    assertEquals(folded(fold, transformer, quartX, quartZ),
-                            folded(fold, transformer, quartX, quartZ + lapQuarts),
-                            "Z lap at quart " + quartX + ", " + quartZ);
+                    
+                    if (transformer.blockDomain(Direction.Axis.Z).loops()) {
+                        assertEquals(folded(fold, transformer, quartX, quartZ),
+                                folded(fold, transformer, quartX, quartZ + lapQuarts),
+                                "Z lap at quart " + quartX + ", " + quartZ);
+                    }
                 }
             }
         }
 
         @Test
         void answersNotFoldedWithoutATransformer() {
-            assertFalse(ReplacementNoiseFold.folded(fold().sum(WORLD_SEED, OVERWORLD_SCALE_QUARTS, 0, 0)));
+            assertFalse(ReplacementNoiseFold.folded(
+                    fold().sum(WORLD_SEED, OVERWORLD_SCALE_QUARTS, 0, 0, OVERWORLD_AMPLITUDES, OVERWORLD_LOWEST_FREQ)));
         }
 
         @Test
@@ -333,6 +351,31 @@ class ReplacementNoiseFoldTest {
                     biolithSum(noise, quartX + offset, quartZ),
                     OVERWORLD_LINE_SAMPLES, OVERWORLD_LINE_STRIDE_QUARTS);
             assertRegionSize(ours, biolith);
+        }
+
+        @Test
+        void regionsShrinkByCompressionFactor() {
+            WorldFold strong = WorldFolds.of(FlatShape.torus(new WorldLoopBounds(-2048, 2048, -2048, 2048)),
+                    com.toroidalworld.api.v1.option.GenerationOptions.DEFAULT.with(
+                            com.toroidalworld.shape.climate.CompactBiomes.OPTION,
+                            com.toroidalworld.shape.climate.ClimateScale.STRONG));
+            WorldFold off = WorldFolds.of(FlatShape.torus(new WorldLoopBounds(-2048, 2048, -2048, 2048)),
+                    com.toroidalworld.api.v1.option.GenerationOptions.DEFAULT.with(
+                            com.toroidalworld.shape.climate.CompactBiomes.OPTION,
+                            com.toroidalworld.shape.climate.ClimateScale.OFF));
+
+            ReplacementNoiseFold fold = fold();
+            double offCrossings = crossingsPerQuart(off, (quartX, quartY, quartZ, offset) ->
+                    folded(fold, off, quartX + offset, quartZ),
+                    OVERWORLD_LINE_SAMPLES, 1);
+            double strongCrossings = crossingsPerQuart(strong, (quartX, quartY, quartZ, offset) ->
+                    folded(fold, strong, quartX + offset, quartZ),
+                    OVERWORLD_LINE_SAMPLES, 1);
+
+            // Factor for STRONG is 4.0. Features shrink by 4x, so crossings (frequency) increase by 4x.
+            double ratio = strongCrossings / offCrossings;
+            assertTrue(Math.abs(ratio - 4.0) <= REGION_TOLERANCE * 4.0,
+                    "crossings per quart off=" + offCrossings + ", strong=" + strongCrossings + ", ratio=" + ratio);
         }
 
         @Test
