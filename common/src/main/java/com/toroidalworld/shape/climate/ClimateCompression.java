@@ -1,10 +1,14 @@
 package com.toroidalworld.shape.climate;
 
+import java.util.List;
 import java.util.function.DoubleSupplier;
+
+import org.jspecify.annotations.Nullable;
 
 import com.toroidalworld.accessors.ClimateCompressionCache;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.engine.noise.ClimateScaleCompression;
+import com.toroidalworld.shape.noise.DensityNoises;
 
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import net.minecraft.world.level.levelgen.DensityFunction;
@@ -32,7 +36,7 @@ public final class ClimateCompression {
 
     public static double warpDivisor(DensityFunction.NoiseHolder noise, WorldFold fold, double xzScale,
             double verticalShare) {
-        return xzScale * factorOf(noise, fold, xzScale, verticalShare);
+        return xzScale * factor(fold, noise, xzScale, verticalShare);
     }
 
     public static double factor(WorldFold fold, boolean climateField, DoubleList amplitudes,
@@ -62,13 +66,18 @@ public final class ClimateCompression {
                 : fit;
     }
 
-    private static double factorOf(DensityFunction.NoiseHolder noise, WorldFold fold, double baseScale,
+    public static double factor(WorldFold fold, DensityFunction.NoiseHolder noise, double baseScale,
             double verticalShare) {
         NormalNoise.NoiseParameters parameters = noise.noiseData().value();
         boolean climateField = noise.noiseData().unwrapKey().filter(ClimateFields::isClimate).isPresent();
 
         return factor(fold, climateField, parameters.amplitudes(), Math.pow(2.0, parameters.firstOctave()),
                 baseScale, verticalShare);
+    }
+
+    public static DensityNoises.@Nullable ScaledNoise climateNoiseOf(DensityFunction function) {
+        List<DensityNoises.ScaledNoise> climate = DensityNoises.scaledMatching(function, ClimateFields::isClimate);
+        return climate.isEmpty() ? null : climate.getFirst();
     }
 
     private ClimateCompression() {
