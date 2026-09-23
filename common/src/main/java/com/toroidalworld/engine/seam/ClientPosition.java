@@ -164,7 +164,7 @@ public final class ClientPosition {
     // destinationOf unwraps a server value already, but it bails on a foreign one, so a seated value arrives raw.
     private static double clientCopy(MirrorWriter writer, boolean seated, Direction.Axis axis, Mirror currMirror,
             double reported) {
-        if (!writer.clientAuthored() && !seated) {
+        if (!writer.needsSeating() && !seated) {
             return reported;
         }
 

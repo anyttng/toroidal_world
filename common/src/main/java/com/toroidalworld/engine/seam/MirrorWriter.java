@@ -3,21 +3,22 @@ package com.toroidalworld.engine.seam;
 public enum MirrorWriter {
     PLAYER_MOVE("player_move", true),
     VEHICLE_MOVE("vehicle_move", true),
+    PASSENGER("passenger", true),
     POSITION_PACKET("position_packet", false);
 
     private final String key;
-    private final boolean clientAuthored;
+    private final boolean needsSeating;
 
-    MirrorWriter(String key, boolean clientAuthored) {
+    MirrorWriter(String key, boolean needsSeating) {
         this.key = key;
-        this.clientAuthored = clientAuthored;
+        this.needsSeating = needsSeating;
     }
 
     public String key() {
         return key;
     }
 
-    public boolean clientAuthored() {
-        return clientAuthored;
+    public boolean needsSeating() {
+        return needsSeating;
     }
 }
