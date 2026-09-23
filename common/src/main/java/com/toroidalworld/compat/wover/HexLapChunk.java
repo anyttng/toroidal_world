@@ -1,9 +1,14 @@
 package com.toroidalworld.compat.wover;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.minecraft.world.level.levelgen.WorldgenRandom;
 
 final class HexLapChunk<T> implements LapChunk<T> {
     private static final int SEED_SPACING = 8;
+
+    private static final int CELLS_PER_SEED = SEED_SPACING * SEED_SPACING;
 
     private static final int MIN_WRAPPED_SEED_LINES = 2;
 
@@ -108,18 +113,39 @@ final class HexLapChunk<T> implements LapChunk<T> {
     private void seed(Object[] buffer, WorldgenRandom random, LapPicker<T> picker) {
         int columns = seedLines(this.sideX, this.wrapX);
         int rows = seedLines(this.sideZ, this.wrapZ);
-        for (int column = 0; column < columns; column++) {
-            for (int row = 0; row < rows; row++) {
-                int x = seedCoordinate(this.sideX, columns, column, random);
-                int z = seedCoordinate(this.sideZ, rows, row, random);
-                circle(buffer, x, z, picker.pick().apply(random), null);
-            }
+        int seeds = seedCount(this.sideX, this.sideZ, this.wrapX, this.wrapZ);
+        List<Integer> slots = new ArrayList<>(columns * rows);
+        for (int slot = 0; slot < columns * rows; slot++) {
+            slots.add(slot);
+        }
+
+        while (slots.size() > seeds) {
+            slots.remove(random.nextInt(slots.size()));
+        }
+
+        for (int slot : slots) {
+            int x = seedCoordinate(this.sideX, columns, slot / rows, random);
+            int z = seedCoordinate(this.sideZ, rows, slot % rows, random);
+            circle(buffer, x, z, picker.pick().apply(random), null);
+        }
+
+        for (int extra = slots.size(); extra < seeds; extra++) {
+            circle(buffer, random.nextInt(this.sideX), random.nextInt(this.sideZ), picker.pick().apply(random), null);
         }
     }
 
     static int seedLines(int side, boolean wraps) {
         int lines = Math.max(1, Math.round((float) side / SEED_SPACING));
         return wraps ? Math.max(lines, Math.min(side, MIN_WRAPPED_SEED_LINES)) : lines;
+    }
+
+    static int seedCount(int sideX, int sideZ, boolean wrapX, boolean wrapZ) {
+        int floor = wrappedSeedFloor(sideX, wrapX) * wrappedSeedFloor(sideZ, wrapZ);
+        return Math.max(floor, Math.round((float) sideX * sideZ / CELLS_PER_SEED));
+    }
+
+    private static int wrappedSeedFloor(int side, boolean wraps) {
+        return wraps ? Math.min(side, MIN_WRAPPED_SEED_LINES) : 1;
     }
 
     private static int seedCoordinate(int side, int lines, int line, WorldgenRandom random) {

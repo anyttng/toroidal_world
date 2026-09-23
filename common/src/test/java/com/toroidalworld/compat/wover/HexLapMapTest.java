@@ -5,8 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
+import org.betterx.wover.generator.api.biomesource.WoverBiomePicker;
+import org.betterx.wover.generator.impl.map.hex.HexBiomeChunk;
+import org.betterx.wover.generator.impl.map.hex.HexBiomeMap;
 import org.junit.jupiter.api.Test;
 
 import com.toroidalworld.core.FlatShape;
@@ -17,9 +21,18 @@ import com.toroidalworld.core.WrapDomain;
 import com.toroidalworld.engine.noise.ClimateScaleCompression;
 
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderGetter;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.levelgen.WorldgenRandom;
 
 class HexLapMapTest {
-    private static final float DEFAULT_SCALE = 256 / 8.0F;
+    private static final int BIOME_SIZE = 256;
+
+    private static final float DEFAULT_SCALE = BIOME_SIZE / 8.0F;
 
     private static final double FACTOR = 4.0;
 
@@ -33,8 +46,110 @@ class HexLapMapTest {
 
     private static final int SEAM_STRIP_BLOCKS = 96;
 
+    private static final int WIDE_LAP_CHUNKS = 256;
+
+    private static final int WIDE_LAP_BLOCKS = 4096;
+
+    private static final int QUART = 4;
+
+    private static final int REGION_LINES = 8;
+
+    private static final int CHUNK_SAMPLES = 64;
+
+    private static final double[] LINE_OFFSETS = {2.0, 6.0, 10.0, 14.0, 18.0, 22.0, 26.0, 30.0};
+
+    private static final int[] TORUS_CHUNK_SIDES = {27, 28, 32};
+
+    private static final double HALF_SAME = 0.5;
+
+    private static final double REGION_TOLERANCE = 0.05;
+
+    private static final double SAME_TOLERANCE = 0.005;
+
+    private static final String PALETTE_NAMESPACE = "cject";
+
+    private static final String PALETTE_PATH = "palette_";
+
     private static final LapPicker<Integer> PICKER = new LapPicker<>(
             random -> random.nextInt(PALETTE), (biome, random) -> biome);
+
+    private interface Cells {
+        Object at(double x, double z);
+    }
+
+    private record Regions(double halfDistance, double sameAtOneQuart) {
+        static Regions of(Cells cells) {
+            int lapQuarts = WIDE_LAP_BLOCKS / QUART;
+            int maxDistance = lapQuarts / 2;
+            long[] same = new long[maxDistance + 1];
+            long[] compared = new long[maxDistance + 1];
+            for (Direction.Axis axis : new Direction.Axis[] {Direction.Axis.X, Direction.Axis.Z}) {
+                for (double offset : LINE_OFFSETS) {
+                    for (int line = 0; line < REGION_LINES; line++) {
+                        double cross = -WIDE_LAP_BLOCKS / 2.0 + (double) line * WIDE_LAP_BLOCKS / REGION_LINES
+                                + offset;
+                        Object[] picks = new Object[lapQuarts + maxDistance];
+                        for (int quart = 0; quart < picks.length; quart++) {
+                            double along = -WIDE_LAP_BLOCKS / 2.0 + (double) quart * QUART;
+                            picks[quart] = axis == Direction.Axis.X ? cells.at(along, cross) : cells.at(cross, along);
+                        }
+
+                        for (int start = 0; start < lapQuarts; start++) {
+                            for (int distance = 1; distance <= maxDistance; distance++) {
+                                compared[distance]++;
+                                if (picks[start].equals(picks[start + distance])) {
+                                    same[distance]++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return new Regions(halfDistance(same, compared), (double) same[1] / compared[1]);
+        }
+
+        private static double halfDistance(long[] same, long[] compared) {
+            double before = 1.0;
+            for (int distance = 1; distance < same.length; distance++) {
+                double share = (double) same[distance] / compared[distance];
+                if (share <= HALF_SAME) {
+                    return distance - 1 + (before - HALF_SAME) / (before - share);
+                }
+
+                before = share;
+            }
+
+            return Double.NaN;
+        }
+
+        @Override
+        public String toString() {
+            return String.format(Locale.ROOT, "half at %.2f quarts, same at 1 quart %.3f", this.halfDistance,
+                    this.sameAtOneQuart);
+        }
+    }
+
+    private static final class Palette extends WoverBiomePicker {
+        private final PickableBiome[] biomes = new PickableBiome[PALETTE];
+
+        Palette() {
+            super((HolderGetter<Biome>) null, key(0));
+            for (int index = 0; index < PALETTE; index++) {
+                this.biomes[index] = new WoverBiomePicker((HolderGetter<Biome>) null, key(index)).fallbackBiome;
+            }
+        }
+
+        @Override
+        public PickableBiome getBiome(WorldgenRandom random) {
+            return this.biomes[random.nextInt(PALETTE)];
+        }
+
+        private static ResourceKey<Biome> key(int index) {
+            return ResourceKey.create(Registries.BIOME,
+                    ResourceLocation.fromNamespaceAndPath(PALETTE_NAMESPACE, PALETTE_PATH + index));
+        }
+    }
 
     private static HexLapMap<Integer> map(WorldFold fold, float scale) {
         return map(fold, scale, ClimateScaleCompression.NO_COMPRESSION);
@@ -129,6 +244,76 @@ class HexLapMapTest {
         }
 
         assertTrue(seen.size() > 1, "the map laid one biome over the whole lap: " + seen);
+    }
+
+    @Test
+    void theLapMapKeepsWorldWeaversRegionSizeOnALapWiderThanItsCell() {
+        Palette palette = new Palette();
+        HexBiomeMap own = new HexBiomeMap(SEED, BIOME_SIZE, palette);
+        LapPicker<WoverBiomePicker.PickableBiome> picker = new LapPicker<>(palette::getBiome,
+                (biome, random) -> biome);
+        WorldFold torus = WorldFolds.of(FlatShape.torus(WorldLoopBounds.ofWidth(WIDE_LAP_CHUNKS)));
+        HexLapMap<WoverBiomePicker.PickableBiome> onTorus = new HexLapMap<>(torus, DEFAULT_SCALE,
+                ClimateScaleCompression.NO_COMPRESSION, SEED, picker);
+        HexLapMap<WoverBiomePicker.PickableBiome> unbounded = new HexLapMap<>(WorldFolds.NOOP, DEFAULT_SCALE,
+                ClimateScaleCompression.NO_COMPRESSION, SEED, picker);
+        Regions ownMap = Regions.of((x, z) -> own.getBiome(x, 0.0, z));
+        Regions lapOnTorus = Regions.of(onTorus::biomeAt);
+        String readings = "WorldWeaver's own map: " + ownMap + "; the lap map on a " + WIDE_LAP_BLOCKS
+                + "-block torus: " + lapOnTorus + "; unbounded: " + Regions.of(unbounded::biomeAt);
+        assertEquals(1.0, lapOnTorus.halfDistance() / ownMap.halfDistance(), REGION_TOLERANCE, readings);
+        assertEquals(ownMap.sameAtOneQuart(), lapOnTorus.sameAtOneQuart(), SAME_TOLERANCE, readings);
+    }
+
+    @Test
+    void theLapChunkLaysCellBordersAsOftenAsWorldWeaversChunk() {
+        Palette palette = new Palette();
+        LapPicker<WoverBiomePicker.PickableBiome> picker = new LapPicker<>(palette::getBiome,
+                (biome, random) -> biome);
+        long ownBorders = 0;
+        long ownPairs = 0;
+        for (int chunk = 0; chunk < CHUNK_SAMPLES; chunk++) {
+            HexBiomeChunk own = new HexBiomeChunk(new WorldgenRandom(RandomSource.create(SEED + chunk)), palette);
+            for (int x = 0; x < HexLapMap.CHUNK_SIDE - 1; x++) {
+                for (int z = 0; z < HexLapMap.CHUNK_SIDE - 1; z++) {
+                    ownPairs += 2;
+                    ownBorders += own.getBiome(x, z).equals(own.getBiome(x + 1, z)) ? 0 : 1;
+                    ownBorders += own.getBiome(x, z).equals(own.getBiome(x, z + 1)) ? 0 : 1;
+                }
+            }
+        }
+
+        double ownShare = (double) ownBorders / ownPairs;
+        for (int side : TORUS_CHUNK_SIDES) {
+            long lapBorders = 0;
+            long lapPairs = 0;
+            for (int chunk = 0; chunk < CHUNK_SAMPLES; chunk++) {
+                HexLapChunk<WoverBiomePicker.PickableBiome> lap = new HexLapChunk<>(side, HexLapMap.CHUNK_SIDE,
+                        false, false, 0, new WorldgenRandom(RandomSource.create(SEED + chunk)), picker);
+                for (int x = 0; x < side - 1; x++) {
+                    for (int z = 0; z < HexLapMap.CHUNK_SIDE - 1; z++) {
+                        lapPairs += 2;
+                        lapBorders += lap.get(x, z).equals(lap.get(x + 1, z)) ? 0 : 1;
+                        lapBorders += lap.get(x, z).equals(lap.get(x, z + 1)) ? 0 : 1;
+                    }
+                }
+            }
+
+            double lapShare = (double) lapBorders / lapPairs;
+            assertEquals(1.0, lapShare / ownShare, REGION_TOLERANCE, "neighbouring cells reading two biomes: the lap "
+                    + "chunk " + side + " cells wide " + lapShare + " against WorldWeaver's " + ownShare);
+        }
+    }
+
+    @Test
+    void aChunkSeedsOneCellInSixtyFourWhateverItsSides() {
+        assertEquals(16, HexLapChunk.seedCount(32, 32, false, false));
+        assertEquals(14, HexLapChunk.seedCount(27, 32, false, false));
+        assertEquals(14, HexLapChunk.seedCount(28, 32, false, false));
+        assertEquals(19, HexLapChunk.seedCount(37, 32, false, false));
+        assertEquals(4, HexLapChunk.seedCount(7, 7, true, true));
+        assertEquals(2, HexLapChunk.seedCount(2, 32, true, false));
+        assertEquals(1, HexLapChunk.seedCount(1, 1, true, true));
     }
 
     static void assertCell(LapAxis axis, double ownCellBlocks, int countStep) {
