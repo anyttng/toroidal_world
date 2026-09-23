@@ -59,5 +59,5 @@ Toroidal World ships for Minecraft 26.3, 26.2, 26.1.2 and 1.21.1, on NeoForge an
 | Fast Noise | 26.3, 26.2, 1.21.1 | NeoForge, Fabric | No patch needed | |
 | [TerraBlender](https://modrinth.com/mod/terrablender) | 26.2, 26.1.2, 1.21.1 | NeoForge | Supported | |
 | [Biolith](https://modrinth.com/mod/biolith) | All | NeoForge, Fabric | Supported | |
+| BetterEnd and BetterNether | 26.2, 26.1.2, 1.21.1 | Fabric | No seam support | |
 | One Dimension | — | — | Not tested | |
-| BetterEnd and BetterNether | — | — | Not tested | |
