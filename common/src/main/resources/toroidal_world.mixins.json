@@ -11,6 +11,7 @@
     "AquiferFluidLevelSeamMixin",
     "AquiferFluidTypeSeamMixin",
     "AquiferSeamMixin",
+    "ArmadilloMixin",
     "AssignProfessionFromJobSiteMixin",
     "BatMixin",
     "BeeEnterHiveGoalMixin",
