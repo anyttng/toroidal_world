@@ -22,3 +22,5 @@ accessible method net/minecraft/world/level/levelgen/synth/BlendedNoise yMultipl
 accessible field net/minecraft/world/level/levelgen/synth/NormalNoise parameters Lnet/minecraft/world/level/levelgen/synth/NormalNoise$Parameters;
 accessible class net/minecraft/world/level/levelgen/synth/NormalNoise$Parameters
 accessible field net/minecraft/world/level/levelgen/RandomState router Lnet/minecraft/world/level/levelgen/NoiseRouter;
+accessible class net/minecraft/world/level/PotentialCalculator$PointCharge
+accessible field net/minecraft/world/level/PotentialCalculator$PointCharge pos Lnet/minecraft/core/BlockPos;

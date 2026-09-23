@@ -193,6 +193,7 @@
     "PoiManagerMixin",
     "PortalForcerMixin",
     "PotentSulfurBlockEntityMixin",
+    "PotentialCalculatorMixin",
     "PrepareRamNearestTargetMixin",
     "ProjectileMixin",
     "ProjectileUtilMixin",
