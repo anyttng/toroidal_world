@@ -9,6 +9,10 @@ import java.util.function.DoubleUnaryOperator;
 import org.betterx.wover.math.api.noise.OpenSimplexNoise;
 import org.junit.jupiter.api.Test;
 
+import net.minecraft.world.level.levelgen.LegacyRandomSource;
+import net.minecraft.world.level.levelgen.WorldgenRandom;
+import net.minecraft.world.level.levelgen.synth.ImprovedNoise;
+
 class OpenSimplexStandInTest {
     private static final long SEED = 0x900L;
 
@@ -27,6 +31,10 @@ class OpenSimplexStandInTest {
     private static final double TOLERANCE = 0.03;
 
     private static final double PERIOD_TOLERANCE = 1.0E-9;
+
+    private static final double ROW_MIDDLE = 0.5;
+
+    private static final double FLIP_STEP = 0.05;
 
     @Test
     void theStandInSpreadsAndCrossesZeroLikeWorldWeaversOpenSimplex() {
@@ -51,6 +59,39 @@ class OpenSimplexStandInTest {
         assertEquals(1.0, standIn.crossingsPerUnit() / openSimplex.crossingsPerUnit(), TOLERANCE,
                 "zero crossings per unit: stand-in " + standIn.crossingsPerUnit() + " against OpenSimplex "
                         + openSimplex.crossingsPerUnit());
+    }
+
+    @Test
+    void theZeroSetCrossesALatticeRowNoMoreOftenThanALineBetweenRows() {
+        Random random = new Random(SEED);
+        long rowFlips = 0;
+        long betweenFlips = 0;
+        long pairs = 0;
+        for (int field = 0; field < FIELDS; field++) {
+            long seed = random.nextLong();
+            OpenSimplexStandIn noise = new OpenSimplexStandIn(seed);
+            double zo = new ImprovedNoise(new WorldgenRandom(new LegacyRandomSource(seed))).zo;
+            for (int row = 0; row < LINES; row++) {
+                double onRow = (row - zo) / OpenSimplexStandIn.RATE;
+                double betweenRows = (row + ROW_MIDDLE - zo) / OpenSimplexStandIn.RATE;
+                for (int sample = 0; sample < LINE_SAMPLES; sample++) {
+                    double x = sample * FLIP_STEP;
+                    pairs++;
+                    rowFlips += flips(noise, x, onRow) ? 1 : 0;
+                    betweenFlips += flips(noise, x, betweenRows) ? 1 : 0;
+                }
+            }
+        }
+
+        double ratio = (double) rowFlips / betweenFlips;
+        assertTrue(ratio <= 1.0, "the zero set crosses a lattice row on "
+                + rowFlips + " of " + pairs + " steps and a line between rows on " + betweenFlips + ": ratio " + ratio);
+    }
+
+    private static boolean flips(OpenSimplexStandIn noise, double x, double z) {
+        double before = noise.eval(x, z - FLIP_STEP, OpenSimplexStandIn.UNBOUNDED, OpenSimplexStandIn.UNBOUNDED);
+        double after = noise.eval(x, z + FLIP_STEP, OpenSimplexStandIn.UNBOUNDED, OpenSimplexStandIn.UNBOUNDED);
+        return (before > 0.0) != (after > 0.0);
     }
 
     @Test

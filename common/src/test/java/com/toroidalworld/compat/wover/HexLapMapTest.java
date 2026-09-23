@@ -33,7 +33,7 @@ class HexLapMapTest {
 
     private static final int SEAM_STRIP_BLOCKS = 96;
 
-    private static final HexLapMap.Picker<Integer> PICKER = new HexLapMap.Picker<>(
+    private static final LapPicker<Integer> PICKER = new LapPicker<>(
             random -> random.nextInt(PALETTE), (biome, random) -> biome);
 
     private static HexLapMap<Integer> map(WorldFold fold, float scale) {
@@ -131,7 +131,7 @@ class HexLapMapTest {
         assertTrue(seen.size() > 1, "the map laid one biome over the whole lap: " + seen);
     }
 
-    private static void assertCell(HexLapMap.LapAxis axis, double ownCellBlocks, int countStep) {
+    static void assertCell(LapAxis axis, double ownCellBlocks, int countStep) {
         double lap = axis.blocks().domainLength;
         double cell = axis.latticeBlocks();
         assertTrue(cell <= ownCellBlocks + 1.0E-9,
@@ -146,7 +146,10 @@ class HexLapMapTest {
     }
 
     private static void assertPeriodic(WorldFold fold, float scale, double factor) {
-        HexLapMap<Integer> map = map(fold, scale, factor);
+        assertPeriodic(map(fold, scale, factor), fold);
+    }
+
+    static void assertPeriodic(LapMap<Integer> map, WorldFold fold) {
         WrapDomain xDomain = fold.blockDomain(Direction.Axis.X);
         WrapDomain zDomain = fold.blockDomain(Direction.Axis.Z);
         int xLap = xDomain.domainLength;

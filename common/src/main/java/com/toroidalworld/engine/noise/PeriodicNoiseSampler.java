@@ -105,12 +105,15 @@ public final class PeriodicNoiseSampler {
                 yFrac, xPeriod, yPeriod, zPeriod) + anchor;
     }
 
-    public static double sampleLattice(byte[] permutations, double xs, double zs, long xPeriod, long zPeriod) {
+    public static double sampleLattice(byte[] permutations, double xs, double ys, double zs, long xPeriod,
+            long zPeriod) {
         int xCell = Mth.floor(xs);
+        int yCell = Mth.floor(ys);
         int zCell = Mth.floor(zs);
         double xFrac = xs - xCell;
+        double yFrac = ys - yCell;
         double zFrac = zs - zCell;
-        return sampleAndLerp(permutations, xCell, 0, zCell, xFrac, 0.0, zFrac, 0.0,
+        return sampleAndLerp(permutations, xCell, yCell, zCell, xFrac, yFrac, zFrac, yFrac,
                 xPeriod, UNBOUNDED_PERIOD, zPeriod);
     }
 
