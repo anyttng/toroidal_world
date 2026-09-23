@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import com.toroidalworld.compat.wover.FoldCompression;
 import com.toroidalworld.compat.wover.HexLapMap;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
@@ -42,8 +43,8 @@ public class HexBiomeMapMixin {
 
         HexLapMap<WoverBiomePicker.PickableBiome> lapMap = this.toroidal$lapMap;
         if (lapMap == null || !lapMap.covers(transformer)) {
-            lapMap = new HexLapMap<>(transformer, this.scale, this.seed, new HexLapMap.Picker<>(
-                    this.picker::getBiome, WoverBiomePicker.PickableBiome::getSubBiome));
+            lapMap = new HexLapMap<>(transformer, this.scale, FoldCompression.of(transformer), this.seed,
+                    new HexLapMap.Picker<>(this.picker::getBiome, WoverBiomePicker.PickableBiome::getSubBiome));
             this.toroidal$lapMap = lapMap;
         }
 
