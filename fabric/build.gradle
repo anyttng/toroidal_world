@@ -271,6 +271,9 @@ dependencies {
     // names game types, and only the remapped jar spells them the way this workspace does.
     modCompileOnly "maven.modrinth:biolith:${biolith_fabric_version}"
     modCompileOnly "curse.maven:reterraforged-unofficial-1607000:${reterraforged_fabric_version}"
+    // WorldWeaver: plain compileOnly on the neoforge flavor; the one game-named override its fold wraps is listed in
+    // both spellings on the mixin, so nothing has to be remapped through its classes.
+    compileOnly "maven.modrinth:worldweaver-neoforge:${worldweaver_version}"
 
     // The 'modmenu' entrypoint class is only ever asked for by ModMenu itself, so it never loads without it.
     // modCompileOnly: its screen-factory API names the game's Screen, which only the remapped jar spells in this

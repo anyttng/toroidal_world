@@ -4,6 +4,9 @@ public final class InjectionTargets {
     public static final String AABB_INTERSECTS =
             "Lnet/minecraft/world/phys/AABB;intersects(Lnet/minecraft/world/phys/AABB;)Z";
 
+    public static final String BIOME_SOURCE_GET_NOISE_BIOME =
+            "getNoiseBiome(IIILnet/minecraft/world/level/biome/Climate$Sampler;)Lnet/minecraft/core/Holder;";
+
     public static final String BLOCK_ENTITY_HANDLE_UPDATE_TAG =
             "Lnet/minecraft/world/level/block/entity/BlockEntity;handleUpdateTag(Lnet/minecraft/nbt/CompoundTag;"
                     + "Lnet/minecraft/core/HolderLookup$Provider;)V";
