@@ -6,7 +6,8 @@
   "plugin": "com.toroidalworld.compat.wover.WoverMixinPlugin",
   "mixins": [
     "HexBiomeMapMixin",
-    "WoverBiomeSourceMixin"
+    "WoverBiomeSourceMixin",
+    "WoverChunkGeneratorImplMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -27,6 +27,7 @@ import net.minecraft.world.level.biome.FixedBiomeSource;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.LevelStem;
+import net.minecraft.world.level.levelgen.DebugLevelSource;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
@@ -97,6 +98,28 @@ class ShapedDimensionsTest {
 
         assertSame(foreign, shaped);
         assertNull(ShapedDimensions.shapeOf(shaped, LevelStem.NETHER));
+    }
+
+    @Test
+    void aVanillaReplacementTakesTheStoredShapeOnItsOwnBiomesAndSettings() {
+        BiomeSource biomes = plainsBiomeSource();
+        Holder<NoiseGeneratorSettings> settings = overworldNoiseSettings();
+        CarriedShape carried = new CarriedShape(CYLINDER);
+
+        ChunkGenerator shaped = ShapedDimensions.withStoredShape(new NoiseBasedChunkGenerator(biomes, settings),
+                carried);
+
+        LoopedChunkGenerator looped = (LoopedChunkGenerator) shaped;
+        assertSame(carried, looped.carriedShape());
+        assertSame(biomes, looped.getBiomeSource());
+        assertSame(settings, looped.generatorSettings());
+    }
+
+    @Test
+    void aReplacementWhoseTerrainIsNotNoiseIsRefusedTheStoredShape() {
+        ChunkGenerator debug = new DebugLevelSource(WORLDGEN.lookupOrThrow(Registries.BIOME).getOrThrow(Biomes.PLAINS));
+
+        assertNull(ShapedDimensions.withStoredShape(debug, new CarriedShape(TORUS)));
     }
 
     private static WorldDimensions overworldOf(ChunkGenerator generator) {
