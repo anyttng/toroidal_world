@@ -13,7 +13,8 @@
     "FullDataSourceProviderV2Mixin",
     "FullDataSourceV2RepoMixin",
     "GeneratedFullDataSourceProviderMixin",
-    "WorldGenerationQueueMixin"
+    "WorldGenerationQueueMixin",
+    "WorldGeneratorInjectorMixin"
   ],
   "client": [
     "LodQuadTreeAccessor",
