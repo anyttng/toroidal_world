@@ -40,9 +40,7 @@ public class LodQuadTreeMixin {
         original.call(DhKeys.nearestSection(shape, center.x, center.z, pos));
     }
 
-    @ModifyReturnValue(
-            method = "calcExpectedDetailLevel(Lcom/seibel/distanthorizons/core/pos/blockPos/DhBlockPos2D;IID)B",
-            at = @At("RETURN"))
+    @ModifyReturnValue(method = "calcExpectedDetailLevel*", at = @At("RETURN"))
     private byte toroidal$capDetailAtTheWorld(byte expected) {
         ToroidalShape shape = DhShapes.of(this.level);
         if (shape == null) {
