@@ -115,6 +115,7 @@
     "GoToTargetLocationMixin",
     "GoalUtilsMixin",
     "HarvestFarmlandMixin",
+    "HoglinAiMixin",
     "HoglinBaseMixin",
     "HoneyBlockMixin",
     "HopperBlockEntityMixin",
