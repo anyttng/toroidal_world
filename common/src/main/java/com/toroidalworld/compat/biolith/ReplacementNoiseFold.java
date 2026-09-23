@@ -4,22 +4,17 @@ import java.util.stream.IntStream;
 
 import org.jspecify.annotations.Nullable;
 
+import com.toroidalworld.compat.LevelClimateCompression;
 import com.toroidalworld.core.WorldFold;
-import com.toroidalworld.engine.noise.ClimateScaleCompression;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
 import com.toroidalworld.engine.noise.LapFloor;
 import com.toroidalworld.engine.noise.NoiseFrame;
 import com.toroidalworld.engine.noise.PeriodicNoiseSampler;
-import com.toroidalworld.shape.climate.ClimateCompression;
 
 import net.minecraft.core.QuartPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.levelgen.LegacyRandomSource;
-import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
 import net.minecraft.world.level.levelgen.densityfunction.DensityFunction;
-import net.minecraft.world.level.levelgen.densityfunction.DensityFunctions;
-import net.minecraft.world.level.levelgen.densityfunction.generator.NoiseFunction;
 import net.minecraft.world.level.levelgen.synth.GradientNoise;
 import net.minecraft.world.level.levelgen.synth.PerlinNoise;
 
@@ -64,14 +59,6 @@ public final class ReplacementNoiseFold {
         return !Double.isNaN(sum);
     }
 
-    public static DensityFunction temperatureOf(@Nullable ServerLevel level) {
-        if (level != null && level.getChunkSource().getGenerator() instanceof NoiseBasedChunkGenerator noise) {
-            return noise.generatorSettings().value().noiseRouter().temperature();
-        }
-
-        return DensityFunctions.zero();
-    }
-
     public double sum(long seed, double[] scaleQuarts, int quartX, int quartZ, DensityFunction temperature) {
         return sum(seed, scaleQuarts, quartX, FLAT_QUART_Y, quartZ, OPEN_SIMPLEX_FLAT_AMPLITUDE, temperature);
     }
@@ -87,11 +74,7 @@ public final class ReplacementNoiseFold {
             return held.factor();
         }
 
-        NoiseFunction climate = ClimateCompression.climateNoiseOf(temperature);
-        double factor = climate == null
-                ? ClimateScaleCompression.NO_COMPRESSION
-                : ClimateCompression.factor(fold, climate.noise(), climate.xzScale(),
-                        GenerationTransformerContext.verticalShare(climate.xzScale(), climate.yScale()));
+        double factor = LevelClimateCompression.factor(fold, temperature);
         this.compression = new Compression(fold, temperature, factor);
         return factor;
     }
