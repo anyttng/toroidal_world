@@ -70,15 +70,16 @@ public final class HexLapMap<T> {
 
     private final Map<Long, HexLapChunk<T>> chunks = new ConcurrentHashMap<>();
 
-    public HexLapMap(WorldFold fold, float scale, int seed, Picker<T> picker) {
+    public HexLapMap(WorldFold fold, float scale, double factor, int seed, Picker<T> picker) {
+        double cellScale = scale / factor;
         this.fold = fold;
         this.seed = seed;
         this.picker = picker;
-        this.x = LapAxis.of(fold.blockDomain(Direction.Axis.X), scale / RAD_INNER, false);
-        this.z = LapAxis.of(fold.blockDomain(Direction.Axis.Z), scale, true);
+        this.x = LapAxis.of(fold.blockDomain(Direction.Axis.X), cellScale / RAD_INNER, false);
+        this.z = LapAxis.of(fold.blockDomain(Direction.Axis.Z), cellScale, true);
         this.warps = new OpenSimplexStandIn[] {
                 new OpenSimplexStandIn((long) seed << 1), new OpenSimplexStandIn(((long) seed << 1) | 1L)};
-        this.warpOctaves = (int) Math.min(Math.ceil(Math.log(scale) / Math.log(2.0)), MAX_WARP_OCTAVES);
+        this.warpOctaves = (int) Math.min(Math.ceil(Math.log(cellScale) / Math.log(2.0)), MAX_WARP_OCTAVES);
     }
 
     public boolean covers(WorldFold fold) {
