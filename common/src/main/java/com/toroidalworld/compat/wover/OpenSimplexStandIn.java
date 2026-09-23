@@ -9,9 +9,11 @@ import net.minecraft.world.level.levelgen.synth.ImprovedNoise;
 public final class OpenSimplexStandIn {
     public static final double UNBOUNDED = 0.0;
 
-    static final double AMPLITUDE = 1.531;
+    static final double AMPLITUDE = 1.252;
 
-    static final double RATE = 0.800;
+    static final double RATE = 1.065;
+
+    private static final double BETWEEN_PLANES = 0.5;
 
     private static final long MIN_CELLS = 1L;
 
@@ -27,8 +29,8 @@ public final class OpenSimplexStandIn {
         long xCells = cells(xPeriod);
         long zCells = cells(zPeriod);
         return AMPLITUDE * PeriodicNoiseSampler.sampleLattice(this.noise.p,
-                lattice(x, xPeriod, xCells) + this.noise.xo, lattice(z, zPeriod, zCells) + this.noise.zo,
-                xCells, zCells);
+                lattice(x, xPeriod, xCells) + this.noise.xo, Math.floor(this.noise.yo) + BETWEEN_PLANES,
+                lattice(z, zPeriod, zCells) + this.noise.zo, xCells, zCells);
     }
 
     static long cells(double period) {

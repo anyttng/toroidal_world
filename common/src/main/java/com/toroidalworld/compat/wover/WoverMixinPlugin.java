@@ -15,9 +15,31 @@ public class WoverMixinPlugin extends ModPresenceGatePlugin {
     private static final String NOISE_BIOME_DESCRIPTOR =
             "(IIILnet/minecraft/world/level/biome/Climate$Sampler;)Lnet/minecraft/core/Holder;";
 
+    private static final String RAW_BIOME_NAME = "getRawBiome";
+
+    private static final String RAW_BIOME_DESCRIPTOR =
+            "(DD)Lorg/betterx/wover/generator/api/biomesource/WoverBiomePicker$PickableBiome;";
+
+    private static final String MAP_STACK = "org/betterx/wover/generator/impl/map/MapStack";
+
+    private static final String SQUARE_MAP = "org/betterx/wover/generator/impl/map/square/SquareBiomeMap";
+
+    private static final String CONSTRUCTOR = "<init>";
+
     static final ModSymbol RAW_BIOME = new ModSymbol(
-            "org/betterx/wover/generator/impl/map/hex/HexBiomeMap", "getRawBiome",
-            "(DD)Lorg/betterx/wover/generator/api/biomesource/WoverBiomePicker$PickableBiome;");
+            "org/betterx/wover/generator/impl/map/hex/HexBiomeMap", RAW_BIOME_NAME, RAW_BIOME_DESCRIPTOR);
+
+    static final ModSymbol SQUARE_RAW_BIOME = new ModSymbol(SQUARE_MAP, RAW_BIOME_NAME, RAW_BIOME_DESCRIPTOR);
+
+    static final ModSymbol SQUARE_CONSTRUCTOR = new ModSymbol(SQUARE_MAP, CONSTRUCTOR,
+            "(JILorg/betterx/wover/generator/api/biomesource/WoverBiomePicker;)V");
+
+    static final ModSymbol STACK_BIOME = new ModSymbol(MAP_STACK, "getBiome",
+            "(DDD)Lorg/betterx/wover/generator/api/biomesource/WoverBiomePicker$PickableBiome;");
+
+    static final ModSymbol STACK_CONSTRUCTOR = new ModSymbol(MAP_STACK, CONSTRUCTOR,
+            "(JILorg/betterx/wover/generator/api/biomesource/WoverBiomePicker;II"
+                    + "Lorg/betterx/wover/generator/api/map/MapBuilderFunction;)V");
 
     static final ModSymbol NETHER_NOISE_BIOME = new ModSymbol(
             "org/betterx/wover/generator/impl/biomesource/nether/WoverNetherBiomeSource", NOISE_BIOME_NAME,
@@ -37,7 +59,8 @@ public class WoverMixinPlugin extends ModPresenceGatePlugin {
 
     private static final ModPresence WOVER = ModPresence.of(LOGGER,
             "org/betterx/wover/generator/impl/map/hex/HexBiomeMap.class",
-            "[wover-compat] gate wover_present", RAW_BIOME, NETHER_NOISE_BIOME, END_NOISE_BIOME, REPLACE_GENERATOR);
+            "[wover-compat] gate wover_present", RAW_BIOME, SQUARE_RAW_BIOME, SQUARE_CONSTRUCTOR, STACK_BIOME,
+            STACK_CONSTRUCTOR, NETHER_NOISE_BIOME, END_NOISE_BIOME, REPLACE_GENERATOR);
 
     public WoverMixinPlugin() {
         super(WOVER);

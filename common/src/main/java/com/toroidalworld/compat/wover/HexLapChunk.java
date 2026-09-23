@@ -2,7 +2,7 @@ package com.toroidalworld.compat.wover;
 
 import net.minecraft.world.level.levelgen.WorldgenRandom;
 
-final class HexLapChunk<T> {
+final class HexLapChunk<T> implements LapChunk<T> {
     private static final int SEED_SPACING = 8;
 
     private static final int MIN_WRAPPED_SEED_LINES = 2;
@@ -28,7 +28,7 @@ final class HexLapChunk<T> {
     private final Object[] cells;
 
     HexLapChunk(int sideX, int sideZ, boolean wrapX, boolean wrapZ, int zOrigin, WorldgenRandom random,
-            HexLapMap.Picker<T> picker) {
+            LapPicker<T> picker) {
         this.sideX = sideX;
         this.sideZ = sideZ;
         this.wrapX = wrapX;
@@ -37,12 +37,28 @@ final class HexLapChunk<T> {
         this.cells = fill(random, picker);
     }
 
+    @Override
+    public int sideX() {
+        return this.sideX;
+    }
+
+    @Override
+    public int sideZ() {
+        return this.sideZ;
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
-    T get(int x, int z) {
+    public T get(int x, int z) {
         return (T) this.cells[index(x, z)];
     }
 
-    private Object[] fill(WorldgenRandom random, HexLapMap.Picker<T> picker) {
+    @Override
+    public void set(int x, int z, T biome) {
+        this.cells[index(x, z)] = biome;
+    }
+
+    private Object[] fill(WorldgenRandom random, LapPicker<T> picker) {
         Object[][] buffers = {new Object[this.cells()], new Object[this.cells()]};
         seed(buffers[0], random, picker);
 
@@ -89,7 +105,7 @@ final class HexLapChunk<T> {
         return out;
     }
 
-    private void seed(Object[] buffer, WorldgenRandom random, HexLapMap.Picker<T> picker) {
+    private void seed(Object[] buffer, WorldgenRandom random, LapPicker<T> picker) {
         int columns = seedLines(this.sideX, this.wrapX);
         int rows = seedLines(this.sideZ, this.wrapZ);
         for (int column = 0; column < columns; column++) {
