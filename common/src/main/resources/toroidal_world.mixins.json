@@ -189,6 +189,7 @@
     "PoiDistanceTrackerMixin",
     "PoiManagerMixin",
     "PortalForcerMixin",
+    "PotentialCalculatorMixin",
     "PrepareRamNearestTargetMixin",
     "ProjectileUtilMixin",
     "ProtoChunkMixin",

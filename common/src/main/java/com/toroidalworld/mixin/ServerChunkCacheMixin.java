@@ -7,14 +7,17 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
+import com.toroidalworld.accessors.TransformerHolder;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WorldLoopAttachments;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.NaturalSpawner;
 
 @Mixin(ServerChunkCache.class)
 public class ServerChunkCacheMixin {
@@ -73,6 +76,14 @@ public class ServerChunkCacheMixin {
     @ModifyVariable(method = "blockChanged", at = @At("HEAD"), argsOnly = true)
     private BlockPos toroidal$wrapChangedBlock(BlockPos pos) {
         return toroidal$transformer().fold(pos);
+    }
+
+    @ModifyExpressionValue(
+            method = "tickChunks()V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/NaturalSpawner;createState(ILjava/lang/Iterable;Lnet/minecraft/world/level/NaturalSpawner$ChunkGetter;Lnet/minecraft/world/level/LocalMobCapCalculator;)Lnet/minecraft/world/level/NaturalSpawner$SpawnState;"))
+    private NaturalSpawner.SpawnState toroidal$bindSpawnPotentialToLevel(NaturalSpawner.SpawnState spawnState) {
+        ((TransformerHolder) spawnState.spawnPotential).toroidal$setTransformer(toroidal$transformer());
+        return spawnState;
     }
 
     @Unique
