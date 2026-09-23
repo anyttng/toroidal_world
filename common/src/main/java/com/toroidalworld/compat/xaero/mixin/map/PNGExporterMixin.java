@@ -1,5 +1,7 @@
 package com.toroidalworld.compat.xaero.mixin.map;
 
+import java.nio.ByteBuffer;
+
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -27,6 +29,7 @@ import xaero.map.region.ExportMapRegion;
 import xaero.map.region.ExportMapTileChunk;
 import xaero.map.region.MapLayer;
 import xaero.map.region.MapRegion;
+import xaero.map.region.texture.ExportLeafRegionTexture;
 import xaero.map.world.MapDimension;
 
 @Mixin(value = PNGExporter.class, remap = false)
@@ -100,6 +103,16 @@ public abstract class PNGExporterMixin {
         }
 
         return this.toroidal$assembly.chunk(slotX, slotZ);
+    }
+
+    @WrapOperation(
+            method = "export",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lxaero/map/region/texture/ExportLeafRegionTexture;getDirectColorBuffer()Ljava/nio/ByteBuffer;"))
+    private ByteBuffer toroidal$assembleSlotColors(ExportLeafRegionTexture texture, Operation<ByteBuffer> original) {
+        ByteBuffer buffer = original.call(texture);
+        return this.toroidal$assembly.assembling() ? this.toroidal$assembly.colorBuffer(buffer) : buffer;
     }
 
     @WrapOperation(

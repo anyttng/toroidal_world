@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
@@ -84,6 +85,9 @@ public abstract class MapRendererMixin implements JourneyMapSeamPass {
     @Shadow(remap = false)
     public abstract Point2D.Double getBlockPixelInGrid(BlockPos pos);
 
+    @Shadow(remap = false)
+    public abstract Context.UI getContext();
+
     @Unique
     private static final int SEAM_ARGB = 0x59FFFFFF;
 
@@ -121,6 +125,13 @@ public abstract class MapRendererMixin implements JourneyMapSeamPass {
         if (worldDir != null) {
             toroidal$lastWorldDir = worldDir;
         }
+    }
+
+    @Inject(
+            method = "render(Lnet/minecraft/client/gui/GuiGraphicsExtractor;DDFZLjava/util/List;DDLorg/joml/Matrix3x2f;)V",
+            at = @At("HEAD"))
+    private void toroidal$recordView(CallbackInfo ci) {
+        JourneyMapFold.recordView(this.getContext(), this.centerBlockX, this.centerBlockZ, this.regions.size());
     }
 
     @WrapOperation(
