@@ -11,7 +11,8 @@ import com.toroidalworld.compat.ModSymbol;
 class DhGateSymbolTest {
     @Test
     void theGateNamesSymbolsTheCompiledAgainstDistantHorizonsCarries() {
-        for (ModSymbol symbol : List.of(DhMixinPlugin.LEVEL_CHUNK_HASH_REPO, DhMixinPlugin.REPO_UPSERT_STATEMENT)) {
+        for (ModSymbol symbol : List.of(DhMixinPlugin.LEVEL_CHUNK_HASH_REPO, DhMixinPlugin.REPO_UPSERT_STATEMENT,
+                DhMixinPlugin.GENERATOR_BIND)) {
             assertTrue(symbol.carriedBy(DhGateSymbolTest.class.getClassLoader()),
                     symbol + " is gone from the Distant Horizons this compat compiles "
                             + "against, so its gate would refuse a Distant Horizons that works");
