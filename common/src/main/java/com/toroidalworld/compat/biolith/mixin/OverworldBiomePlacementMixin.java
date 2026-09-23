@@ -12,9 +12,6 @@ import com.terraformersmc.biolith.impl.biome.OverworldBiomePlacement;
 import com.terraformersmc.biolith.impl.noise.OpenSimplexNoise2;
 import com.toroidalworld.compat.biolith.ReplacementNoiseFold;
 
-import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
-import it.unimi.dsi.fastutil.doubles.DoubleList;
-
 @Mixin(OverworldBiomePlacement.class)
 public abstract class OverworldBiomePlacementMixin extends DimensionBiomePlacement {
     @Unique
@@ -22,12 +19,6 @@ public abstract class OverworldBiomePlacementMixin extends DimensionBiomePlaceme
 
     @Unique
     private static final double TOROIDAL_SUM_DIVISOR = 1.21875;
-
-    @Unique
-    private static final DoubleList VANILLA_AMPLITUDES = DoubleArrayList.wrap(new double[]{1.5, 0.0, 1.0, 0.0, 0.0, 0.0});
-
-    @Unique
-    private static final double VANILLA_LOWEST_FREQ = 1.0 / 1024.0;
 
     @Unique
     private final ReplacementNoiseFold toroidal$fold = new ReplacementNoiseFold(TOROIDAL_OCTAVE_WEIGHTS);
@@ -42,7 +33,8 @@ public abstract class OverworldBiomePlacementMixin extends DimensionBiomePlaceme
             return;
         }
 
-        double sum = this.toroidal$fold.sum(noise.getSeed(), this.scale, x, z, VANILLA_AMPLITUDES, VANILLA_LOWEST_FREQ);
+        double sum = this.toroidal$fold.sum(noise.getSeed(), this.scale, x, z,
+                ReplacementNoiseFold.temperatureOf(this.world));
         if (ReplacementNoiseFold.folded(sum)) {
             cir.setReturnValue(this.normalize(sum / TOROIDAL_SUM_DIVISOR));
         }
