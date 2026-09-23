@@ -1,5 +1,7 @@
-package com.toroidalworld.mixin;
+package com.toroidalworld.compat.wover.mixin;
 
+import org.betterx.wover.generator.impl.biomesource.end.WoverEndBiomeSource;
+import org.betterx.wover.generator.impl.biomesource.nether.WoverNetherBiomeSource;
 import org.spongepowered.asm.mixin.Mixin;
 
 import com.toroidalworld.InjectionTargets;
@@ -12,12 +14,11 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import net.minecraft.core.Holder;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Climate;
-import net.minecraft.world.level.biome.TheEndBiomeSource;
 
-@Mixin(TheEndBiomeSource.class)
-public class TheEndBiomeSourceMixin {
+@Mixin({WoverNetherBiomeSource.class, WoverEndBiomeSource.class})
+public class WoverBiomeSourceMixin {
     @WrapMethod(method = InjectionTargets.BIOME_SOURCE_GET_NOISE_BIOME)
-    private Holder<Biome> toroidal$loopedNoiseBiome(int quartX, int quartY, int quartZ, Climate.Sampler sampler,
+    private Holder<Biome> toroidal$foldedNoiseBiome(int quartX, int quartY, int quartZ, Climate.Sampler sampler,
             Operation<Holder<Biome>> original) {
         WorldFold transformer = GenerationTransformerContext.context().wrappedTransformer();
         if (transformer == null) {
