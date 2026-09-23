@@ -27,9 +27,17 @@ public class WoverMixinPlugin extends ModPresenceGatePlugin {
             "org/betterx/wover/generator/impl/biomesource/end/WoverEndBiomeSource", NOISE_BIOME_NAME,
             NOISE_BIOME_DESCRIPTOR);
 
+    static final ModSymbol REPLACE_GENERATOR = new ModSymbol(
+            "org/betterx/wover/generator/impl/chunkgenerator/WoverChunkGeneratorImpl", "replaceGenerator",
+            "(Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/resources/ResourceKey;"
+                    + "Lnet/minecraft/core/RegistryAccess;Ljava/util/Set;Lnet/minecraft/world/level/chunk/ChunkGenerator;"
+                    + "Lorg/betterx/wover/generator/impl/chunkgenerator/WoverChunkGeneratorImpl$StemGetter;"
+                    + "Lorg/betterx/wover/generator/impl/chunkgenerator/WoverChunkGeneratorImpl$RegisterHelper;)"
+                    + "Lnet/minecraft/core/Registry;");
+
     private static final ModPresence WOVER = ModPresence.of(LOGGER,
             "org/betterx/wover/generator/impl/map/hex/HexBiomeMap.class",
-            "[wover-compat] gate wover_present", RAW_BIOME, NETHER_NOISE_BIOME, END_NOISE_BIOME);
+            "[wover-compat] gate wover_present", RAW_BIOME, NETHER_NOISE_BIOME, END_NOISE_BIOME, REPLACE_GENERATOR);
 
     public WoverMixinPlugin() {
         super(WOVER);
