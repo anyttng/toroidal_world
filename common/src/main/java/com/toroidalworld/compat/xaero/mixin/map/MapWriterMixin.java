@@ -2,15 +2,22 @@ package com.toroidalworld.compat.xaero.mixin.map;
 
 import java.util.ArrayDeque;
 
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
+import org.spongepowered.asm.mixin.injection.Slice;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
+import com.toroidalworld.compat.AxisCopies;
 import com.toroidalworld.compat.xaero.XaeroInjectionTargets;
 import com.toroidalworld.compat.xaero.XaeroWorldMapFold;
 
@@ -18,7 +25,9 @@ import net.minecraft.core.Direction;
 
 import xaero.map.MapProcessor;
 import xaero.map.MapWriter;
+import xaero.map.pool.MapTilePool;
 import xaero.map.region.MapRegion;
+import xaero.map.region.MapTile;
 
 @Mixin(value = MapWriter.class, remap = false)
 public abstract class MapWriterMixin {
@@ -32,7 +41,29 @@ public abstract class MapWriterMixin {
     private int endTileChunkZ;
 
     @Unique
+    private static final String INSIDE_X = "Lxaero/map/MapWriter;insideX:I";
+    @Unique
+    private static final String INSIDE_Z = "Lxaero/map/MapWriter;insideZ:I";
+    @Unique
+    private static final String SET_TILE = "Lxaero/map/region/MapTileChunk;setTile(IILxaero/map/region/MapTile;"
+            + "Lxaero/map/cache/BlockStateShortShapeCache;Lxaero/map/MapProcessor;)V";
+    @Unique
+    private static final int CHUNK_X_ARG = 8;
+    @Unique
+    private static final int CHUNK_Z_ARG = 9;
+
+    @Unique
     private final ArrayDeque<int[]> toroidal$visitQueue = new ArrayDeque<>();
+    @Unique
+    private boolean toroidal$foldedPosition;
+    @Unique
+    private int toroidal$insideX;
+    @Unique
+    private int toroidal$insideZ;
+    @Unique
+    private int toroidal$lastInsideX;
+    @Unique
+    private int toroidal$lastInsideZ;
 
     @ModifyArgs(
             method = "writeMap",
@@ -42,8 +73,8 @@ public abstract class MapWriterMixin {
     private void toroidal$foldWriteKeys(Args args) {
         int tileChunkX = args.get(16);
         int tileChunkZ = args.get(17);
-        int foldedX = XaeroWorldMapFold.foldTileChunk(Direction.Axis.X, tileChunkX);
-        int foldedZ = XaeroWorldMapFold.foldTileChunk(Direction.Axis.Z, tileChunkZ);
+        int foldedX = XaeroWorldMapFold.tileOfChunk(Direction.Axis.X, args.<Integer>get(20));
+        int foldedZ = XaeroWorldMapFold.tileOfChunk(Direction.Axis.Z, args.<Integer>get(21));
         if (foldedX == tileChunkX && foldedZ == tileChunkZ) {
             return;
         }
@@ -52,6 +83,84 @@ public abstract class MapWriterMixin {
         args.set(17, foldedZ);
         args.set(18, XaeroWorldMapFold.tileChunkInRegion(foldedX));
         args.set(19, XaeroWorldMapFold.tileChunkInRegion(foldedZ));
+    }
+
+    @Inject(method = "writeChunk", at = @At("HEAD"))
+    private void toroidal$foldTilePosition(CallbackInfoReturnable<Boolean> cir,
+            @Local(argsOnly = true, ordinal = CHUNK_X_ARG) int chunkX,
+            @Local(argsOnly = true, ordinal = CHUNK_Z_ARG) int chunkZ) {
+        this.toroidal$foldedPosition = XaeroWorldMapFold.active();
+        if (!this.toroidal$foldedPosition) {
+            return;
+        }
+
+        AxisCopies copiesX = XaeroWorldMapFold.chunkCopies(Direction.Axis.X);
+        AxisCopies copiesZ = XaeroWorldMapFold.chunkCopies(Direction.Axis.Z);
+        this.toroidal$insideX = XaeroWorldMapFold.insideTile(copiesX, chunkX);
+        this.toroidal$insideZ = XaeroWorldMapFold.insideTile(copiesZ, chunkZ);
+        this.toroidal$lastInsideX = XaeroWorldMapFold.lastInsideTile(copiesX, chunkX);
+        this.toroidal$lastInsideZ = XaeroWorldMapFold.lastInsideTile(copiesZ, chunkZ);
+    }
+
+    @ModifyExpressionValue(
+            method = "writeChunk",
+            at = @At(value = "FIELD", target = INSIDE_X, opcode = Opcodes.GETFIELD),
+            slice = @Slice(to = @At(value = "INVOKE", target = SET_TILE)))
+    private int toroidal$tileInsideX(int raw) {
+        return this.toroidal$foldedPosition ? this.toroidal$insideX : raw;
+    }
+
+    @ModifyExpressionValue(
+            method = "writeChunk",
+            at = @At(value = "FIELD", target = INSIDE_Z, opcode = Opcodes.GETFIELD),
+            slice = @Slice(to = @At(value = "INVOKE", target = SET_TILE)))
+    private int toroidal$tileInsideZ(int raw) {
+        return this.toroidal$foldedPosition ? this.toroidal$insideZ : raw;
+    }
+
+    @ModifyExpressionValue(
+            method = "writeChunk",
+            at = @At(value = "FIELD", target = INSIDE_X, opcode = Opcodes.GETFIELD),
+            slice = @Slice(
+                    from = @At(value = "INVOKE", target = SET_TILE),
+                    to = @At(value = "FIELD", target = INSIDE_X, opcode = Opcodes.PUTFIELD, ordinal = 0)))
+    private int toroidal$bufferTriggerX(int raw) {
+        return this.toroidal$foldedPosition ? this.toroidal$lastInsideX : raw;
+    }
+
+    @ModifyExpressionValue(
+            method = "writeChunk",
+            at = @At(value = "FIELD", target = INSIDE_Z, opcode = Opcodes.GETFIELD),
+            slice = @Slice(
+                    from = @At(value = "INVOKE", target = SET_TILE),
+                    to = @At(value = "FIELD", target = INSIDE_X, opcode = Opcodes.PUTFIELD, ordinal = 0)))
+    private int toroidal$bufferTriggerZ(int raw) {
+        return this.toroidal$foldedPosition ? this.toroidal$lastInsideZ : raw;
+    }
+
+    @ModifyExpressionValue(
+            method = "updateBottomRightTile",
+            at = @At(value = "FIELD", target = INSIDE_X, opcode = Opcodes.GETFIELD))
+    private int toroidal$slopeInsideX(int raw) {
+        return this.toroidal$foldedPosition ? this.toroidal$insideX : raw;
+    }
+
+    @ModifyExpressionValue(
+            method = "updateBottomRightTile",
+            at = @At(value = "FIELD", target = INSIDE_Z, opcode = Opcodes.GETFIELD))
+    private int toroidal$slopeInsideZ(int raw) {
+        return this.toroidal$foldedPosition ? this.toroidal$insideZ : raw;
+    }
+
+    @WrapOperation(
+            method = "writeChunk",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lxaero/map/pool/MapTilePool;get(Ljava/lang/String;II)Lxaero/map/region/MapTile;"))
+    private MapTile toroidal$canonicalTileChunk(MapTilePool pool, String dimension, int chunkX, int chunkZ,
+            Operation<MapTile> original) {
+        return original.call(pool, dimension, XaeroWorldMapFold.foldChunk(Direction.Axis.X, chunkX),
+                XaeroWorldMapFold.foldChunk(Direction.Axis.Z, chunkZ));
     }
 
     @WrapOperation(

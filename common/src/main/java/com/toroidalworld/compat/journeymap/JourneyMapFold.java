@@ -28,7 +28,6 @@ public final class JourneyMapFold {
     private static final int REGION_CHUNKS = 32;
 
     private static final int MAX_TILE_BLITS = 16_384;
-    private static final double VIEWPORT_COVER = 0.75;
 
     public static final String WORLD_CHANGED = "world";
     public static final String DIMENSION_CHANGED = "dimension";
@@ -37,6 +36,8 @@ public final class JourneyMapFold {
     private static int fullscreenRangeZ;
     private static int minimapRangeX;
     private static int minimapRangeZ;
+    private static @Nullable View fullscreenView;
+    private static @Nullable View minimapView;
 
     public static int foldRegionChunk(Direction.Axis axis, int chunk) {
         ToroidalShape shape = ClientShapes.current();
@@ -138,23 +139,6 @@ public final class JourneyMapFold {
         return new int[] {(int) Math.floor(centerBlock - halfSpanBlocks), (int) Math.ceil(centerBlock + halfSpanBlocks)};
     }
 
-    public static int tilesWithContent(int zoom, int viewportX, int viewportZ) {
-        ToroidalShape shape = ClientShapes.current();
-        if (shape == null) {
-            return 1;
-        }
-
-        return tilesAlong(shape, Direction.Axis.X, zoom, viewportX) * tilesAlong(shape, Direction.Axis.Z, zoom, viewportZ);
-    }
-
-    private static int tilesAlong(ToroidalShape shape, Direction.Axis axis, int zoom, int viewportPixels) {
-        return shape.loops(axis) ? regionSpan(shape, axis) : viewportTiles(zoom, viewportPixels);
-    }
-
-    public static int viewportTiles(int zoom, int viewportPixels) {
-        return zoom <= 0 ? 1 : (int) Math.ceil((double) viewportPixels / zoom) + 1;
-    }
-
     public static int copyRangeCap(int loopedAxes, int tilesWithContent) {
         int budget = MAX_TILE_BLITS / Math.max(1, tilesWithContent);
         return switch (loopedAxes) {
@@ -164,17 +148,57 @@ public final class JourneyMapFold {
         };
     }
 
-    public static int copyRange(int loopedAxes, int tilesWithContent, double periodPixels, int viewportPixels,
+    public static int[] copyRanges(AxisCopies copiesX, AxisCopies copiesZ, int gridTiles, int[] spanX, int[] spanZ,
             MapCopies copies) {
         if (copies == MapCopies.SINGLE) {
-            return 0;
+            return new int[] {0, 0};
         }
 
-        return Math.min(copiesToCover(periodPixels, viewportPixels), copyRangeCap(loopedAxes, tilesWithContent));
+        int[] lapsX = copiesX.laps(spanX[0], spanX[1]);
+        int[] lapsZ = copiesZ.laps(spanZ[0], spanZ[1]);
+        int rangeX = farthestLap(lapsX);
+        int rangeZ = farthestLap(lapsZ);
+        if ((long) gridTiles * lapsX.length * lapsZ.length <= MAX_TILE_BLITS) {
+            return new int[] {rangeX, rangeZ};
+        }
+
+        int cap = copyRangeCap((copiesX.loops() ? 1 : 0) + (copiesZ.loops() ? 1 : 0), gridTiles);
+        return new int[] {Math.min(rangeX, cap), Math.min(rangeZ, cap)};
     }
 
-    private static int copiesToCover(double periodPixels, int viewportPixels) {
-        return periodPixels <= 0.0 ? 0 : (int) Math.ceil(viewportPixels * VIEWPORT_COVER / periodPixels);
+    private static int farthestLap(int[] laps) {
+        int farthest = 0;
+        for (int lap : laps) {
+            farthest = Math.max(farthest, Math.abs(lap));
+        }
+
+        return farthest;
+    }
+
+    public static int[] tileLaps(AxisCopies copies, int tileMin, int tileSize, int spanMin, int spanMax, int range) {
+        if (!copies.loops()) {
+            return new int[] {0};
+        }
+
+        int first = Math.max(-range, Math.floorDiv(spanMin - tileMin - tileSize, copies.width()) + 1);
+        int last = Math.min(range, Math.floorDiv(spanMax - 1 - tileMin, copies.width()));
+        return AxisCopies.lapRange(first, last);
+    }
+
+    public static void recordView(Context.UI ui, double centerX, double centerZ, int tiles) {
+        View view = new View(centerX, centerZ, tiles);
+        if (ui == Context.UI.Fullscreen) {
+            fullscreenView = view;
+        } else if (ui == Context.UI.Minimap) {
+            minimapView = view;
+        }
+    }
+
+    public static @Nullable View viewOf(Context.UI ui) {
+        return ui == Context.UI.Fullscreen ? fullscreenView : ui == Context.UI.Minimap ? minimapView : null;
+    }
+
+    public record View(double centerX, double centerZ, int tiles) {
     }
 
     public static void recordCopyRange(Context.UI ui, int rangeX, int rangeZ) {
