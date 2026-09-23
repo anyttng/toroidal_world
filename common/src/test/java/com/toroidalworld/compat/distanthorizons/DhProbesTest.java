@@ -91,4 +91,10 @@ class DhProbesTest {
     void aChunkKeyIsNamedInChunks() {
         assertEquals("64,1", DhProbes.chunkValue(WIDTH_CHUNKS, 1));
     }
+
+    @Test
+    void theSeamSqlLineNamesItsSiteAndWhetherDhsDistanceWasFound() {
+        assertEquals("[dh-compat] seam_sql site=regen_count matched=false",
+                DhProbes.seamSqlLine(DhSeamSql.Site.REGEN_COUNT, false));
+    }
 }

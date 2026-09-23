@@ -20,6 +20,7 @@ public final class DhProbes {
     private static final String NONE = "none";
 
     private static final Set<String> SEEN_KEY_PERIODS = ConcurrentHashMap.newKeySet();
+    private static final Set<DhSeamSql.Site> SEEN_SEAM_SQL_SITES = ConcurrentHashMap.newKeySet();
 
     enum Key {
         SECTION("section"),
@@ -110,6 +111,16 @@ public final class DhProbes {
 
     static String beaconValue(DhBlockPos pos) {
         return pos.getX() + "," + pos.getY() + "," + pos.getZ();
+    }
+
+    static void seamSql(DhSeamSql.Site site, boolean matched) {
+        if (SEEN_SEAM_SQL_SITES.add(site)) {
+            LOGGER.info(seamSqlLine(site, matched));
+        }
+    }
+
+    static String seamSqlLine(DhSeamSql.Site site, boolean matched) {
+        return "[dh-compat] seam_sql site=" + site.label + " matched=" + matched;
     }
 
     static int foldedKeyLines(Key key) {

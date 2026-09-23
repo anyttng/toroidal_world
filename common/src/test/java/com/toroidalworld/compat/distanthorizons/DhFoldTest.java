@@ -594,6 +594,48 @@ class DhFoldTest {
     }
 
     @Nested
+    class TheSeamDistanceIsTheShorterWayRound {
+        private final ToroidalShape shape = torus(0, WIDTH_CHUNKS);
+
+        @Test
+        void twoPointsEitherSideOfTheSeamAreCloseTogether() {
+            assertEquals(20, DhFold.seamDistance(shape, Direction.Axis.X, 10, WIDTH_BLOCKS - 10));
+            assertEquals(20, DhFold.seamDistance(shape, Direction.Axis.Z, WIDTH_BLOCKS - 10, 10));
+        }
+
+        @Test
+        void twoPointsOnOneSideKeepTheirPlainDistance() {
+            assertEquals(200, DhFold.seamDistance(shape, Direction.Axis.X, 100, 300));
+        }
+
+        @Test
+        void aPointAnyNumberOfLapsOutMeasuresFromItsNearestCopy() {
+            assertEquals(0, DhFold.seamDistance(shape, Direction.Axis.X, 10, 10 + 3 * WIDTH_BLOCKS));
+            assertEquals(24, DhFold.seamDistance(shape, Direction.Axis.X, 0, 1000 + WIDTH_BLOCKS));
+            assertEquals(24, DhFold.seamDistance(shape, Direction.Axis.X, 0, 1000 - 2 * WIDTH_BLOCKS));
+        }
+
+        @Test
+        void theAntipodeIsHalfAWorldAwayEitherWay() {
+            assertEquals(WIDTH_BLOCKS / 2, DhFold.seamDistance(shape, Direction.Axis.X, 0, WIDTH_BLOCKS / 2));
+            assertEquals(WIDTH_BLOCKS / 2, DhFold.seamDistance(shape, Direction.Axis.X, WIDTH_BLOCKS / 2, 0));
+        }
+
+        @Test
+        void theUnboundedAxisOfACylinderKeepsThePlainDistance() {
+            ToroidalShape cylinder = cylinder(0, WIDTH_CHUNKS);
+            assertEquals(5 * WIDTH_BLOCKS, DhFold.seamDistance(cylinder, Direction.Axis.Z, 0, 5 * WIDTH_BLOCKS));
+            assertEquals(20, DhFold.seamDistance(cylinder, Direction.Axis.X, 10, WIDTH_BLOCKS - 10));
+        }
+
+        @Test
+        void theChebyshevDistanceTakesTheLongerAxisThroughTheSeam() {
+            assertEquals(30, DhFold.seamChebyshevDistance(shape, 10, 5, WIDTH_BLOCKS - 10, WIDTH_BLOCKS - 25));
+            assertEquals(300, DhFold.seamChebyshevDistance(shape, 10, 100, WIDTH_BLOCKS - 10, 400));
+        }
+    }
+
+    @Nested
     class TheRepositoryKeyIsFoldedByItsType {
         private final ToroidalShape shape = torus(0, WIDTH_CHUNKS);
         private final int sectionsPerWorld = WIDTH_BLOCKS / DhFold.sectionWidthBlocks(DhKeys.LEAF);
