@@ -20,6 +20,7 @@
     "BeeMixin",
     "BeePollinateGoalMixin",
     "BeeWanderGoalMixin",
+    "BeehiveBlockEntityMixin",
     "BehaviorUtilsMixin",
     "BellBlockEntityMixin",
     "BiomeMixin",
