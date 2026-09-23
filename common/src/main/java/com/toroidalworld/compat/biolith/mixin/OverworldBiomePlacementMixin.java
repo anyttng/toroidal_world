@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.terraformersmc.biolith.impl.biome.DimensionBiomePlacement;
 import com.terraformersmc.biolith.impl.biome.OverworldBiomePlacement;
 import com.terraformersmc.biolith.impl.noise.OpenSimplexNoise2;
-import com.toroidalworld.compat.LevelClimateCompression;
+import com.toroidalworld.compat.LevelTemperature;
 import com.toroidalworld.compat.biolith.ReplacementNoiseFold;
 
 @Mixin(OverworldBiomePlacement.class)
@@ -24,6 +24,9 @@ public abstract class OverworldBiomePlacementMixin extends DimensionBiomePlaceme
     @Unique
     private final ReplacementNoiseFold toroidal$fold = new ReplacementNoiseFold(TOROIDAL_OCTAVE_WEIGHTS);
 
+    @Unique
+    private final LevelTemperature toroidal$temperature = new LevelTemperature();
+
     @Shadow
     private double[] scale;
 
@@ -35,7 +38,7 @@ public abstract class OverworldBiomePlacementMixin extends DimensionBiomePlaceme
         }
 
         double sum = this.toroidal$fold.sum(noise.getSeed(), this.scale, x, z,
-                LevelClimateCompression.temperatureOf(this.world));
+                this.toroidal$temperature.of(this.world));
         if (ReplacementNoiseFold.folded(sum)) {
             cir.setReturnValue(this.normalize(sum / TOROIDAL_SUM_DIVISOR));
         }

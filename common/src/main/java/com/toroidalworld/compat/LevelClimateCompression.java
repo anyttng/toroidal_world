@@ -15,6 +15,18 @@ import net.minecraft.world.level.levelgen.densityfunction.generator.NoiseFunctio
 
 public final class LevelClimateCompression {
     public static DensityFunction temperatureOf(@Nullable ServerLevel level) {
+        return temperatureOf(routerTemperatureOf(level), overworldTemperatureOf(level));
+    }
+
+    static DensityFunction temperatureOf(DensityFunction own, DensityFunction overworld) {
+        return ClimateCompression.climateNoiseOf(own) != null ? own : overworld;
+    }
+
+    static DensityFunction overworldTemperatureOf(@Nullable ServerLevel level) {
+        return routerTemperatureOf(level != null ? level.getServer().overworld() : null);
+    }
+
+    static DensityFunction routerTemperatureOf(@Nullable ServerLevel level) {
         if (level != null && level.getChunkSource().getGenerator() instanceof NoiseBasedChunkGenerator noise) {
             return noise.generatorSettings().value().noiseRouter().temperature();
         }
