@@ -1,6 +1,5 @@
 package com.toroidalworld.client.shape.climate;
 
-import java.util.List;
 import java.util.OptionalDouble;
 
 import org.jspecify.annotations.Nullable;
@@ -11,17 +10,13 @@ import com.toroidalworld.api.v1.shape.LoopSpans;
 import com.toroidalworld.core.WorldFolds;
 import com.toroidalworld.core.WorldLoopBounds;
 import com.toroidalworld.shape.climate.ClimateCompression;
-import com.toroidalworld.shape.climate.ClimateFields;
 import com.toroidalworld.shape.noise.DensityNoises;
 
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.levelgen.DensityFunction;
-import net.minecraft.world.level.levelgen.DensityFunction.NoiseHolder;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
-import net.minecraft.world.level.levelgen.synth.NormalNoise;
 
 final class ClimateFactorPreview {
     private static final double CLIMATE_XZ_SCALE = 0.25;
@@ -29,23 +24,19 @@ final class ClimateFactorPreview {
     private static final double HORIZONTAL_SHARE = 0.0;
 
     static OptionalDouble temperatureFactor(Screen parent, GenerationOptions generationOptions, LoopSpans spans) {
-        NoiseHolder temperature = temperatureNoise(parent);
+        DensityNoises.ScaledNoise temperature = temperatureNoise(parent);
         if (temperature == null) {
             return OptionalDouble.empty();
         }
 
-        NormalNoise.NoiseParameters parameters = temperature.noiseData().value();
-        boolean climateField = temperature.noiseData().unwrapKey().filter(ClimateFields::isClimate).isPresent();
         return OptionalDouble.of(ClimateCompression.factor(
                 WorldFolds.of(new FlatShape(WorldLoopBounds.of(spans), FlatShape.NO_SKEW, null), generationOptions),
-                climateField,
-                parameters.amplitudes(),
-                Math.pow(2.0, parameters.firstOctave()),
+                temperature.noise(),
                 CLIMATE_XZ_SCALE,
                 HORIZONTAL_SHARE));
     }
 
-    private static @Nullable NoiseHolder temperatureNoise(Screen parent) {
+    private static DensityNoises.@Nullable ScaledNoise temperatureNoise(Screen parent) {
         if (!(parent instanceof CreateWorldScreen create)) {
             return null;
         }
@@ -58,12 +49,7 @@ final class ClimateFactorPreview {
             return null;
         }
 
-        return climateNoiseOf(noise.generatorSettings().value().noiseRouter().temperature());
-    }
-
-    static @Nullable NoiseHolder climateNoiseOf(DensityFunction function) {
-        List<NoiseHolder> climate = DensityNoises.matching(function, ClimateFields::isClimate);
-        return climate.isEmpty() ? null : climate.getFirst();
+        return ClimateCompression.climateNoiseOf(noise.generatorSettings().value().noiseRouter().temperature());
     }
 
     private ClimateFactorPreview() {

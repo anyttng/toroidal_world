@@ -9,6 +9,9 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.toroidalworld.shape.climate.ClimateCompression;
+import com.toroidalworld.shape.noise.DensityNoises;
+
 import net.minecraft.SharedConstants;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
@@ -16,7 +19,6 @@ import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.level.levelgen.DensityFunction;
-import net.minecraft.world.level.levelgen.DensityFunction.NoiseHolder;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.Noises;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
@@ -37,9 +39,9 @@ class ClimateFactorPreviewTest {
     }
 
     private static ResourceKey<NormalNoise.NoiseParameters> foundIn(ResourceKey<NoiseGeneratorSettings> settings) {
-        NoiseHolder found = ClimateFactorPreview.climateNoiseOf(temperatureOf(settings));
+        DensityNoises.ScaledNoise found = ClimateCompression.climateNoiseOf(temperatureOf(settings));
         assertNotNull(found, settings.identifier() + ": the router carries no climate noise to find");
-        return found.noiseData().unwrapKey().orElseThrow();
+        return found.noise().noiseData().unwrapKey().orElseThrow();
     }
 
     @Test
@@ -64,7 +66,7 @@ class ClimateFactorPreviewTest {
 
     @Test
     void aRouterWithoutAClimateNoiseIsAnswerlessRatherThanWrong() {
-        assertNull(ClimateFactorPreview.climateNoiseOf(temperatureOf(NoiseGeneratorSettings.END)),
+        assertNull(ClimateCompression.climateNoiseOf(temperatureOf(NoiseGeneratorSettings.END)),
                 "the End router carries no climate noise, so nothing may be reported as one");
     }
 }
