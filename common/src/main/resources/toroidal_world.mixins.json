@@ -119,6 +119,7 @@
     "GoalUtilsMixin",
     "HappyGhastMixin",
     "HarvestFarmlandMixin",
+    "HoglinAiMixin",
     "HoglinBaseMixin",
     "HoneyBlockMixin",
     "HopperBlockEntityMixin",
