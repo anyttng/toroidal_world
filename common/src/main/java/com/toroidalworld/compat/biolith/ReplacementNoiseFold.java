@@ -5,16 +5,21 @@ import java.util.stream.IntStream;
 import org.jspecify.annotations.Nullable;
 
 import com.toroidalworld.core.WorldFold;
+import com.toroidalworld.engine.noise.ClimateScaleCompression;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
 import com.toroidalworld.engine.noise.LapFloor;
 import com.toroidalworld.engine.noise.NoiseFrame;
 import com.toroidalworld.engine.noise.PeriodicNoiseSampler;
 import com.toroidalworld.shape.climate.ClimateCompression;
 
-import it.unimi.dsi.fastutil.doubles.DoubleList;
 import net.minecraft.core.QuartPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.levelgen.LegacyRandomSource;
+import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunction;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunctions;
+import net.minecraft.world.level.levelgen.densityfunction.generator.NoiseFunction;
 import net.minecraft.world.level.levelgen.synth.GradientNoise;
 import net.minecraft.world.level.levelgen.synth.PerlinNoise;
 
@@ -43,6 +48,8 @@ public final class ReplacementNoiseFold {
 
     private volatile @Nullable Octaves octaves;
 
+    private volatile @Nullable Compression compression;
+
     public ReplacementNoiseFold(double... weights) {
         this(weights, IntStream.range(0, weights.length).toArray(), IntStream.range(0, weights.length).toArray());
     }
@@ -57,26 +64,46 @@ public final class ReplacementNoiseFold {
         return !Double.isNaN(sum);
     }
 
-    public double sum(long seed, double[] scaleQuarts, int quartX, int quartZ, DoubleList climateAmplitudes,
-            double lowestFreqInputFactor) {
-        return sum(seed, scaleQuarts, quartX, FLAT_QUART_Y, quartZ, OPEN_SIMPLEX_FLAT_AMPLITUDE, climateAmplitudes,
-                lowestFreqInputFactor);
+    public static DensityFunction temperatureOf(@Nullable ServerLevel level) {
+        if (level != null && level.getChunkSource().getGenerator() instanceof NoiseBasedChunkGenerator noise) {
+            return noise.generatorSettings().value().noiseRouter().temperature();
+        }
+
+        return DensityFunctions.zero();
     }
 
-    public double sum(long seed, double[] scaleQuarts, int quartX, int quartY, int quartZ, DoubleList climateAmplitudes,
-            double lowestFreqInputFactor) {
-        return sum(seed, scaleQuarts, quartX, quartY, quartZ, OPEN_SIMPLEX_VOLUME_AMPLITUDE, climateAmplitudes,
-                lowestFreqInputFactor);
+    public double sum(long seed, double[] scaleQuarts, int quartX, int quartZ, DensityFunction temperature) {
+        return sum(seed, scaleQuarts, quartX, FLAT_QUART_Y, quartZ, OPEN_SIMPLEX_FLAT_AMPLITUDE, temperature);
+    }
+
+    public double sum(long seed, double[] scaleQuarts, int quartX, int quartY, int quartZ,
+            DensityFunction temperature) {
+        return sum(seed, scaleQuarts, quartX, quartY, quartZ, OPEN_SIMPLEX_VOLUME_AMPLITUDE, temperature);
+    }
+
+    double compression(WorldFold fold, DensityFunction temperature) {
+        Compression held = this.compression;
+        if (held != null && held.temperature() == temperature && held.fold().equals(fold)) {
+            return held.factor();
+        }
+
+        NoiseFunction climate = ClimateCompression.climateNoiseOf(temperature);
+        double factor = climate == null
+                ? ClimateScaleCompression.NO_COMPRESSION
+                : ClimateCompression.factor(fold, climate.noise(), climate.xzScale(),
+                        GenerationTransformerContext.verticalShare(climate.xzScale(), climate.yScale()));
+        this.compression = new Compression(fold, temperature, factor);
+        return factor;
     }
 
     private double sum(long seed, double[] scaleQuarts, int quartX, int quartY, int quartZ, double amplitude,
-            DoubleList climateAmplitudes, double lowestFreqInputFactor) {
+            DensityFunction temperature) {
         WorldFold fold = GenerationTransformerContext.context().wrappedTransformer();
         if (fold == null) {
             return NOT_FOLDED;
         }
 
-        double factor = ClimateCompression.factor(fold, true, climateAmplitudes, lowestFreqInputFactor, 1.0, 0.0);
+        double factor = compression(fold, temperature);
         Octaves resolved = octavesFor(seed);
         double x = QuartPos.toBlock(quartX);
         double y = QuartPos.toBlock(quartY);
@@ -114,5 +141,8 @@ public final class ReplacementNoiseFold {
     }
 
     private record Octaves(long seed, PerlinNoise[] noises) {
+    }
+
+    private record Compression(WorldFold fold, DensityFunction temperature, double factor) {
     }
 }

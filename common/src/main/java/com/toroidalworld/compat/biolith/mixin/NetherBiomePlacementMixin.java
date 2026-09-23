@@ -12,9 +12,6 @@ import com.terraformersmc.biolith.impl.biome.NetherBiomePlacement;
 import com.terraformersmc.biolith.impl.noise.OpenSimplexNoise2;
 import com.toroidalworld.compat.biolith.ReplacementNoiseFold;
 
-import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
-import it.unimi.dsi.fastutil.doubles.DoubleList;
-
 @Mixin(NetherBiomePlacement.class)
 public abstract class NetherBiomePlacementMixin extends DimensionBiomePlacement {
     @Unique
@@ -30,12 +27,6 @@ public abstract class NetherBiomePlacementMixin extends DimensionBiomePlacement 
     private static final double TOROIDAL_SUM_DIVISOR = 1.09375;
 
     @Unique
-    private static final DoubleList VANILLA_AMPLITUDES = DoubleArrayList.wrap(new double[]{1.0, 1.0});
-
-    @Unique
-    private static final double VANILLA_LOWEST_FREQ = 1.0 / 128.0;
-
-    @Unique
     private final ReplacementNoiseFold toroidal$fold = new ReplacementNoiseFold(TOROIDAL_OCTAVE_WEIGHTS,
             TOROIDAL_HORIZONTAL_SCALE_SLOTS, TOROIDAL_VERTICAL_SCALE_SLOTS);
 
@@ -49,7 +40,8 @@ public abstract class NetherBiomePlacementMixin extends DimensionBiomePlacement 
             return;
         }
 
-        double sum = this.toroidal$fold.sum(noise.getSeed(), this.scale, x, y, z, VANILLA_AMPLITUDES, VANILLA_LOWEST_FREQ);
+        double sum = this.toroidal$fold.sum(noise.getSeed(), this.scale, x, y, z,
+                ReplacementNoiseFold.temperatureOf(this.world));
         if (ReplacementNoiseFold.folded(sum)) {
             cir.setReturnValue(this.normalize(sum / TOROIDAL_SUM_DIVISOR));
         }

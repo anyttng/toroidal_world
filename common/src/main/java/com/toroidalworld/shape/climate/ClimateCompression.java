@@ -1,13 +1,19 @@
 package com.toroidalworld.shape.climate;
 
 import java.util.Collections;
+import java.util.List;
+
+import org.jspecify.annotations.Nullable;
 
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.engine.noise.ClimateScaleCompression;
+import com.toroidalworld.shape.noise.DensityNoises;
 
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import net.minecraft.core.Holder;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunction;
+import net.minecraft.world.level.levelgen.densityfunction.generator.NoiseFunction;
 import net.minecraft.world.level.levelgen.synth.NoiseStack;
 import net.minecraft.world.level.levelgen.synth.NormalNoise;
 
@@ -59,6 +65,11 @@ public final class ClimateCompression {
         return scale.mode() == ClimateScale.Mode.STRONG
                 ? Math.max(fitted, ClimateScale.STRONG_FACTOR)
                 : fitted;
+    }
+
+    public static @Nullable NoiseFunction climateNoiseOf(DensityFunction function) {
+        List<NoiseFunction> climate = DensityNoises.matching(function, ClimateFields::isClimate);
+        return climate.isEmpty() ? null : climate.getFirst();
     }
 
     public static DoubleList octaveAmplitudes(NormalNoise.Parameters parameters) {
