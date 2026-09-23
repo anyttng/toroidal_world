@@ -3,8 +3,10 @@ package com.toroidalworld.compat.wover;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Locale;
 import java.util.Random;
 import java.util.function.DoubleUnaryOperator;
+import java.util.function.IntFunction;
 
 import org.betterx.wover.math.api.noise.OpenSimplexNoise;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,136 @@ class OpenSimplexStandInTest {
     private static final double ROW_MIDDLE = 0.5;
 
     private static final double FLIP_STEP = 0.05;
+
+    private static final int WARP_OCTAVES = 5;
+
+    private static final double QUART_STEP = 0.125;
+
+    private static final int QUART_SAMPLES = 1600;
+
+    private static final int SUM = 0;
+
+    private interface Field {
+        double at(double x, double z);
+    }
+
+    private record Warp(OpenSimplexNoise[] own, OpenSimplexStandIn[] standIn) {
+        static Warp of(Random random) {
+            return new Warp(new OpenSimplexNoise[] {new OpenSimplexNoise(random.nextLong()),
+                    new OpenSimplexNoise(random.nextLong())},
+                    new OpenSimplexStandIn[] {new OpenSimplexStandIn(random.nextLong()),
+                            new OpenSimplexStandIn(random.nextLong())});
+        }
+
+        Field ownOctave(int octave) {
+            return (x, z) -> this.own[(octave - 1) & 1].eval(x * octave, z * octave) / octave;
+        }
+
+        Field standInOctave(int octave) {
+            return (x, z) -> this.standIn[(octave - 1) & 1].eval(x * octave, z * octave,
+                    OpenSimplexStandIn.UNBOUNDED, OpenSimplexStandIn.UNBOUNDED) / octave;
+        }
+
+        Field own(int octave) {
+            return octave == SUM ? sum(this::ownOctave) : ownOctave(octave);
+        }
+
+        Field standIn(int octave) {
+            return octave == SUM ? sum(this::standInOctave) : standInOctave(octave);
+        }
+
+        private static Field sum(IntFunction<Field> octaves) {
+            return (x, z) -> {
+                double result = 0.0;
+                for (int octave = 1; octave <= WARP_OCTAVES; octave++) {
+                    result += octaves.apply(octave).at(x, z);
+                }
+
+                return result;
+            };
+        }
+    }
+
+    private static final class Increments {
+        private double squares;
+
+        private double incrementSquares;
+
+        private long samples;
+
+        private long crossings;
+
+        private double length;
+
+        void line(Field field, double originX, double z) {
+            double previous = field.at(originX, z);
+            for (int sample = 1; sample < QUART_SAMPLES; sample++) {
+                double value = field.at(originX + sample * QUART_STEP, z);
+                this.squares += value * value;
+                this.incrementSquares += (value - previous) * (value - previous);
+                this.samples++;
+                if ((value > 0.0) != (previous > 0.0)) {
+                    this.crossings++;
+                }
+
+                previous = value;
+            }
+
+            this.length += QUART_SAMPLES * QUART_STEP;
+        }
+
+        double deviation() {
+            return Math.sqrt(this.squares / this.samples);
+        }
+
+        double quartIncrement() {
+            return Math.sqrt(this.incrementSquares / this.samples);
+        }
+
+        double crossingsPerUnit() {
+            return this.crossings / this.length;
+        }
+
+        String against(Increments other) {
+            return String.format(Locale.ROOT, "spread %.4f / %.4f, crossings per unit %.3f / %.3f, "
+                    + "quart increment %.4f / %.4f", deviation(), other.deviation(), crossingsPerUnit(),
+                    other.crossingsPerUnit(), quartIncrement(), other.quartIncrement());
+        }
+    }
+
+    @Test
+    void theWarpSumMovesAQuartLikeWorldWeaversOnEveryOctave() {
+        Random random = new Random(SEED);
+        Increments[] own = new Increments[WARP_OCTAVES + 1];
+        Increments[] standIn = new Increments[WARP_OCTAVES + 1];
+        for (int octave = SUM; octave <= WARP_OCTAVES; octave++) {
+            own[octave] = new Increments();
+            standIn[octave] = new Increments();
+        }
+
+        for (int field = 0; field < FIELDS; field++) {
+            Warp warp = Warp.of(random);
+            double originX = random.nextDouble() * ORIGIN_SPREAD;
+            double originZ = random.nextDouble() * ORIGIN_SPREAD;
+            for (int line = 0; line < LINES; line++) {
+                double z = originZ + line * LINE_SPACING;
+                for (int octave = SUM; octave <= WARP_OCTAVES; octave++) {
+                    own[octave].line(warp.own(octave), originX, z);
+                    standIn[octave].line(warp.standIn(octave), originX, z);
+                }
+            }
+        }
+
+        StringBuilder table = new StringBuilder("stand-in / OpenSimplex");
+        for (int octave = SUM; octave <= WARP_OCTAVES; octave++) {
+            table.append("; ").append(octave == SUM ? "sum" : "octave " + octave).append(": ")
+                    .append(standIn[octave].against(own[octave]));
+        }
+
+        String readings = table.toString();
+        assertEquals(1.0, standIn[SUM].deviation() / own[SUM].deviation(), TOLERANCE, readings);
+        assertEquals(1.0, standIn[SUM].quartIncrement() / own[SUM].quartIncrement(), TOLERANCE, readings);
+    }
 
     @Test
     void theStandInSpreadsAndCrossesZeroLikeWorldWeaversOpenSimplex() {
