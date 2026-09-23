@@ -1,18 +1,21 @@
 package com.toroidalworld.compat.sable.mixin;
 
+import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
 
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.toroidalworld.core.JomlVectors;
 import com.toroidalworld.core.WorldLoopAttachments;
 
 import dev.ryanhcode.sable.sublevel.system.SubLevelTrackingSystem;
 
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 
 @Mixin(value = SubLevelTrackingSystem.class, remap = false)
 public class SubLevelTrackingSystemMixin {
@@ -20,10 +23,10 @@ public class SubLevelTrackingSystemMixin {
     @Final
     private ServerLevel level;
 
-    @WrapOperation(
-            method = "shouldLoad",
-            at = @At(value = "INVOKE", target = "Lorg/joml/Vector3dc;distanceSquared(DDD)D"))
-    private double toroidal$distanceTheShortWayRound(Vector3dc pose, double x, double y, double z, Operation<Double> original) {
-        return WorldLoopAttachments.transformerOf(this.level).sqrDistance(pose.x(), pose.y(), pose.z(), x, y, z);
+    @WrapMethod(method = "shouldLoad")
+    private boolean toroidal$trackTheShortWayRound(Player player, Vector3dc entityPosition, Operation<Boolean> original) {
+        Vec3 raw = JomlVectors.read(entityPosition);
+        Vec3 nearest = WorldLoopAttachments.transformerOf(this.level).nearestCopy(player.position(), raw);
+        return original.call(player, nearest == raw ? entityPosition : JomlVectors.write(nearest, new Vector3d()));
     }
 }
