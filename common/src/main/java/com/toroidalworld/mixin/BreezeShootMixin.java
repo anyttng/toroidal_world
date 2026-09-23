@@ -20,7 +20,7 @@ import net.minecraft.world.phys.Vec3;
 public class BreezeShootMixin {
     @WrapOperation(
             method = "isTargetWithinRange",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D"))
+            at = @At(value = "INVOKE", target = InjectionTargets.VEC3_DISTANCE_TO_SQR))
     private static double toroidal$shootRangeThroughSeam(Vec3 from, Vec3 to, Operation<Double> original,
             @Local(argsOnly = true) Breeze body) {
         return SeamRange.sqr(body, from, to);

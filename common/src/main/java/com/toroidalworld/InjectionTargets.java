@@ -95,7 +95,10 @@ public final class InjectionTargets {
     public static final String VEC3_DISTANCE_TO =
             "Lnet/minecraft/world/phys/Vec3;distanceTo(Lnet/minecraft/world/phys/Vec3;)D";
 
-    public static final String VEC3_DISTANCE_TO_SQR_XYZ = "Lnet/minecraft/world/phys/Vec3;distanceToSqr(DDD)D";
+    public static final String VEC3_DISTANCE_TO_SQR =
+            "Lnet/minecraft/world/phys/Vec3;distanceToSqr(Lnet/minecraft/world/phys/Vec3;)D";
+
+    public static final String VEC3_DISTANCE_TO_SQR_XYZ ="Lnet/minecraft/world/phys/Vec3;distanceToSqr(DDD)D";
 
     public static final String VEC3_INIT = "Lnet/minecraft/world/phys/Vec3;<init>(DDD)V";
 
