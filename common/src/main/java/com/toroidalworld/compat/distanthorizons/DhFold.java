@@ -180,6 +180,15 @@ public final class DhFold {
         return Math.floorDiv(2 * delta - 1 + worldWidth, 2 * worldWidth);
     }
 
+    public static long seamDistance(ToroidalShape shape, Direction.Axis axis, long from, long to) {
+        return Math.abs((long) shape.nearestCoord(axis, to, from) - to);
+    }
+
+    public static long seamChebyshevDistance(ToroidalShape shape, long fromX, long fromZ, long toX, long toZ) {
+        return Math.max(seamDistance(shape, Direction.Axis.X, fromX, toX),
+                seamDistance(shape, Direction.Axis.Z, fromZ, toZ));
+    }
+
     public static boolean overlapsNearestLap(ToroidalShape shape, Direction.Axis axis, int refBlock, int minBlock,
             int widthBlocks) {
         if (!shape.loops(axis)) {
