@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
@@ -19,6 +20,8 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.platform.Window;
+import com.toroidalworld.compat.AxisCopies;
+import com.toroidalworld.compat.FullscreenZoomFloor;
 import com.toroidalworld.compat.MapCopies;
 import com.toroidalworld.compat.MapCopyBudget;
 import com.toroidalworld.compat.journeymap.JourneyMapFold;
@@ -31,6 +34,8 @@ import journeymap.client.model.region.RegionImageCache;
 import journeymap.client.model.region.RegionImageSet;
 import journeymap.client.render.map.RegionTile;
 import journeymap.client.render.map.TileGrid;
+import journeymap.client.ui.UIManager;
+import journeymap.client.ui.minimap.DisplayVars;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -53,6 +58,10 @@ public abstract class MapRendererMixin {
 
     @Unique
     private static final String MOVE = "move(DD)V";
+
+    @Unique
+    private static final String RENDER = "render(Lnet/minecraft/client/gui/GuiGraphics;"
+            + "Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDFZ)V";
 
     @Shadow(remap = false)
     protected double centerBlockX;
@@ -114,6 +123,11 @@ public abstract class MapRendererMixin {
         if (worldDir != null) {
             toroidal$lastWorldDir = worldDir;
         }
+    }
+
+    @Inject(method = RENDER, at = @At("HEAD"))
+    private void toroidal$recordView(CallbackInfo ci) {
+        JourneyMapFold.recordView(this.contextUi, this.centerBlockX, this.centerBlockZ, this.regions.size());
     }
 
     @WrapOperation(
@@ -213,7 +227,7 @@ public abstract class MapRendererMixin {
     }
 
     @WrapOperation(
-            method = "render(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;DDFZ)V",
+            method = RENDER,
             at = @At(
                     value = "INVOKE",
                     target = "Ljourneymap/client/render/map/RegionTile;render(Lnet/minecraft/client/gui/GuiGraphics;"
@@ -226,25 +240,34 @@ public abstract class MapRendererMixin {
             return;
         }
 
-        int loopedAxes = JourneyMapFold.loopedAxes();
-        if (loopedAxes == 0) {
+        JourneyMapFold.View view = JourneyMapFold.viewOf(this.contextUi);
+        if (JourneyMapFold.loopedAxes() == 0 || view == null) {
             return;
         }
 
+        AxisCopies copiesX = JourneyMapFold.copies(Direction.Axis.X);
+        AxisCopies copiesZ = JourneyMapFold.copies(Direction.Axis.Z);
+        Window window = Minecraft.getInstance().getWindow();
+        int viewportX = toroidal$viewportPixels(this.contextUi, window.getWidth());
+        int viewportZ = toroidal$viewportPixels(this.contextUi, window.getHeight());
+        int[] spanX = JourneyMapFold.viewSpan(view.centerX(), viewportX, this.zoom);
+        int[] spanZ = JourneyMapFold.viewSpan(view.centerZ(), viewportZ, this.zoom);
+        int[] ranges = MapCopyBudget.copyRanges(copiesX, copiesZ, view.tiles(), spanX, spanZ,
+                JourneyMapFold.copiesOf(this.contextUi));
+        JourneyMapFold.recordCopyRange(this.contextUi, ranges[0], ranges[1]);
+        if (ranges[0] == 0 && ranges[1] == 0) {
+            return;
+        }
+
+        RegionCoord region = ((RegionTile) tile).getRegionCoord();
+        int[] lapsX = JourneyMapFold.tileLaps(copiesX, region.regionX * FullscreenZoomFloor.JOURNEYMAP_REGION_BLOCKS,
+                FullscreenZoomFloor.JOURNEYMAP_REGION_BLOCKS, spanX[0], spanX[1], ranges[0]);
+        int[] lapsZ = JourneyMapFold.tileLaps(copiesZ, region.regionZ * FullscreenZoomFloor.JOURNEYMAP_REGION_BLOCKS,
+                FullscreenZoomFloor.JOURNEYMAP_REGION_BLOCKS, spanZ[0], spanZ[1], ranges[1]);
         double periodX = JourneyMapFold.worldPixelPeriod(Direction.Axis.X, this.zoom);
         double periodZ = JourneyMapFold.worldPixelPeriod(Direction.Axis.Z, this.zoom);
-        Window window = Minecraft.getInstance().getWindow();
-        int tiles = JourneyMapFold.tilesWithContent(this.zoom, window.getWidth(), window.getHeight());
-        MapCopies copies = JourneyMapFold.copiesOf(this.contextUi);
-        int rangeX = MapCopyBudget.copyRange(loopedAxes, tiles, periodX, window.getWidth(), copies);
-        int rangeZ = MapCopyBudget.copyRange(loopedAxes, tiles, periodZ, window.getHeight(), copies);
-        JourneyMapFold.recordCopyRange(this.contextUi, rangeX, rangeZ);
-        if (rangeX == 0 && rangeZ == 0) {
-            return;
-        }
-
-        for (int lapX = -rangeX; lapX <= rangeX; lapX++) {
-            for (int lapZ = -rangeZ; lapZ <= rangeZ; lapZ++) {
+        for (int lapX : lapsX) {
+            for (int lapZ : lapsZ) {
                 if (lapX == 0 && lapZ == 0) {
                     continue;
                 }
@@ -253,5 +276,17 @@ public abstract class MapRendererMixin {
                         pixelOffsetX + lapX * periodX, pixelOffsetZ + lapZ * periodZ, alpha, mapType, shaderIndex);
             }
         }
+    }
+
+    @Unique
+    private static int toroidal$viewportPixels(Context.UI context, int windowPixels) {
+        if (context != Context.UI.Minimap) {
+            return windowPixels;
+        }
+
+        DisplayVars displayVars = UIManager.INSTANCE.getMiniMap().getDisplayVars();
+        return displayVars == null
+                ? windowPixels
+                : (int) Math.ceil(Math.hypot(displayVars.minimapWidth, displayVars.minimapHeight));
     }
 }

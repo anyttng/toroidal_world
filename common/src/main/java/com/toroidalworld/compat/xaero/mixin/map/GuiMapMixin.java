@@ -1,5 +1,7 @@
 package com.toroidalworld.compat.xaero.mixin.map;
 
+import java.util.ArrayList;
+
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,17 +24,25 @@ import com.toroidalworld.compat.xaero.XaeroInjectionTargets;
 import com.toroidalworld.compat.xaero.XaeroWorldMapFold;
 import com.toroidalworld.core.CoordinateConstants;
 
+import it.unimi.dsi.fastutil.longs.LongIterator;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Direction;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ChunkPos;
 
 import xaero.map.MapProcessor;
+import xaero.map.WorldMap;
 import xaero.map.graphics.MapRenderHelper;
 import xaero.map.graphics.renderer.multitexture.MultiTextureRenderTypeRenderer;
 import xaero.map.gui.GuiMap;
 import xaero.map.gui.MapTileSelection;
+import xaero.map.misc.Misc;
+import xaero.map.region.BranchLeveledRegion;
 import xaero.map.region.LeveledRegion;
+import xaero.map.region.MapRegion;
 import xaero.map.region.texture.RegionTexture;
 
 // The injection method is GuiMap's override of Screen.render, and its NAME differs per loader jar: Mojmap "render"
@@ -52,12 +62,26 @@ public abstract class GuiMapMixin {
     private double cameraX;
     @Shadow
     private double cameraZ;
+    @Shadow
+    private ArrayList<MapRegion> regionBuffer;
+    @Shadow
+    private ArrayList<BranchLeveledRegion> branchRegionBuffer;
+    @Shadow
+    private boolean prevWaitingForBranchCache;
+    @Shadow
+    private boolean[] waitingForBranchCache;
 
     @Unique
     private static final int SEAM_ARGB = 0xCCFFFFFF;
 
     @Unique
     private static final float CHANNEL_MAX = 255.0F;
+
+    @Unique
+    private static final int REQUEST_BUFFER_SIZE = 10;
+
+    @Unique
+    private static final int NO_TEXTURE = -1;
 
     @Unique
     private static final String LEVELED_REGION_GET_TEXTURE =
@@ -84,6 +108,12 @@ public abstract class GuiMapMixin {
     @Unique
     private int toroidal$slotViewBlockZ;
     @Unique
+    private final LongOpenHashSet toroidal$drawnCanonicalSlots = new LongOpenHashSet();
+    @Unique
+    private final LongOpenHashSet toroidal$fannedRegions = new LongOpenHashSet();
+    @Unique
+    private final LongOpenHashSet toroidal$loopRegions = new LongOpenHashSet();
+    @Unique
     private int toroidal$cursorLapX;
     @Unique
     private int toroidal$cursorLapZ;
@@ -109,7 +139,10 @@ public abstract class GuiMapMixin {
     @Inject(
             method = {"render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", "method_25394(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"},
             at = @At("HEAD"))
-    private void toroidal$floorZoomOutOnRender(CallbackInfo ci) {
+    private void toroidal$beginFrame(CallbackInfo ci) {
+        this.toroidal$drawnCanonicalSlots.clear();
+        this.toroidal$fannedRegions.clear();
+        this.toroidal$loopRegions.clear();
         toroidal$floorZoomOut();
     }
 
@@ -214,18 +247,110 @@ public abstract class GuiMapMixin {
         this.toroidal$viewCaveLayer = caveLayer;
         this.toroidal$leveledCandidate = null;
         LeveledRegion<?> existing = original.call(processor, caveLayer, regX, regZ, level);
-        if (existing != null || !XaeroWorldMapFold.active() || !XaeroWorldMapFold.glueableAt(XaeroWorldMapFold.SLOT_BLOCKS << level)) {
+        this.toroidal$loopRegions.add(ChunkPos.asLong(regX, regZ));
+        if (!XaeroWorldMapFold.active()) {
+            return existing;
+        }
+
+        int side = XaeroWorldMapFold.REGION_BLOCKS << level;
+        toroidal$collectFannedRegions(regX, regZ, side);
+        if (existing != null) {
             return existing;
         }
 
         // A candidate value only, so the draw block runs at all; the texture redirect re-resolves each slot precisely.
-        int side = XaeroWorldMapFold.REGION_BLOCKS << level;
         int foldedOriginX = XaeroWorldMapFold.foldBlock(Direction.Axis.X, regX * side);
         int foldedOriginZ = XaeroWorldMapFold.foldBlock(Direction.Axis.Z, regZ * side);
-        LeveledRegion<?> candidate = original.call(
-                processor, caveLayer, Math.floorDiv(foldedOriginX, side), Math.floorDiv(foldedOriginZ, side), level);
+        int candidateX = Math.floorDiv(foldedOriginX, side);
+        int candidateZ = Math.floorDiv(foldedOriginZ, side);
+        LeveledRegion<?> candidate = original.call(processor, caveLayer, candidateX, candidateZ, level);
+        if (candidate != null) {
+            this.toroidal$loopRegions.add(ChunkPos.asLong(candidateX, candidateZ));
+        }
+
         this.toroidal$leveledCandidate = candidate;
         return candidate;
+    }
+
+    @Unique
+    private void toroidal$collectFannedRegions(int regX, int regZ, int side) {
+        AxisCopies copiesX = XaeroWorldMapFold.copies(Direction.Axis.X);
+        AxisCopies copiesZ = XaeroWorldMapFold.copies(Direction.Axis.Z);
+        if (!XaeroWorldMapFold.spanLeavesWorld(copiesX, regX * side, side)
+                && !XaeroWorldMapFold.spanLeavesWorld(copiesZ, regZ * side, side)) {
+            return;
+        }
+
+        for (int originX : XaeroWorldMapFold.canonicalSlotOrigins(copiesX, regX * side, side)) {
+            for (int originZ : XaeroWorldMapFold.canonicalSlotOrigins(copiesZ, regZ * side, side)) {
+                this.toroidal$fannedRegions.add(ChunkPos.asLong(Math.floorDiv(originX, side), Math.floorDiv(originZ, side)));
+            }
+        }
+    }
+
+    @Inject(
+            method = {"render(Lnet/minecraft/client/gui/GuiGraphics;IIF)V", "method_25394(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"},
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lxaero/map/file/MapSaveLoad;getNextToLoadByViewing()Lxaero/map/region/LeveledRegion;",
+                    ordinal = 1))
+    private void toroidal$maintainFannedRegions(CallbackInfo ci) {
+        if (this.toroidal$fannedRegions.isEmpty()) {
+            return;
+        }
+
+        LongIterator regions = this.toroidal$fannedRegions.iterator();
+        while (regions.hasNext()) {
+            long region = regions.nextLong();
+            toroidal$maintainRegion(ChunkPos.getX(region), ChunkPos.getZ(region),
+                    !this.toroidal$loopRegions.contains(region));
+        }
+    }
+
+    @Unique
+    private void toroidal$maintainRegion(int regX, int regZ, boolean outsideLoop) {
+        MapProcessor processor = this.toroidal$processor;
+        int caveLayer = this.toroidal$viewCaveLayer;
+        int level = this.toroidal$viewLevel;
+        int leaves = 1 << level;
+        int minLeafX = regX * leaves;
+        int minLeafZ = regZ * leaves;
+        for (int leafX = minLeafX; leafX < minLeafX + leaves; leafX++) {
+            for (int leafZ = minLeafZ; leafZ < minLeafZ + leaves; leafZ++) {
+                MapRegion leaf = processor.getLeafMapRegion(caveLayer, leafX, leafZ, false);
+                if (leaf == null) {
+                    leaf = processor.getLeafMapRegion(caveLayer, leafX, leafZ, processor.regionExists(caveLayer, leafX, leafZ));
+                }
+
+                if (leaf != null && !this.prevWaitingForBranchCache) {
+                    toroidal$queueLeafLoad(leaf, level);
+                }
+            }
+        }
+
+        LeveledRegion<?> region = processor.getLeveledRegion(caveLayer, regX, regZ, level);
+        if (region == null || !outsideLoop || processor.isUploadingPaused() || WorldMap.pauseRequests) {
+            return;
+        }
+
+        if (region instanceof BranchLeveledRegion branch) {
+            branch.checkForUpdates(processor, this.prevWaitingForBranchCache, this.waitingForBranchCache,
+                    this.branchRegionBuffer, level, minLeafX, minLeafZ, minLeafX + leaves - 1, minLeafZ + leaves - 1);
+        }
+
+        processor.getMapWorld().getCurrentDimension().getLayeredMapRegions().bumpLoadedRegion(region);
+    }
+
+    @Unique
+    private void toroidal$queueLeafLoad(MapRegion leaf, int level) {
+        synchronized (leaf) {
+            if (leaf.canRequestReload_unsynced() && leaf.getLoadState() == 0
+                    && (!leaf.isMetaLoaded() || level == 0 || leaf.loadingNeededForBranchLevel == level)
+                    && !this.regionBuffer.contains(leaf)) {
+                leaf.calculateSortingDistance();
+                Misc.addToListOfSmallest(REQUEST_BUFFER_SIZE, this.regionBuffer, leaf);
+            }
+        }
     }
 
     // An origin-fold substitute, so the block runs even where the cell has no LEAF region of its own.
@@ -241,13 +366,12 @@ public abstract class GuiMapMixin {
             return existing;
         }
 
-        int foldedOriginX =
-                XaeroWorldMapFold.foldBlock(Direction.Axis.X, regX * XaeroWorldMapFold.REGION_BLOCKS);
-        int foldedOriginZ =
-                XaeroWorldMapFold.foldBlock(Direction.Axis.Z, regZ * XaeroWorldMapFold.REGION_BLOCKS);
-        return original.call(
-                processor, caveLayer, Math.floorDiv(foldedOriginX, XaeroWorldMapFold.REGION_BLOCKS),
-                Math.floorDiv(foldedOriginZ, XaeroWorldMapFold.REGION_BLOCKS), false);
+        int foldedRegX = Math.floorDiv(XaeroWorldMapFold.foldBlock(Direction.Axis.X, regX * XaeroWorldMapFold.REGION_BLOCKS),
+                XaeroWorldMapFold.REGION_BLOCKS);
+        int foldedRegZ = Math.floorDiv(XaeroWorldMapFold.foldBlock(Direction.Axis.Z, regZ * XaeroWorldMapFold.REGION_BLOCKS),
+                XaeroWorldMapFold.REGION_BLOCKS);
+        return original.call(processor, caveLayer, foldedRegX, foldedRegZ,
+                processor.regionExists(caveLayer, foldedRegX, foldedRegZ));
     }
 
     @WrapOperation(
@@ -293,8 +417,19 @@ public abstract class GuiMapMixin {
         int viewBlockZ = this.toroidal$viewLeveledRegZ * side + slotZ * slotSize;
         this.toroidal$slotViewBlockX = viewBlockX;
         this.toroidal$slotViewBlockZ = viewBlockZ;
-        if (!XaeroWorldMapFold.active() || !XaeroWorldMapFold.glueableAt(slotSize)) {
+        if (!XaeroWorldMapFold.active()) {
             return isCandidate ? null : original.call(region, slotX, slotZ);
+        }
+
+        if (!XaeroWorldMapFold.glueableAt(slotSize)) {
+            if (!isCandidate
+                    && !XaeroWorldMapFold.spanLeavesWorld(XaeroWorldMapFold.copies(Direction.Axis.X), viewBlockX, slotSize)
+                    && !XaeroWorldMapFold.spanLeavesWorld(XaeroWorldMapFold.copies(Direction.Axis.Z), viewBlockZ, slotSize)) {
+                return original.call(region, slotX, slotZ);
+            }
+
+            this.toroidal$slotFolded = true;
+            return toroidal$anyCanonicalTexture(viewBlockX, viewBlockZ, slotSize);
         }
 
         int foldedBlockX = XaeroWorldMapFold.foldBlock(Direction.Axis.X, viewBlockX);
@@ -306,6 +441,22 @@ public abstract class GuiMapMixin {
         this.toroidal$slotFolded = true;
         return this.toroidal$mapCopies == MapCopies.SINGLE
                 ? null : toroidal$canonicalRegionTexture(foldedBlockX, foldedBlockZ);
+    }
+
+    @Unique
+    private @Nullable RegionTexture<?> toroidal$anyCanonicalTexture(int viewBlockX, int viewBlockZ, int slotSize) {
+        AxisCopies copiesX = XaeroWorldMapFold.copies(Direction.Axis.X);
+        AxisCopies copiesZ = XaeroWorldMapFold.copies(Direction.Axis.Z);
+        for (int originX : XaeroWorldMapFold.canonicalSlotOrigins(copiesX, viewBlockX, slotSize)) {
+            for (int originZ : XaeroWorldMapFold.canonicalSlotOrigins(copiesZ, viewBlockZ, slotSize)) {
+                RegionTexture<?> regionTexture = toroidal$canonicalRegionTexture(originX, originZ);
+                if (regionTexture != null) {
+                    return regionTexture;
+                }
+            }
+        }
+
+        return null;
     }
 
     @Unique
@@ -361,34 +512,48 @@ public abstract class GuiMapMixin {
         int[] spanZ = XaeroWorldMapFold.viewSpan(this.cameraZ, window.getHeight(), this.scale, slotSize);
         int[] lapsX = XaeroWorldMapFold.drawnLaps(copiesX, spanX[0], spanX[1], this.toroidal$mapCopies);
         int[] lapsZ = XaeroWorldMapFold.drawnLaps(copiesZ, spanZ[0], spanZ[1], this.toroidal$mapCopies);
-        int slotMinX = this.toroidal$slotViewBlockX;
-        int slotMinZ = this.toroidal$slotViewBlockZ;
-        int clippedMinX = copiesX.clipMin(slotMinX);
-        int clippedMaxX = copiesX.clipMax(slotMinX + slotSize);
-        int clippedMinZ = copiesZ.clipMin(slotMinZ);
-        int clippedMaxZ = copiesZ.clipMax(slotMinZ + slotSize);
-        if (clippedMinX >= clippedMaxX || clippedMinZ >= clippedMaxZ) {
-            return;
-        }
+        int viewBlockX = this.toroidal$slotViewBlockX;
+        int viewBlockZ = this.toroidal$slotViewBlockZ;
+        for (int originX : XaeroWorldMapFold.canonicalSlotOrigins(copiesX, viewBlockX, slotSize)) {
+            for (int originZ : XaeroWorldMapFold.canonicalSlotOrigins(copiesZ, viewBlockZ, slotSize)) {
+                if (!this.toroidal$drawnCanonicalSlots.add(((long) originX << 32) ^ (originZ & 0xFFFFFFFFL))) {
+                    continue;
+                }
 
-        float clippedX = x + (clippedMinX - slotMinX);
-        float clippedY = y + (clippedMinZ - slotMinZ);
-        float clippedWidth = clippedMaxX - clippedMinX;
-        float clippedHeight = clippedMaxZ - clippedMinZ;
-        float u1 = (float) (clippedMinX - slotMinX) / slotSize;
-        float u2 = (float) (clippedMaxX - slotMinX) / slotSize;
-        float v1 = (float) (clippedMinZ - slotMinZ) / slotSize;
-        float v2 = (float) (clippedMaxZ - slotMinZ) / slotSize;
-        // The quad is emitted directly: calling GuiMap's own helper would drag its xaerolib superclass onto the compile classpath.
-        for (int lapX : lapsX) {
-            for (int lapZ : lapsZ) {
-                float copyX = clippedX + copiesX.offset(lapX);
-                float copyY = clippedY + copiesZ.offset(lapZ);
-                BufferBuilder quad = renderer.begin(texture);
-                quad.addVertex(matrix, copyX, copyY + clippedHeight, 0.0F).setUv(u1, v2);
-                quad.addVertex(matrix, copyX + clippedWidth, copyY + clippedHeight, 0.0F).setUv(u2, v2);
-                quad.addVertex(matrix, copyX + clippedWidth, copyY, 0.0F).setUv(u2, v1);
-                quad.addVertex(matrix, copyX, copyY, 0.0F).setUv(u1, v1);
+                RegionTexture<?> regionTexture = toroidal$canonicalRegionTexture(originX, originZ);
+                int canonicalTexture = regionTexture == null ? NO_TEXTURE : regionTexture.getGlColorTexture();
+                if (canonicalTexture == NO_TEXTURE) {
+                    continue;
+                }
+
+                int clippedMinX = copiesX.clipMin(originX);
+                int clippedMaxX = copiesX.clipMax(originX + slotSize);
+                int clippedMinZ = copiesZ.clipMin(originZ);
+                int clippedMaxZ = copiesZ.clipMax(originZ + slotSize);
+                if (clippedMinX >= clippedMaxX || clippedMinZ >= clippedMaxZ) {
+                    continue;
+                }
+
+                float clippedX = x + (clippedMinX - viewBlockX);
+                float clippedY = y + (clippedMinZ - viewBlockZ);
+                float clippedWidth = clippedMaxX - clippedMinX;
+                float clippedHeight = clippedMaxZ - clippedMinZ;
+                float u1 = (float) (clippedMinX - originX) / slotSize;
+                float u2 = (float) (clippedMaxX - originX) / slotSize;
+                float v1 = (float) (clippedMinZ - originZ) / slotSize;
+                float v2 = (float) (clippedMaxZ - originZ) / slotSize;
+                // The quad is emitted directly: calling GuiMap's own helper would drag its xaerolib superclass onto the compile classpath.
+                for (int lapX : lapsX) {
+                    for (int lapZ : lapsZ) {
+                        float copyX = clippedX + copiesX.offset(lapX);
+                        float copyY = clippedY + copiesZ.offset(lapZ);
+                        BufferBuilder quad = renderer.begin(canonicalTexture);
+                        quad.addVertex(matrix, copyX, copyY + clippedHeight, 0.0F).setUv(u1, v2);
+                        quad.addVertex(matrix, copyX + clippedWidth, copyY + clippedHeight, 0.0F).setUv(u2, v2);
+                        quad.addVertex(matrix, copyX + clippedWidth, copyY, 0.0F).setUv(u2, v1);
+                        quad.addVertex(matrix, copyX, copyY, 0.0F).setUv(u1, v1);
+                    }
+                }
             }
         }
     }

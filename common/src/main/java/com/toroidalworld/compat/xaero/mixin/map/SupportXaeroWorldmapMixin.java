@@ -1,5 +1,8 @@
 package com.toroidalworld.compat.xaero.mixin.map;
 
+import java.util.List;
+
+import org.joml.Matrix4f;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -9,9 +12,13 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.toroidalworld.compat.xaero.XaeroInjectionTargets;
 import com.toroidalworld.compat.xaero.XaeroWorldMapFold;
+import com.toroidalworld.compat.xaero.XaeroWorldMapFold.TilePiece;
+import com.toroidalworld.core.CoordinateConstants;
 
 import net.minecraft.core.Direction;
 
+import xaero.common.graphics.renderer.multitexture.MultiTextureRenderTypeRenderer;
+import xaero.common.minimap.render.MinimapRendererHelper;
 import xaero.common.mods.SupportXaeroWorldmap;
 import xaero.map.MapProcessor;
 import xaero.map.WorldMapSession;
@@ -33,7 +40,16 @@ public abstract class SupportXaeroWorldmapMixin {
     @Unique
     private int toroidal$mirrorTileZ;
     @Unique
+    private static final int NO_TEXTURE = -1;
+
+    @Unique
     private MapRegion toroidal$foldedRegion;
+    @Unique
+    private MapProcessor toroidal$processor;
+    @Unique
+    private @Nullable List<TilePiece> toroidal$piecesX;
+    @Unique
+    private @Nullable List<TilePiece> toroidal$piecesZ;
 
     @WrapOperation(
             method = "renderChunks",
@@ -97,30 +113,110 @@ public abstract class SupportXaeroWorldmapMixin {
             return region == null ? null : original.call(region, localX, localZ);
         }
 
-        int foldedTileX = XaeroWorldMapFold.foldTileChunk(Direction.Axis.X, mirrorTileX);
-        int foldedTileZ = XaeroWorldMapFold.foldTileChunk(Direction.Axis.Z, mirrorTileZ);
+        this.toroidal$piecesX = null;
+        this.toroidal$piecesZ = null;
         WorldMapSession session = WorldMapSession.getCurrentSession();
         if (session == null) {
             return region == null ? null : original.call(region, localX, localZ);
         }
 
         MapProcessor processor = session.getMapProcessor();
-        int foldedRegionX = XaeroWorldMapFold.regionOfTileChunk(foldedTileX);
-        int foldedRegionZ = XaeroWorldMapFold.regionOfTileChunk(foldedTileZ);
-        MapRegion foldedRegion = this.toroidal$fetchIsLeaf
-                ? processor.getLeafMapRegion(this.toroidal$fetchLeafLayer, foldedRegionX, foldedRegionZ, false)
-                : processor.getMinimapMapRegion(foldedRegionX, foldedRegionZ);
-        if (foldedRegion == null) {
-            return null;
+        this.toroidal$processor = processor;
+        List<TilePiece> piecesX = XaeroWorldMapFold.tilePieces(XaeroWorldMapFold.chunkCopies(Direction.Axis.X), mirrorTileX);
+        List<TilePiece> piecesZ = XaeroWorldMapFold.tilePieces(XaeroWorldMapFold.chunkCopies(Direction.Axis.Z), mirrorTileZ);
+        MapTileChunk shown = null;
+        for (TilePiece pieceX : piecesX) {
+            for (TilePiece pieceZ : piecesZ) {
+                MapRegion canonicalRegion = toroidal$canonicalRegion(pieceX.canonicalTile(), pieceZ.canonicalTile());
+                if (canonicalRegion == null) {
+                    continue;
+                }
+
+                if (canonicalRegion != region) {
+                    processor.beforeMinimapRegionRender(canonicalRegion);
+                }
+
+                MapTileChunk chunk = original.call(canonicalRegion,
+                        XaeroWorldMapFold.tileChunkInRegion(pieceX.canonicalTile()),
+                        XaeroWorldMapFold.tileChunkInRegion(pieceZ.canonicalTile()));
+                if (chunk != null && (shown == null
+                        || toroidal$textureOf(shown) == NO_TEXTURE && toroidal$textureOf(chunk) != NO_TEXTURE)) {
+                    shown = chunk;
+                    this.toroidal$foldedRegion = canonicalRegion;
+                }
+            }
         }
 
-        if (foldedRegion != region) {
-            processor.beforeMinimapRegionRender(foldedRegion);
+        if (piecesX.size() > 1 || piecesZ.size() > 1) {
+            this.toroidal$piecesX = piecesX;
+            this.toroidal$piecesZ = piecesZ;
         }
 
-        this.toroidal$foldedRegion = foldedRegion;
-        return original.call(foldedRegion, XaeroWorldMapFold.tileChunkInRegion(foldedTileX),
-                XaeroWorldMapFold.tileChunkInRegion(foldedTileZ));
+        return shown;
+    }
+
+    @WrapOperation(
+            method = "renderChunks",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lxaero/common/mods/SupportXaeroWorldmap;prepareMapTexturedRect(Lorg/joml/Matrix4f;FFIIFF"
+                            + "Lxaero/map/region/MapTileChunk;"
+                            + "Lxaero/common/graphics/renderer/multitexture/MultiTextureRenderTypeRenderer;"
+                            + "Lxaero/common/graphics/renderer/multitexture/MultiTextureRenderTypeRenderer;"
+                            + "Lxaero/common/minimap/render/MinimapRendererHelper;)V"))
+    private void toroidal$drawTilePieces(SupportXaeroWorldmap support, Matrix4f matrix, float x, float y, int textureX,
+            int textureY, float width, float height, MapTileChunk chunk, MultiTextureRenderTypeRenderer noLightRenderer,
+            MultiTextureRenderTypeRenderer withLightRenderer, MinimapRendererHelper helper, Operation<Void> original) {
+        List<TilePiece> piecesX = this.toroidal$piecesX;
+        List<TilePiece> piecesZ = this.toroidal$piecesZ;
+        if (piecesX == null || piecesZ == null) {
+            original.call(support, matrix, x, y, textureX, textureY, width, height, chunk, noLightRenderer,
+                    withLightRenderer, helper);
+            return;
+        }
+
+        for (TilePiece pieceX : piecesX) {
+            for (TilePiece pieceZ : piecesZ) {
+                MapRegion canonicalRegion = toroidal$canonicalRegion(pieceX.canonicalTile(), pieceZ.canonicalTile());
+                MapTileChunk piece = canonicalRegion == null ? null : canonicalRegion.getChunk(
+                        XaeroWorldMapFold.tileChunkInRegion(pieceX.canonicalTile()),
+                        XaeroWorldMapFold.tileChunkInRegion(pieceZ.canonicalTile()));
+                int texture = piece == null ? NO_TEXTURE : toroidal$textureOf(piece);
+                if (texture == NO_TEXTURE) {
+                    continue;
+                }
+
+                if (canonicalRegion != this.toroidal$foldedRegion) {
+                    support.bumpLoadedRegion(this.toroidal$processor, canonicalRegion);
+                }
+
+                helper.prepareMyTexturedModalRect(matrix,
+                        x + pieceX.rawOffset() * CoordinateConstants.CHUNK_WIDTH,
+                        y + pieceZ.rawOffset() * CoordinateConstants.CHUNK_WIDTH,
+                        pieceX.firstInside() * CoordinateConstants.CHUNK_WIDTH,
+                        (pieceZ.firstInside() + pieceZ.count()) * CoordinateConstants.CHUNK_WIDTH,
+                        pieceX.count() * CoordinateConstants.CHUNK_WIDTH,
+                        pieceZ.count() * CoordinateConstants.CHUNK_WIDTH,
+                        -pieceZ.count() * CoordinateConstants.CHUNK_WIDTH,
+                        XaeroWorldMapFold.SLOT_BLOCKS,
+                        texture,
+                        piece.getLeafTexture().getTextureHasLight() ? withLightRenderer : noLightRenderer);
+            }
+        }
+    }
+
+    @Unique
+    private @Nullable MapRegion toroidal$canonicalRegion(int canonicalTileX, int canonicalTileZ) {
+        int regionX = XaeroWorldMapFold.regionOfTileChunk(canonicalTileX);
+        int regionZ = XaeroWorldMapFold.regionOfTileChunk(canonicalTileZ);
+        return this.toroidal$fetchIsLeaf
+                ? this.toroidal$processor.getLeafMapRegion(this.toroidal$fetchLeafLayer, regionX, regionZ, false)
+                : this.toroidal$processor.getMinimapMapRegion(regionX, regionZ);
+    }
+
+    @Unique
+    private static int toroidal$textureOf(MapTileChunk chunk) {
+        return chunk.getLeafTexture().getGlColorTexture();
     }
 
     @WrapOperation(

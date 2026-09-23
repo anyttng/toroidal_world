@@ -1,5 +1,6 @@
 package com.toroidalworld.compat;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
@@ -21,38 +22,45 @@ class MapCopyBudgetTest {
     }
 
     @Test
-    void aViewportCoveredByThreeQuartersNeedsThatManyCopies() {
-        assertEquals(3, MapCopyBudget.copyRange(1, 1, 128.0, 512, MapCopies.REPEATED), "ceil(512 * 0.75 / 128) is 3");
-        assertEquals(3, MapCopyBudget.copyRange(2, 1, 128.0, 512, MapCopies.REPEATED),
-                "the torus reads a different count under its cap");
+    void theRangeReachesTheFarthestLapTheViewTouches() {
+        AxisCopies tiny = AxisCopies.looped(-256, 512);
+        assertArrayEquals(new int[] {2, 2},
+                MapCopyBudget.copyRanges(tiny, tiny, 1, new int[] {-1000, 1000}, new int[] {-1000, 1000}, MapCopies.REPEATED),
+                "-1000..999 touches laps -2..2 of a 512-block world");
     }
 
     @Test
-    void theCapBindsWhenTheViewportAsksForMore() {
-        assertEquals(63, MapCopyBudget.copyRange(2, 1, 16.0, 1920, MapCopies.REPEATED),
-                "ceil(1920 * 0.75 / 16) = 90 was not capped at 63");
-        assertEquals(90, MapCopyBudget.copyRange(1, 1, 16.0, 1920, MapCopies.REPEATED),
-                "90 copies on a one-tile cylinder were capped");
-        assertEquals(15, MapCopyBudget.copyRange(2, 16, 16.0, 1920, MapCopies.REPEATED),
-                "90 copies over 16 torus tiles were not capped at 15");
+    void theCapBindsOnlyWhenTheGridsTilesTimesTheLapsOverrunTheBudget() {
+        AxisCopies tiny = AxisCopies.looped(-256, 512);
+        int[] far = {-50_000, 50_000};
+        assertArrayEquals(new int[] {15, 15}, MapCopyBudget.copyRanges(tiny, tiny, 16, far, far, MapCopies.REPEATED),
+                "16 tiles over 197 x 197 laps overrun 16384 blits, so the torus cap (sqrt(1024) - 1) / 2 = 15 binds");
+        assertArrayEquals(new int[] {98, 0},
+                MapCopyBudget.copyRanges(tiny, AxisCopies.UNBOUNDED, 16, far, far, MapCopies.REPEATED),
+                "16 tiles over 197 laps of a cylinder stay inside the budget");
     }
 
     @Test
-    void anAxisWithNoPeriodDrawsNoCopies() {
-        assertEquals(0, MapCopyBudget.copyRange(1, 1, 0.0, 1920, MapCopies.REPEATED), "an unbounded axis got copies");
+    void anUnboundedAxisDrawsNoCopies() {
+        AxisCopies tiny = AxisCopies.looped(-256, 512);
+        assertArrayEquals(new int[] {0, 2}, MapCopyBudget.copyRanges(AxisCopies.UNBOUNDED, tiny, 1,
+                new int[] {-1000, 1000}, new int[] {-1000, 1000}, MapCopies.REPEATED), "an unbounded axis got copies");
     }
 
     @Test
-    void aSingleCopyMapDrawsNoCopyWhateverTheViewportAsks() {
-        assertEquals(0, MapCopyBudget.copyRange(2, 1, 16.0, 1920, MapCopies.SINGLE), "a torus under SINGLE got copies");
-        assertEquals(0, MapCopyBudget.copyRange(1, 1, 128.0, 512, MapCopies.SINGLE), "a cylinder under SINGLE got copies");
+    void aSingleCopyMapDrawsNoCopyWhateverTheViewAsks() {
+        AxisCopies tiny = AxisCopies.looped(-256, 512);
+        assertArrayEquals(new int[] {0, 0},
+                MapCopyBudget.copyRanges(tiny, tiny, 1, new int[] {-1000, 1000}, new int[] {-1000, 1000}, MapCopies.SINGLE),
+                "a torus under SINGLE got copies");
     }
 
     @Test
-    void aViewportCountsTheTilesAcrossIt() {
-        assertEquals(6, MapCopyBudget.viewportTiles(256, 1280), "ceil(1280 / 256) + 1 is 6");
-        assertEquals(161, MapCopyBudget.viewportTiles(8, 1280), "ceil(1280 / 8) + 1 is 161");
-        assertEquals(1, MapCopyBudget.viewportTiles(0, 1280), "a zero tile size is not one tile");
+    void aFewTilesOnAWideWorldStillGetTheCopyTheViewReaches() {
+        AxisCopies axis = AxisCopies.looped(-14992, 30000);
+        assertArrayEquals(new int[] {1, 0},
+                MapCopyBudget.copyRanges(axis, axis, 8, new int[] {14024, 15944}, new int[] {-960, 960}, MapCopies.REPEATED),
+                "8 tiles on a 60 x 60-region world, a view crossing the +X seam and none along Z");
     }
 
     @Test

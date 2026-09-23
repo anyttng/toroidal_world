@@ -2,10 +2,13 @@ package com.toroidalworld.compat.xaero;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.jspecify.annotations.Nullable;
+
+import com.toroidalworld.compat.xaero.XaeroWorldMapFold.TilePiece;
 
 import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
@@ -22,6 +25,7 @@ import xaero.map.region.MapLayer;
 import xaero.map.region.MapRegion;
 import xaero.map.region.MapTileChunk;
 import xaero.map.region.MapUpdateFastConfig;
+import xaero.map.region.texture.ExportLeafRegionTexture;
 import xaero.map.region.texture.LeafRegionTexture;
 import xaero.map.world.MapDimension;
 
@@ -29,6 +33,13 @@ public final class XaeroExportAssembly {
     private static final String CACHE_REASON = "png";
     private static final byte TILE_CHUNK_LOADED = 2;
     private static final int CACHE_LOAD_ATTEMPTS = 1;
+    private static final int TILE_PIXELS = 64;
+    private static final int CHUNK_PIXELS = 16;
+    private static final int BYTES_PER_PIXEL = 4;
+    private static final byte[] EMPTY_TILE = new byte[TILE_PIXELS * TILE_PIXELS * BYTES_PER_PIXEL];
+
+    private record SlotPiece(ExportMapTileChunk chunk, TilePiece x, TilePiece z) {
+    }
 
     private static final class Loaded {
         private final int regionX;
@@ -51,6 +62,8 @@ public final class XaeroExportAssembly {
     private boolean includingHighlights;
 
     private final List<Loaded> loaded = new ArrayList<>();
+    private final List<SlotPiece> slotPieces = new ArrayList<>();
+    private final ByteBuffer composite = ByteBuffer.allocateDirect(EMPTY_TILE.length);
     private boolean assembling;
     private int rawRegionX;
     private int rawRegionZ;
@@ -118,8 +131,66 @@ public final class XaeroExportAssembly {
     public @Nullable ExportMapTileChunk chunk(int slotX, int slotZ) {
         this.tileChunkX = XaeroWorldMapFold.firstTileChunkOfRegion(this.rawRegionX) + slotX;
         this.tileChunkZ = XaeroWorldMapFold.firstTileChunkOfRegion(this.rawRegionZ) + slotZ;
-        int canonicalX = XaeroWorldMapFold.foldTileChunk(Direction.Axis.X, this.tileChunkX);
-        int canonicalZ = XaeroWorldMapFold.foldTileChunk(Direction.Axis.Z, this.tileChunkZ);
+        this.slotPieces.clear();
+        List<TilePiece> piecesX = XaeroWorldMapFold.tilePieces(XaeroWorldMapFold.chunkCopies(Direction.Axis.X), this.tileChunkX);
+        List<TilePiece> piecesZ = XaeroWorldMapFold.tilePieces(XaeroWorldMapFold.chunkCopies(Direction.Axis.Z), this.tileChunkZ);
+        ExportMapTileChunk carrier = null;
+        for (TilePiece pieceX : piecesX) {
+            for (TilePiece pieceZ : piecesZ) {
+                ExportMapTileChunk chunk = canonicalChunk(pieceX.canonicalTile(), pieceZ.canonicalTile());
+                if (chunk == null) {
+                    continue;
+                }
+
+                this.slotPieces.add(new SlotPiece(chunk, pieceX, pieceZ));
+                if (carrier == null) {
+                    carrier = chunk;
+                }
+            }
+        }
+
+        if (piecesX.size() == 1 && piecesZ.size() == 1) {
+            this.slotPieces.clear();
+        }
+
+        return carrier;
+    }
+
+    public ByteBuffer colorBuffer(ByteBuffer carrierBuffer) {
+        if (this.slotPieces.isEmpty()) {
+            return carrierBuffer;
+        }
+
+        ByteBuffer composite = this.composite;
+        composite.put(0, EMPTY_TILE, 0, EMPTY_TILE.length);
+        ExportMapTileChunk carrier = this.slotPieces.get(0).chunk();
+        for (SlotPiece piece : this.slotPieces) {
+            ExportLeafRegionTexture texture = piece.chunk().getLeafTexture();
+            if (texture.getColorBuffer() == null) {
+                texture.prepareBuffer();
+            }
+
+            copyPiece(texture.getDirectColorBuffer(), composite, piece.x(), piece.z());
+            if (piece.chunk() != carrier) {
+                texture.deleteColorBuffer();
+            }
+        }
+
+        return composite;
+    }
+
+    private static void copyPiece(ByteBuffer source, ByteBuffer target, TilePiece pieceX, TilePiece pieceZ) {
+        int rowBytes = pieceX.count() * CHUNK_PIXELS * BYTES_PER_PIXEL;
+        for (int row = 0; row < pieceZ.count() * CHUNK_PIXELS; row++) {
+            int sourceRow = pieceZ.firstInside() * CHUNK_PIXELS + row;
+            int targetRow = pieceZ.rawOffset() * CHUNK_PIXELS + row;
+            int sourcePos = (sourceRow * TILE_PIXELS + pieceX.firstInside() * CHUNK_PIXELS) * BYTES_PER_PIXEL;
+            int targetPos = (targetRow * TILE_PIXELS + pieceX.rawOffset() * CHUNK_PIXELS) * BYTES_PER_PIXEL;
+            target.put(targetPos, source, sourcePos, rowBytes);
+        }
+    }
+
+    private @Nullable ExportMapTileChunk canonicalChunk(int canonicalX, int canonicalZ) {
         int canonicalRegionX = XaeroWorldMapFold.regionOfTileChunk(canonicalX);
         int canonicalRegionZ = XaeroWorldMapFold.regionOfTileChunk(canonicalZ);
         int canonicalSlotX = XaeroWorldMapFold.tileChunkInRegion(canonicalX);
@@ -278,5 +349,6 @@ public final class XaeroExportAssembly {
         }
 
         this.loaded.clear();
+        this.slotPieces.clear();
     }
 }

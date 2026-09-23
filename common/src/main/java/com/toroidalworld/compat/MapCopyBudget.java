@@ -8,22 +8,7 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 public final class MapCopyBudget {
     private static final int MAX_TILE_BLITS = 16_384;
-    private static final double VIEWPORT_COVER = 0.75;
     private static final int REGION_CHUNKS = 32;
-
-    public static int viewportTiles(int tilePixels, int viewportPixels) {
-        return tilePixels <= 0 ? 1 : (int) Math.ceil((double) viewportPixels / tilePixels) + 1;
-    }
-
-    // A looped axis paints the world's own regions and nothing more, however many empty tiles the viewport spans.
-    public static int tilesWithContent(ToroidalShape shape, int tilePixels, int viewWidth, int viewHeight) {
-        if (shape == null) {
-            return 1;
-        }
-
-        return tilesAlong(shape, Direction.Axis.X, tilePixels, viewWidth)
-                * tilesAlong(shape, Direction.Axis.Z, tilePixels, viewHeight);
-    }
 
     public static int regionSpan(ToroidalShape shape, Direction.Axis axis) {
         if (!shape.loops(axis)) {
@@ -35,10 +20,6 @@ public final class MapCopyBudget {
         return maxRegion - minRegion + 1;
     }
 
-    private static int tilesAlong(ToroidalShape shape, Direction.Axis axis, int tilePixels, int viewportPixels) {
-        return shape.loops(axis) ? regionSpan(shape, axis) : viewportTiles(tilePixels, viewportPixels);
-    }
-
     public static int copyRangeCap(int loopedAxes, int tilesWithContent) {
         int budget = MAX_TILE_BLITS / Math.max(1, tilesWithContent);
         return switch (loopedAxes) {
@@ -48,13 +29,31 @@ public final class MapCopyBudget {
         };
     }
 
-    public static int copyRange(int loopedAxes, int tilesWithContent, double periodPixels, int viewportPixels,
+    public static int[] copyRanges(AxisCopies copiesX, AxisCopies copiesZ, int gridTiles, int[] spanX, int[] spanZ,
             MapCopies copies) {
         if (copies == MapCopies.SINGLE) {
-            return 0;
+            return new int[] {0, 0};
         }
 
-        return Math.min(copiesToCover(periodPixels, viewportPixels), copyRangeCap(loopedAxes, tilesWithContent));
+        int[] lapsX = copiesX.laps(spanX[0], spanX[1]);
+        int[] lapsZ = copiesZ.laps(spanZ[0], spanZ[1]);
+        int rangeX = farthestLap(lapsX);
+        int rangeZ = farthestLap(lapsZ);
+        if ((long) gridTiles * lapsX.length * lapsZ.length <= MAX_TILE_BLITS) {
+            return new int[] {rangeX, rangeZ};
+        }
+
+        int cap = copyRangeCap((copiesX.loops() ? 1 : 0) + (copiesZ.loops() ? 1 : 0), gridTiles);
+        return new int[] {Math.min(rangeX, cap), Math.min(rangeZ, cap)};
+    }
+
+    private static int farthestLap(int[] laps) {
+        int farthest = 0;
+        for (int lap : laps) {
+            farthest = Math.max(farthest, Math.abs(lap));
+        }
+
+        return farthest;
     }
 
     public static int[] drawnLaps(AxisCopies copies, int spanMin, int spanMax, MapCopies mapCopies) {
@@ -76,10 +75,6 @@ public final class MapCopyBudget {
         return new Copies(Math.max(rangeX, rangeZ), new BoundingBox(
                 paintedMin(x, rangeX), Integer.MIN_VALUE, paintedMin(z, rangeZ),
                 paintedMax(x, rangeX), Integer.MAX_VALUE, paintedMax(z, rangeZ)));
-    }
-
-    private static int copiesToCover(double periodPixels, int viewportPixels) {
-        return periodPixels <= 0.0 ? 0 : (int) Math.ceil(viewportPixels * VIEWPORT_COVER / periodPixels);
     }
 
     private static int paintedMin(AxisCopies copies, int range) {
