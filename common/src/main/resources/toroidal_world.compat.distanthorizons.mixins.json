@@ -12,7 +12,8 @@
     "ChunkWrapperMixin",
     "FullDataSourceProviderV2Mixin",
     "FullDataSourceV2RepoMixin",
-    "GeneratedFullDataSourceProviderMixin"
+    "GeneratedFullDataSourceProviderMixin",
+    "WorldGenerationQueueMixin"
   ],
   "client": [
     "LodQuadTreeAccessor",

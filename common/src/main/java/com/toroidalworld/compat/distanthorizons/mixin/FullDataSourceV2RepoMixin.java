@@ -4,24 +4,26 @@ import java.sql.PreparedStatement;
 
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
 
-import com.toroidalworld.api.v1.ToroidalShape;
-import com.toroidalworld.compat.distanthorizons.DhFold;
 import com.toroidalworld.compat.distanthorizons.DhKeys;
 import com.toroidalworld.compat.distanthorizons.DhRepoLevel;
+import com.toroidalworld.compat.distanthorizons.DhSeamSql;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.seibel.distanthorizons.core.enums.EDhDirection;
 import com.seibel.distanthorizons.core.sql.dto.FullDataSourceV2DTO;
 import com.seibel.distanthorizons.core.sql.repo.FullDataSourceV2Repo;
-
-import net.minecraft.core.Direction;
 
 import it.unimi.dsi.fastutil.bytes.ByteArrayList;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 
 @Mixin(FullDataSourceV2Repo.class)
 public class FullDataSourceV2RepoMixin {
+    private static final String CREATE_PREPARED_STATEMENT = "Lcom/seibel/distanthorizons/core/sql/repo/FullDataSourceV2Repo;"
+            + "createPreparedStatement(Ljava/lang/String;)Ljava/sql/PreparedStatement;";
+
     @WrapMethod(method = "setPreparedStatementWhereClause(Ljava/sql/PreparedStatement;ILjava/lang/Long;)I")
     private int toroidal$foldWhereKey(PreparedStatement statement, int index, Long pos, Operation<Integer> original) {
         return original.call(statement, index, DhKeys.foldSection(DhRepoLevel.shapeOf(this), pos));
@@ -74,14 +76,21 @@ public class FullDataSourceV2RepoMixin {
     }
 
     @WrapMethod(method = "getPositionsToUpdate(IIILjava/lang/String;)Lit/unimi/dsi/fastutil/longs/LongArrayList;")
-    private LongArrayList toroidal$foldUpdateTarget(int targetBlockX, int targetBlockZ, int returnCount,
+    private LongArrayList toroidal$rankUpdatesThroughTheSeam(int targetBlockX, int targetBlockZ, int returnCount,
             String sql, Operation<LongArrayList> original) {
-        ToroidalShape shape = DhRepoLevel.shapeOf(this);
-        if (shape == null) {
-            return original.call(targetBlockX, targetBlockZ, returnCount, sql);
-        }
+        return original.call(targetBlockX, targetBlockZ, returnCount,
+                DhSeamSql.rewrite(DhRepoLevel.shapeOf(this), sql, DhSeamSql.Site.UPDATE));
+    }
 
-        return original.call(DhFold.foldBlock(shape, Direction.Axis.X, DhKeys.LEAF, targetBlockX),
-                DhFold.foldBlock(shape, Direction.Axis.Z, DhKeys.LEAF, targetBlockZ), returnCount, sql);
+    @WrapOperation(method = "getChildPositionsToRegen", at = @At(value = "INVOKE", target = CREATE_PREPARED_STATEMENT))
+    private PreparedStatement toroidal$filterRegenThroughTheSeam(FullDataSourceV2Repo repo, String sql,
+            Operation<PreparedStatement> original) {
+        return original.call(repo, DhSeamSql.rewrite(DhRepoLevel.shapeOf(this), sql, DhSeamSql.Site.REGEN));
+    }
+
+    @WrapOperation(method = "getRegenChunkCount", at = @At(value = "INVOKE", target = CREATE_PREPARED_STATEMENT))
+    private PreparedStatement toroidal$countRegenThroughTheSeam(FullDataSourceV2Repo repo, String sql,
+            Operation<PreparedStatement> original) {
+        return original.call(repo, DhSeamSql.rewrite(DhRepoLevel.shapeOf(this), sql, DhSeamSql.Site.REGEN_COUNT));
     }
 }
