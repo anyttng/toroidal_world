@@ -28,7 +28,7 @@ public final class PeriodicNoiseSampler {
             {0, -1, -1}
     };
 
-    static final long UNBOUNDED_PERIOD = 0L;
+    public static final long UNBOUNDED_PERIOD = 0L;
 
     static final long HELD_PERIOD = -1L;
 
@@ -103,6 +103,15 @@ public final class PeriodicNoiseSampler {
 
         return correction * sampleAndLerp(permutations, xCell, yCell, zCell, xFrac, yFrac - yFracFudge, zFrac,
                 yFrac, xPeriod, yPeriod, zPeriod) + anchor;
+    }
+
+    public static double sampleLattice(byte[] permutations, double xs, double zs, long xPeriod, long zPeriod) {
+        int xCell = Mth.floor(xs);
+        int zCell = Mth.floor(zs);
+        double xFrac = xs - xCell;
+        double zFrac = zs - zCell;
+        return sampleAndLerp(permutations, xCell, 0, zCell, xFrac, 0.0, zFrac, 0.0,
+                xPeriod, UNBOUNDED_PERIOD, zPeriod);
     }
 
     private static double anchorSample(byte[] permutations, WrapDomain xDomain, WrapDomain zDomain,

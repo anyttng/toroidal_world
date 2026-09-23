@@ -85,6 +85,25 @@ var xaeroLibJars = tasks.register('unpackXaeroLib', Sync) {
     into layout.buildDirectory.dir('xaerolib')
 }
 
+// WorldWeaver publishes one jar whose modules all ride inside it as jar-in-jars; the biome-map fold mixins name its
+// generator and math types. Unpacked the same way, compile and test classpath alone.
+configurations {
+    woverModules
+}
+
+dependencies {
+    woverModules "maven.modrinth:worldweaver-neoforge:${worldweaver_version}"
+}
+
+var woverModuleJars = tasks.register('unpackWoverModules', Sync) {
+    from(zipTree(configurations.woverModules.singleFile)) {
+        include 'META-INF/jars/*.jar'
+        eachFile { it.relativePath = new RelativePath(true, it.name) }
+    }
+    includeEmptyDirs = false
+    into layout.buildDirectory.dir('wover-modules')
+}
+
 // NeoForm brings only vanilla; the mixin annotations the sources carry come from the same artifacts the NeoForge
 // runtime ships (pinned in gradle.properties from the neo_version userdev config). compileOnly — applying them is
 // the loaders' business.
@@ -100,6 +119,7 @@ dependencies {
     compileOnly "maven.modrinth:terrablender:${terrablender_version}"
     compileOnly "maven.modrinth:biolith:${biolith_version}"
     compileOnly files(xaeroLibJars).asFileTree.matching { include '*.jar' }
+    compileOnly files(woverModuleJars).asFileTree.matching { include '*.jar' }
     compileOnly "com.github.bawnorton.mixinsquared:mixinsquared-common:${mixinsquared_version}"
 }
 
@@ -117,6 +137,8 @@ dependencies {
     testRuntimeOnly "maven.modrinth:terrablender:${terrablender_version}"
     testCompileOnly "maven.modrinth:biolith:${biolith_version}"
     testRuntimeOnly "maven.modrinth:biolith:${biolith_version}"
+    testCompileOnly files(woverModuleJars).asFileTree.matching { include '*.jar' }
+    testRuntimeOnly files(woverModuleJars).asFileTree.matching { include '*.jar' }
     // The compat jars and Mixin on the test runtime alone: what the gate-symbol tests read is the class file each
     // gate names, and a config plugin cannot even load without IMixinConfigPlugin.
     testRuntimeOnly "maven.modrinth:journeymap:${journeymap_version}"
