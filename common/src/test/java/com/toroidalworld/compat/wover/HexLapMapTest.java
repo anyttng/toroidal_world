@@ -14,11 +14,14 @@ import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WorldFolds;
 import com.toroidalworld.core.WorldLoopBounds;
 import com.toroidalworld.core.WrapDomain;
+import com.toroidalworld.engine.noise.ClimateScaleCompression;
 
 import net.minecraft.core.Direction;
 
 class HexLapMapTest {
     private static final float DEFAULT_SCALE = 256 / 8.0F;
+
+    private static final double FACTOR = 4.0;
 
     private static final int SEED = 0x900;
 
@@ -34,7 +37,11 @@ class HexLapMapTest {
             random -> random.nextInt(PALETTE), (biome, random) -> biome);
 
     private static HexLapMap<Integer> map(WorldFold fold, float scale) {
-        return new HexLapMap<>(fold, scale, SEED, PICKER);
+        return map(fold, scale, ClimateScaleCompression.NO_COMPRESSION);
+    }
+
+    private static HexLapMap<Integer> map(WorldFold fold, float scale, double factor) {
+        return new HexLapMap<>(fold, scale, factor, SEED, PICKER);
     }
 
     @Test
@@ -81,6 +88,24 @@ class HexLapMapTest {
     }
 
     @Test
+    void theCompactBiomesFactorShrinksTheCellOnBothAxes() {
+        double[] factors = {2.0, 4.0, 1.56};
+        WorldFold torus = WorldFolds.of(FlatShape.torus(WorldLoopBounds.ofWidth(256)));
+        for (double factor : factors) {
+            HexLapMap<Integer> map = map(torus, DEFAULT_SCALE, factor);
+            assertCell(map.axis(Direction.Axis.X), DEFAULT_SCALE / factor / HexLapMap.RAD_INNER, 1);
+            assertCell(map.axis(Direction.Axis.Z), DEFAULT_SCALE / factor, 2);
+        }
+
+        WorldFold cylinder = WorldFolds.of(FlatShape.cylinder(WorldLoopBounds.ofWidth(Direction.Axis.X, 256)));
+        HexLapMap<Integer> compact = map(cylinder, DEFAULT_SCALE, FACTOR);
+        assertEquals(DEFAULT_SCALE / FACTOR, compact.axis(Direction.Axis.Z).cellBlocks(), 1.0E-9,
+                "the cylinder's open axis kept WorldWeaver's cell");
+        assertCell(compact.axis(Direction.Axis.X), DEFAULT_SCALE / FACTOR / HexLapMap.RAD_INNER, 1);
+        assertPeriodic(cylinder, DEFAULT_SCALE, FACTOR);
+    }
+
+    @Test
     void aLapHeldInOneBlockSeedsTwoLinesAlongEachLoopedAxis() {
         assertEquals(2, HexLapChunk.seedLines(7, true));
         assertEquals(2, HexLapChunk.seedLines(2, true));
@@ -117,7 +142,11 @@ class HexLapMapTest {
     }
 
     private static void assertPeriodic(WorldFold fold, float scale) {
-        HexLapMap<Integer> map = map(fold, scale);
+        assertPeriodic(fold, scale, ClimateScaleCompression.NO_COMPRESSION);
+    }
+
+    private static void assertPeriodic(WorldFold fold, float scale, double factor) {
+        HexLapMap<Integer> map = map(fold, scale, factor);
         WrapDomain xDomain = fold.blockDomain(Direction.Axis.X);
         WrapDomain zDomain = fold.blockDomain(Direction.Axis.Z);
         int xLap = xDomain.domainLength;
