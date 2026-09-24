@@ -9,6 +9,7 @@ import com.toroidalworld.shape.climate.ClimateCompression;
 import com.toroidalworld.shape.noise.DensityNoises;
 
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.DensityFunction;
 import net.minecraft.world.level.levelgen.DensityFunctions;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
@@ -16,6 +17,10 @@ import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 public final class LevelClimateCompression {
     public static DensityFunction temperatureOf(@Nullable ServerLevel level) {
         return temperatureOf(routerTemperatureOf(level), overworldTemperatureOf(level));
+    }
+
+    public static DensityFunction temperatureOf(ChunkGenerator own, @Nullable ChunkGenerator overworld) {
+        return temperatureOf(routerTemperatureOf(own), routerTemperatureOf(overworld));
     }
 
     static DensityFunction temperatureOf(DensityFunction own, DensityFunction overworld) {
@@ -27,7 +32,11 @@ public final class LevelClimateCompression {
     }
 
     static DensityFunction routerTemperatureOf(@Nullable ServerLevel level) {
-        if (level != null && level.getChunkSource().getGenerator() instanceof NoiseBasedChunkGenerator noise) {
+        return routerTemperatureOf(level != null ? level.getChunkSource().getGenerator() : null);
+    }
+
+    private static DensityFunction routerTemperatureOf(@Nullable ChunkGenerator generator) {
+        if (generator instanceof NoiseBasedChunkGenerator noise) {
             return noise.generatorSettings().value().noiseRouter().temperature();
         }
 
