@@ -14,6 +14,10 @@ public record PreliminarySurfaceLevel(DensityFunction density) implements Densit
 
     private static final int SEARCH_STEP = 8;
 
+    public PreliminarySurfaceLevel {
+        density = ColumnMemo.overColumnMarkers(density);
+    }
+
     @Override
     public double compute(FunctionContext context) {
         int blockX = context.blockX();

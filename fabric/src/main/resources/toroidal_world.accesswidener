@@ -21,4 +21,6 @@ accessible class net/minecraft/world/level/levelgen/DensityFunctions$TwoArgument
 accessible class net/minecraft/world/level/levelgen/DensityFunctions$PureTransformer
 accessible class net/minecraft/world/level/levelgen/DensityFunctions$TransformerWithContext
 accessible class net/minecraft/world/level/levelgen/DensityFunctions$RangeChoice
+accessible class net/minecraft/world/level/levelgen/DensityFunctions$Marker
+accessible class net/minecraft/world/level/levelgen/DensityFunctions$Marker$Type
 accessible field net/minecraft/world/level/levelgen/synth/ImprovedNoise p [B
