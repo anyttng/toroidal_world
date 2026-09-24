@@ -19,16 +19,23 @@ public abstract class LapMap<T> {
 
     private final WorldFold fold;
 
+    private final double factor;
+
     private final Map<Long, LapChunk<T>> chunks = new ConcurrentHashMap<>();
 
     private volatile @Nullable ChunkSource<T> shared;
 
-    LapMap(WorldFold fold) {
+    LapMap(WorldFold fold, double factor) {
         this.fold = fold;
+        this.factor = factor;
     }
 
     public boolean covers(WorldFold fold) {
         return this.fold == fold;
+    }
+
+    public double factor() {
+        return this.factor;
     }
 
     public abstract T biomeAt(double blockX, double blockZ);

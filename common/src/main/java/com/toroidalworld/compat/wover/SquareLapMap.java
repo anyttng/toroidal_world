@@ -31,7 +31,7 @@ public final class SquareLapMap<T> extends LapMap<T> {
     private final int depth;
 
     public SquareLapMap(WorldFold fold, int sizeXZ, double factor, long seed, LapPicker<T> picker) {
-        super(fold);
+        super(fold, factor);
         this.picker = picker;
         this.cellBlocks = sizeXZ / factor;
         this.x = LapAxis.of(fold.blockDomain(Direction.Axis.X), this.cellBlocks, false, CHUNK_SIDE);

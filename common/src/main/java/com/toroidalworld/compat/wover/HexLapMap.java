@@ -55,7 +55,7 @@ public final class HexLapMap<T> extends LapMap<T> {
     private final int warpOctaves;
 
     public HexLapMap(WorldFold fold, float scale, double factor, int seed, LapPicker<T> picker) {
-        super(fold);
+        super(fold, factor);
         double cellScale = scale / factor;
         this.seed = seed;
         this.picker = picker;
