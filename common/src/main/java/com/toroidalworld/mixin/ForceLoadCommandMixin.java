@@ -61,4 +61,12 @@ public class ForceLoadCommandMixin {
             @Local(argsOnly = true) CommandSourceStack source) {
         return WorldLoopAttachments.transformerOf(source.getLevel()).fold(chunkPos);
     }
+
+    @ModifyExpressionValue(
+            method = "queryForceLoad",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/ColumnPos;toChunkPos()Lnet/minecraft/world/level/ChunkPos;"))
+    private static ChunkPos toroidal$queryThePhysicalChunk(ChunkPos chunkPos,
+            @Local(argsOnly = true) CommandSourceStack source) {
+        return WorldLoopAttachments.transformerOf(source.getLevel()).fold(chunkPos);
+    }
 }
