@@ -17,7 +17,9 @@
     "MapRendererMixin",
     "MapStateMixin",
     "ModOverlayLayerMixin",
-    "RegionCoordMixin"
+    "RegionCoordMixin",
+    "RegionTileAccessor",
+    "RegionTileMixin"
   ],
   "injectors": {
     "defaultRequire": 1

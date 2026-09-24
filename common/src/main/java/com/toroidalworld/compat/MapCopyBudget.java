@@ -1,24 +1,11 @@
 package com.toroidalworld.compat;
 
-import com.toroidalworld.api.v1.ToroidalShape;
 import com.toroidalworld.engine.seam.MapSurfaceCopies.Copies;
 
-import net.minecraft.core.Direction;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 public final class MapCopyBudget {
     private static final int MAX_TILE_BLITS = 16_384;
-    private static final int REGION_CHUNKS = 32;
-
-    public static int regionSpan(ToroidalShape shape, Direction.Axis axis) {
-        if (!shape.loops(axis)) {
-            return 0;
-        }
-
-        int minRegion = Math.floorDiv(shape.minChunk(axis), REGION_CHUNKS);
-        int maxRegion = Math.floorDiv(shape.maxChunk(axis) - 1, REGION_CHUNKS);
-        return maxRegion - minRegion + 1;
-    }
 
     public static int copyRangeCap(int loopedAxes, int tilesWithContent) {
         int budget = MAX_TILE_BLITS / Math.max(1, tilesWithContent);
