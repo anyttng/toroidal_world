@@ -11,7 +11,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.toroidalworld.compat.wover.FoldCompression;
+import com.toroidalworld.compat.FoldCompression;
+import com.toroidalworld.compat.wover.EdgeBiomes;
 import com.toroidalworld.compat.wover.HexLapMap;
 import com.toroidalworld.compat.wover.LapMap;
 import com.toroidalworld.compat.wover.LapMapHolder;
@@ -35,6 +36,15 @@ public class HexBiomeMapMixin implements LapMapHolder<WoverBiomePicker.PickableB
 
     @Unique
     private volatile @Nullable HexLapMap<WoverBiomePicker.PickableBiome> toroidal$lapMap;
+
+    @Inject(method = "getBiome", at = @At("HEAD"), cancellable = true)
+    private void toroidal$lapBiomeWithEdge(double x, double y, double z,
+            CallbackInfoReturnable<WoverBiomePicker.PickableBiome> cir) {
+        WorldFold transformer = GenerationTransformerContext.context().wrappedTransformer();
+        if (transformer != null) {
+            cir.setReturnValue(EdgeBiomes.hex(toroidal$lapMap(transformer), x, z));
+        }
+    }
 
     @Inject(method = "getRawBiome", at = @At("HEAD"), cancellable = true)
     private void toroidal$lapBiome(double x, double z,
