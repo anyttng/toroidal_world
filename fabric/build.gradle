@@ -128,6 +128,7 @@ dependencies {
     compileOnly "maven.modrinth:distanthorizons:${distanthorizons_version}"
     compileOnly "maven.modrinth:terrablender:${terrablender_version}"
     compileOnly "maven.modrinth:biolith:${biolith_version}"
+    compileOnly "maven.modrinth:sodium:${sodium_version}"
     compileOnly files(xaeroLibJars).asFileTree.matching { include '*.jar' }
 
     // The 'modmenu' entrypoint class is only ever asked for by ModMenu itself, so it never loads without it.

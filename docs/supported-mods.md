@@ -6,11 +6,12 @@ Toroidal World ships for Minecraft 26.3, 26.2, 26.1.2 and 1.21.1, on NeoForge an
 
 | Mod | Minecraft | Loaders | Status | Notes |
 | --- | --- | --- | --- | --- |
-| [Sodium](https://modrinth.com/mod/sodium) and [Iris Shaders](https://modrinth.com/mod/iris) | All | NeoForge, Fabric | No patch needed | |
+| [Iris Shaders](https://modrinth.com/mod/iris) | All | NeoForge, Fabric | No patch needed | |
 | Separate Sable Render Distance | 1.21.1 | NeoForge | No patch needed | |
 | [Lithium](https://modrinth.com/mod/lithium) | All | NeoForge, Fabric | Supported | |
 | [C2ME](https://modrinth.com/mod/c2me-fabric) | All | NeoForge, Fabric | Supported | |
 | ScalableLux | All | NeoForge, Fabric | Supported | |
+| [Sodium](https://modrinth.com/mod/sodium) | All | NeoForge, Fabric | Supported | |
 | [Simple Clouds](https://modrinth.com/mod/simple-clouds) | 1.21.1 | NeoForge | Supported | |
 
 ## Distant terrain

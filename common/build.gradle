@@ -118,6 +118,7 @@ dependencies {
     compileOnly "maven.modrinth:distanthorizons:${distanthorizons_version}"
     compileOnly "maven.modrinth:terrablender:${terrablender_version}"
     compileOnly "maven.modrinth:biolith:${biolith_version}"
+    compileOnly "maven.modrinth:sodium:${sodium_version}"
     compileOnly files(xaeroLibJars).asFileTree.matching { include '*.jar' }
     compileOnly files(woverModuleJars).asFileTree.matching { include '*.jar' }
     compileOnly "com.github.bawnorton.mixinsquared:mixinsquared-common:${mixinsquared_version}"

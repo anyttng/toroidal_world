@@ -32,7 +32,8 @@
     "toroidal_world.compat.terrablender.mixins.json",
     "toroidal_world.compat.scalablelux.mixins.json",
     "toroidal_world.compat.biolith.mixins.json",
-    "toroidal_world.compat.wover.mixins.json"
+    "toroidal_world.compat.wover.mixins.json",
+    "toroidal_world.compat.sodium.mixins.json"
   ],
   "accessWidener": "toroidal_world.accesswidener",
   "custom": {
