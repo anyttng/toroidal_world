@@ -19,6 +19,7 @@ def jarVersion = withBuildSuffix("${toroidal_world_version}+mc${minecraft_versio
 // The metadata closure is detached from this script by the configuration cache, so the property is read here.
 def journeymapMinVersion = journeymap_min_version
 def ftbchunksMinVersion = ftbchunks_min_version
+def c2meMinVersion = c2me_fabric_min_version
 
 base {
     archivesName = mod_id
@@ -371,9 +372,10 @@ processResources {
     inputs.property 'version', modIngameVersion
     inputs.property 'journeymap_min_version', journeymapMinVersion
     inputs.property 'ftbchunks_min_version', ftbchunksMinVersion
+    inputs.property 'c2me_min_version', c2meMinVersion
     filesMatching('fabric.mod.json') {
         expand version: modIngameVersion, journeymap_min_version: journeymapMinVersion,
-                ftbchunks_min_version: ftbchunksMinVersion
+                ftbchunks_min_version: ftbchunksMinVersion, c2me_min_version: c2meMinVersion
     }
 }
 
