@@ -13,6 +13,12 @@ public final class OpenSimplexStandIn {
 
     static final double RATE = 1.065;
 
+    static final double AMPLITUDE_3D = 1.162;
+
+    static final double RATE_3D = 0.858;
+
+    static final double RATE_3D_VERTICAL = 0.798;
+
     private static final double BETWEEN_PLANES = 0.5;
 
     private static final long MIN_CELLS = 1L;
@@ -26,20 +32,32 @@ public final class OpenSimplexStandIn {
     }
 
     public double eval(double x, double z, double xPeriod, double zPeriod) {
-        long xCells = cells(xPeriod);
-        long zCells = cells(zPeriod);
+        long xCells = cells(xPeriod, RATE);
+        long zCells = cells(zPeriod, RATE);
         return AMPLITUDE * PeriodicNoiseSampler.sampleLattice(this.noise.p,
-                lattice(x, xPeriod, xCells) + this.noise.xo, Math.floor(this.noise.yo) + BETWEEN_PLANES,
-                lattice(z, zPeriod, zCells) + this.noise.zo, xCells, zCells);
+                lattice(x, xPeriod, xCells, RATE) + this.noise.xo, Math.floor(this.noise.yo) + BETWEEN_PLANES,
+                lattice(z, zPeriod, zCells, RATE) + this.noise.zo, xCells, zCells);
+    }
+
+    public double eval(double x, double y, double z, double xPeriod, double zPeriod) {
+        long xCells = cells(xPeriod, RATE_3D);
+        long zCells = cells(zPeriod, RATE_3D);
+        return AMPLITUDE_3D * PeriodicNoiseSampler.sampleLattice(this.noise.p,
+                lattice(x, xPeriod, xCells, RATE_3D) + this.noise.xo, y * RATE_3D_VERTICAL + this.noise.yo,
+                lattice(z, zPeriod, zCells, RATE_3D) + this.noise.zo, xCells, zCells);
     }
 
     static long cells(double period) {
-        return period == UNBOUNDED
-                ? PeriodicNoiseSampler.UNBOUNDED_PERIOD
-                : Math.max(MIN_CELLS, (long) Math.ceil(period * RATE - CELL_EPSILON));
+        return cells(period, RATE);
     }
 
-    private static double lattice(double coord, double period, long cells) {
-        return period == UNBOUNDED ? coord * RATE : coord * (cells / period);
+    static long cells(double period, double rate) {
+        return period == UNBOUNDED
+                ? PeriodicNoiseSampler.UNBOUNDED_PERIOD
+                : Math.max(MIN_CELLS, (long) Math.ceil(period * rate - CELL_EPSILON));
+    }
+
+    private static double lattice(double coord, double period, long cells, double rate) {
+        return period == UNBOUNDED ? coord * rate : coord * (cells / period);
     }
 }
