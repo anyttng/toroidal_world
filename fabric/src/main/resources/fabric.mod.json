@@ -52,6 +52,6 @@
   },
   "breaks": {
     "journeymap": "<${journeymap_min_version}",
-    "c2me": "<${c2me_min_version}"
+    "c2me": ["<${c2me_min_version}", "${c2me_broken_version}"]
   }
 }
