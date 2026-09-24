@@ -134,6 +134,9 @@ config="toroidal_world.compat.mekanism.mixins.json"
 config="toroidal_world.compat.terrablender.mixins.json"
 
 [[mixins]]
+config="toroidal_world.compat.reterraforged.mixins.json"
+
+[[mixins]]
 config="toroidal_world.compat.astikorcarts.mixins.json"
 
 [[mixins]]

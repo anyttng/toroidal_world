@@ -52,6 +52,14 @@ repositories {
             includeGroup 'maven.modrinth'
         }
     }
+    // ReTerraForged is on CurseForge alone.
+    maven {
+        name = 'CurseMaven'
+        url = 'https://cursemaven.com'
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
     // MixinSquared — the C2ME compat mixin injects into C2ME's own handler.
     maven {
         name = 'Bawnorton'
@@ -262,6 +270,7 @@ dependencies {
     // Biolith rides modCompileOnly as the FABRIC flavor, as the Xaero jars do: the placement class the mixin extends
     // names game types, and only the remapped jar spells them the way this workspace does.
     modCompileOnly "maven.modrinth:biolith:${biolith_fabric_version}"
+    modCompileOnly "curse.maven:reterraforged-unofficial-1607000:${reterraforged_fabric_version}"
 
     // The 'modmenu' entrypoint class is only ever asked for by ModMenu itself, so it never loads without it.
     // modCompileOnly: its screen-factory API names the game's Screen, which only the remapped jar spells in this

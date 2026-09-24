@@ -36,6 +36,14 @@ repositories {
             includeGroup 'maven.modrinth'
         }
     }
+    // ReTerraForged is on CurseForge alone.
+    maven {
+        name = 'CurseMaven'
+        url = 'https://cursemaven.com'
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
     // MixinSquared — the C2ME compat mixin injects into C2ME's own handler.
     maven {
         name = 'Bawnorton'
@@ -206,6 +214,7 @@ dependencies {
     compileOnly "maven.modrinth:terrablender:${terrablender_version}"
     compileOnly "maven.modrinth:astikorcarts-redux:${astikorcarts_version}"
     compileOnly "maven.modrinth:biolith:${biolith_version}"
+    compileOnly "curse.maven:reterraforged-unofficial-1607000:${reterraforged_version}"
     compileOnly "com.github.bawnorton.mixinsquared:mixinsquared-common:${mixinsquared_version}"
 }
 
@@ -245,6 +254,8 @@ dependencies {
     testRuntimeOnly "maven.modrinth:terrablender:${terrablender_version}"
     testCompileOnly "maven.modrinth:biolith:${biolith_version}"
     testRuntimeOnly "maven.modrinth:biolith:${biolith_version}"
+    testCompileOnly "curse.maven:reterraforged-unofficial-1607000:${reterraforged_version}"
+    testRuntimeOnly "curse.maven:reterraforged-unofficial-1607000:${reterraforged_version}"
     // The compat jars and Mixin on the test runtime alone: what the gate-symbol tests read is the class file each
     // gate names, and a config plugin cannot even load without IMixinConfigPlugin.
     testRuntimeOnly "maven.modrinth:journeymap:${journeymap_version}"

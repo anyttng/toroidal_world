@@ -46,6 +46,12 @@ public final class InjectionTargets {
     public static final String DISTANCE_PREDICATE_MATCHES =
             "Lnet/minecraft/advancements/critereon/DistancePredicate;matches(DDDDDD)Z";
 
+    public static final String FUNCTION_CONTEXT_BLOCK_X =
+            "Lnet/minecraft/world/level/levelgen/DensityFunction$FunctionContext;blockX()I";
+
+    public static final String FUNCTION_CONTEXT_BLOCK_Z =
+            "Lnet/minecraft/world/level/levelgen/DensityFunction$FunctionContext;blockZ()I";
+
     public static final String ENTITY_GET_BOUNDING_BOX =
             "Lnet/minecraft/world/entity/Entity;getBoundingBox()Lnet/minecraft/world/phys/AABB;";
 
