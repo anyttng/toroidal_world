@@ -22,6 +22,14 @@ public final class InjectionTargets {
     public static final String BLOCK_POS_OFFSET_PACKED =
             "Lnet/minecraft/core/BlockPos;offset(JLnet/minecraft/core/Direction;)J";
 
+    public static final String BLOCK_STATE_BASE_GET_COLLISION_SHAPE =
+            "getCollisionShape(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;"
+                    + "Lnet/minecraft/world/phys/shapes/CollisionContext;)Lnet/minecraft/world/phys/shapes/VoxelShape;";
+
+    public static final String BLOCK_STATE_GET_OFFSET =
+            "Lnet/minecraft/world/level/block/state/BlockState;getOffset(Lnet/minecraft/core/BlockPos;)"
+                    + "Lnet/minecraft/world/phys/Vec3;";
+
     public static final String CHUNK_POS_PACK = "Lnet/minecraft/world/level/ChunkPos;pack(II)J";
 
     public static final String DENSITY_FUNCTION_COMPILE_SAMPLER =
