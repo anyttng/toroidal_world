@@ -1,0 +1,15 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.toroidalworld.compat.betterend.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "plugin": "com.toroidalworld.compat.betterend.BetterEndMixinPlugin",
+  "mixins": [
+    "IslandLayerMixin",
+    "TerrainGeneratorAccessor",
+    "TerrainGeneratorMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

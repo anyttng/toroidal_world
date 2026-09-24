@@ -238,6 +238,8 @@ dependencies {
     compileOnly "curse.maven:mt-chunk-generation-1120044:${mtchunkgeneration_version}"
     compileOnly "maven.modrinth:worldweaver-neoforge:${worldweaver_version}"
     compileOnly files(sodiumModJars).asFileTree.matching { include '*.jar' }
+    compileOnly "maven.modrinth:betterend-neoforge:${betterend_version}"
+    compileOnly "maven.modrinth:bclib-neoforge:${bclib_version}"
     compileOnly "com.github.bawnorton.mixinsquared:mixinsquared-common:${mixinsquared_version}"
 }
 
@@ -281,6 +283,11 @@ dependencies {
     testRuntimeOnly "curse.maven:reterraforged-unofficial-1607000:${reterraforged_version}"
     testCompileOnly "maven.modrinth:worldweaver-neoforge:${worldweaver_version}"
     testRuntimeOnly "maven.modrinth:worldweaver-neoforge:${worldweaver_version}"
+    testCompileOnly "maven.modrinth:betterend-neoforge:${betterend_version}"
+    testRuntimeOnly "maven.modrinth:betterend-neoforge:${betterend_version}"
+    testCompileOnly "maven.modrinth:bclib-neoforge:${bclib_version}"
+    testRuntimeOnly "maven.modrinth:bclib-neoforge:${bclib_version}"
+    testRuntimeOnly "maven.modrinth:wunderlib-neoforge:${wunderlib_version}"
     // The compat jars and Mixin on the test runtime alone: what the gate-symbol tests read is the class file each
     // gate names, and a config plugin cannot even load without IMixinConfigPlugin.
     testRuntimeOnly "maven.modrinth:journeymap:${journeymap_version}"

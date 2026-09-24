@@ -43,6 +43,7 @@
     "toroidal_world.compat.biolith.mixins.json",
     "toroidal_world.compat.reterraforged.mixins.json",
     "toroidal_world.compat.wover.mixins.json",
+    "toroidal_world.compat.betterend.mixins.json",
     "toroidal_world.compat.sodium.mixins.json"
   ],
   "accessWidener": "toroidal_world.accesswidener",

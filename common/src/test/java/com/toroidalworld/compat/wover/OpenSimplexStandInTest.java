@@ -46,6 +46,10 @@ class OpenSimplexStandInTest {
 
     private static final int SUM = 0;
 
+    private static final int AXES = 3;
+
+    private static final int FIELDS_3D = 64;
+
     private interface Field {
         double at(double x, double z);
     }
@@ -191,6 +195,77 @@ class OpenSimplexStandInTest {
         assertEquals(1.0, standIn.crossingsPerUnit() / openSimplex.crossingsPerUnit(), TOLERANCE,
                 "zero crossings per unit: stand-in " + standIn.crossingsPerUnit() + " against OpenSimplex "
                         + openSimplex.crossingsPerUnit());
+    }
+
+    @Test
+    void theThreeDimensionalStandInSpreadsAndCrossesZeroLikeOpenSimplexAlongEveryAxis() {
+        StringBuilder readings = new StringBuilder("stand-in / OpenSimplex in three dimensions");
+        double[][] ratios = new double[AXES][];
+        for (int axis = 0; axis < AXES; axis++) {
+            Random random = new Random(SEED + axis);
+            Moments openSimplex = new Moments();
+            Moments standIn = new Moments();
+            for (int field = 0; field < FIELDS_3D; field++) {
+                OpenSimplexNoise reference = new OpenSimplexNoise(random.nextLong());
+                OpenSimplexStandIn candidate = new OpenSimplexStandIn(random.nextLong());
+                double[] origin = {random.nextDouble() * ORIGIN_SPREAD, random.nextDouble() * ORIGIN_SPREAD,
+                        random.nextDouble() * ORIGIN_SPREAD};
+                for (int line = 0; line < LINES; line++) {
+                    double[] start = origin.clone();
+                    start[(axis + 1) % AXES] += line * LINE_SPACING;
+                    int along = axis;
+                    openSimplex.line(t -> reference.eval(at(start, along, t, 0), at(start, along, t, 1),
+                            at(start, along, t, 2)), 0.0);
+                    standIn.line(t -> candidate.eval(at(start, along, t, 0), at(start, along, t, 1),
+                            at(start, along, t, 2), OpenSimplexStandIn.UNBOUNDED, OpenSimplexStandIn.UNBOUNDED), 0.0);
+                }
+            }
+
+            ratios[axis] = new double[] {standIn.deviation() / openSimplex.deviation(),
+                    standIn.crossingsPerUnit() / openSimplex.crossingsPerUnit()};
+            readings.append(String.format(Locale.ROOT, "; axis %d: spread %.4f / %.4f, crossings per unit %.4f / %.4f",
+                    axis, standIn.deviation(), openSimplex.deviation(), standIn.crossingsPerUnit(),
+                    openSimplex.crossingsPerUnit()));
+        }
+
+        for (double[] ratio : ratios) {
+            assertEquals(1.0, ratio[0], TOLERANCE, readings.toString());
+            assertEquals(1.0, ratio[1], TOLERANCE, readings.toString());
+        }
+    }
+
+    private static double at(double[] start, int along, double t, int axis) {
+        return axis == along ? start[axis] + t : start[axis];
+    }
+
+    @Test
+    void aClosedPeriodRepeatsInThreeDimensions() {
+        OpenSimplexStandIn noise = new OpenSimplexStandIn(SEED);
+        double[] periods = {1.0, 7.0, 21.0, 110.0};
+        for (double xPeriod : periods) {
+            for (double zPeriod : periods) {
+                for (double x = -3.0; x < 3.0; x += 0.37) {
+                    for (double z = -3.0; z < 3.0; z += 0.41) {
+                        double y = x * z;
+                        double here = noise.eval(x, y, z, xPeriod, zPeriod);
+                        assertEquals(here, noise.eval(x + xPeriod, y, z, xPeriod, zPeriod), PERIOD_TOLERANCE,
+                                "x period " + xPeriod + " at " + x + ", " + y + ", " + z);
+                        assertEquals(here, noise.eval(x, y, z + zPeriod, xPeriod, zPeriod), PERIOD_TOLERANCE,
+                                "z period " + zPeriod + " at " + x + ", " + y + ", " + z);
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    void aClosedPeriodNeverWidensTheThreeDimensionalFeature() {
+        double[] periods = {0.5, 1.0, 2.5, 8.0, 110.0};
+        for (double period : periods) {
+            long cells = OpenSimplexStandIn.cells(period, OpenSimplexStandIn.RATE_3D);
+            assertTrue(cells >= period * OpenSimplexStandIn.RATE_3D - PERIOD_TOLERANCE,
+                    cells + " lattice cells over a period of " + period);
+        }
     }
 
     @Test
