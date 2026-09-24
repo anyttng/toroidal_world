@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
+import com.toroidalworld.accessors.RegionLevelSource;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WorldLoopAttachments;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
@@ -18,10 +19,15 @@ import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.LevelChunk;
 
 @Mixin(PathNavigationRegion.class)
-public class PathNavigationRegionMixin {
+public class PathNavigationRegionMixin implements RegionLevelSource {
     @Shadow
     @Final
     protected Level level;
+
+    @Override
+    public Level toroidal$regionLevel() {
+        return this.level;
+    }
 
     @WrapOperation(
             method = "<init>",
