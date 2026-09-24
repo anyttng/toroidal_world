@@ -105,6 +105,25 @@ var c2meModuleJars = tasks.register('unpackC2meModules', Sync) {
     into layout.buildDirectory.dir('c2me-modules')
 }
 
+// Same unpack as in common, for the same reason: common's classes are remapped against this module's classpath, and
+// the offset-seed mixin names Sodium's level slice.
+configurations {
+    sodiumModJar
+}
+
+dependencies {
+    sodiumModJar "maven.modrinth:sodium:${sodium_version}"
+}
+
+var sodiumModJars = tasks.register('unpackSodiumMod', Sync) {
+    from(zipTree(configurations.sodiumModJar.singleFile)) {
+        include 'META-INF/jarjar/net.caffeinemc.sodium-neoforge-*-mod.jar'
+        eachFile { it.relativePath = new RelativePath(true, it.name) }
+    }
+    includeEmptyDirs = false
+    into layout.buildDirectory.dir('sodium-mod')
+}
+
 // Same unpack as in common, for the same reason: Ponder and Flywheel ride jar-in-jar inside the Create jar, and
 // without VirtualBlockEntity and AbstractBlockEntityVisual on the classpath neither a Create block entity's members
 // nor its visual classes resolve. Plain compileOnly and the neoforge flavor, like the Create jar beside it — there is
@@ -274,6 +293,8 @@ dependencies {
     // WorldWeaver: plain compileOnly on the neoforge flavor; the one game-named override its fold wraps is listed in
     // both spellings on the mixin, so nothing has to be remapped through its classes.
     compileOnly "maven.modrinth:worldweaver-neoforge:${worldweaver_version}"
+    // Sodium: the unpacked neoforge mod jar, as in common; its level slice carries no game name the fold renames.
+    compileOnly files(sodiumModJars).asFileTree.matching { include '*.jar' }
 
     // The 'modmenu' entrypoint class is only ever asked for by ModMenu itself, so it never loads without it.
     // modCompileOnly: its screen-factory API names the game's Screen, which only the remapped jar spells in this

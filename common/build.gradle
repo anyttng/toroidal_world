@@ -82,6 +82,25 @@ var c2meModuleJars = tasks.register('unpackC2meModules', Sync) {
     into layout.buildDirectory.dir('c2me-modules')
 }
 
+// Sodium's NeoForge file keeps its own classes in a jar-in-jar beside the Fabric API modules it bundles; the
+// offset-seed mixin names its level slice, so that inner jar is unpacked and rides compileOnly beside the others.
+configurations {
+    sodiumModJar
+}
+
+dependencies {
+    sodiumModJar "maven.modrinth:sodium:${sodium_version}"
+}
+
+var sodiumModJars = tasks.register('unpackSodiumMod', Sync) {
+    from(zipTree(configurations.sodiumModJar.singleFile)) {
+        include 'META-INF/jarjar/net.caffeinemc.sodium-neoforge-*-mod.jar'
+        eachFile { it.relativePath = new RelativePath(true, it.name) }
+    }
+    includeEmptyDirs = false
+    into layout.buildDirectory.dir('sodium-mod')
+}
+
 // Two of the jars Create carries in jar-in-jar have to be on the compile classpath, and neither is reachable from the
 // plain artifact. Ponder: every Create block entity inherits SmartBlockEntity, which implements
 // net.createmod.ponder.api.VirtualBlockEntity, so reading any member off one fails with "cannot access
@@ -216,6 +235,7 @@ dependencies {
     compileOnly "maven.modrinth:biolith:${biolith_version}"
     compileOnly "curse.maven:reterraforged-unofficial-1607000:${reterraforged_version}"
     compileOnly "maven.modrinth:worldweaver-neoforge:${worldweaver_version}"
+    compileOnly files(sodiumModJars).asFileTree.matching { include '*.jar' }
     compileOnly "com.github.bawnorton.mixinsquared:mixinsquared-common:${mixinsquared_version}"
 }
 
