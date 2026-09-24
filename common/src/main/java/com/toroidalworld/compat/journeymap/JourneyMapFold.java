@@ -135,6 +135,10 @@ public final class JourneyMapFold {
         return FullscreenZoomFloor.journeyMapCoverZoom(shape, window.getWidth(), window.getHeight());
     }
 
+    public static int seatFullscreenZoom(int zoom) {
+        return FullscreenZoomFloor.journeyMapSeatedZoom(zoom, fullscreenZoomFloor(), MapCopies.current());
+    }
+
     public static int[] viewSpan(double centerBlock, int windowPixels, int zoom) {
         double halfSpanBlocks = halfViewBlocks(zoom, windowPixels);
         return new int[] {(int) Math.floor(centerBlock - halfSpanBlocks), (int) Math.ceil(centerBlock + halfSpanBlocks)};
