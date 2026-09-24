@@ -52,6 +52,30 @@ public class LevelTicksMixin<T> implements LevelBindable {
                 tick.subTickOrder());
     }
 
+    @ModifyVariable(method = "hasScheduledTick", at = @At("HEAD"), argsOnly = true)
+    private BlockPos toroidal$queryScheduledAtPhysicalPos(BlockPos pos) {
+        return toroidal$foldQueried(pos);
+    }
+
+    @ModifyVariable(method = "willTickThisTick", at = @At("HEAD"), argsOnly = true)
+    private BlockPos toroidal$queryThisTickAtPhysicalPos(BlockPos pos) {
+        return toroidal$foldQueried(pos);
+    }
+
+    @Unique
+    private BlockPos toroidal$foldQueried(BlockPos pos) {
+        if (this.toroidal$level == null) {
+            return pos;
+        }
+
+        WorldFold transformer = toroidal$transformer();
+        if (!transformer.isWrapped()) {
+            return pos;
+        }
+
+        return transformer.fold(pos);
+    }
+
     @Inject(method = "clearArea", at = @At("HEAD"), cancellable = true)
     private void toroidal$clearEachCopyOfTheArea(BoundingBox area, CallbackInfo ci) {
         if (this.toroidal$level == null) {
