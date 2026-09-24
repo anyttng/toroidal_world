@@ -32,6 +32,7 @@
     "BlockEntityMixin",
     "BlockStateCollisionMixin",
     "BlockStateInsideMixin",
+    "BlockStateOffsetSeedMixin",
     "BoatItemMixin",
     "BreakDoorGoalMixin",
     "BreezeMixin",
@@ -196,6 +197,7 @@
     "PlayerMixin",
     "PoiDistanceTrackerMixin",
     "PoiManagerMixin",
+    "PointedDripstoneBlockMixin",
     "PortalForcerMixin",
     "PotentialCalculatorMixin",
     "PrepareRamNearestTargetMixin",
@@ -301,6 +303,8 @@
     "DebugEntryChunkGenerationMixin",
     "DebugEntryPositionMixin",
     "LevelHeldBlockEntityMixin",
+    "ModelBlockRendererMixin",
+    "RenderSectionRegionMixin",
     "WeatherEffectRendererMixin"
   ],
   "injectors": {
