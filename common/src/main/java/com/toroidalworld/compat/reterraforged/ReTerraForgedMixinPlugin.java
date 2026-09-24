@@ -22,9 +22,14 @@ public class ReTerraForgedMixinPlugin extends ModPresenceGatePlugin {
             "raccoonman/reterraforged/world/worldgen/cell/continent/uplift/UpliftContinentGenerator",
             "getSmoothVoronoiGradient", "(Lraccoonman/reterraforged/world/worldgen/cell/Cell;FF)F");
 
+    static final ModSymbol POISSON_POINT = new ModSymbol(
+            "raccoonman/reterraforged/world/worldgen/feature/placement/poisson/FastPoisson", "getPoint",
+            "(IFFLraccoonman/reterraforged/world/worldgen/feature/placement/poisson/FastPoissonContext;)J");
+
     private static final ModPresence RETERRAFORGED = ModPresence.of(LOGGER,
             "raccoonman/reterraforged/world/worldgen/cell/heightmap/Heightmap.class",
-            "[reterraforged-compat] gate reterraforged_present", LATTICE_HASH, HEIGHTMAP_RIVERS, UPLIFT_GRADIENT);
+            "[reterraforged-compat] gate reterraforged_present", LATTICE_HASH, HEIGHTMAP_RIVERS, UPLIFT_GRADIENT,
+            POISSON_POINT);
 
     public ReTerraForgedMixinPlugin() {
         super(RETERRAFORGED);

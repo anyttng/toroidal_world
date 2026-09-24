@@ -17,6 +17,7 @@
     "ContinentGeneratorMixin",
     "CubicMixin",
     "ErosionNoiseMixin",
+    "FastPoissonMixin",
     "FrequencyMixin",
     "HeightmapMixin",
     "LegacyTemperatureMixin",
@@ -35,6 +36,7 @@
     "SingleContinentGeneratorMixin",
     "StrataRuleSourceMixin",
     "UpliftContinentGeneratorMixin",
+    "WarpMixin",
     "WhiteMixin",
     "WorleyEdgeMixin",
     "WorleyMixin"

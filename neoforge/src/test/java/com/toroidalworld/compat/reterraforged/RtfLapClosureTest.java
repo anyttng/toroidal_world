@@ -67,6 +67,7 @@ class RtfLapClosureTest {
             WORLDGEN + "noise.module.WorleyEdge",
             WORLDGEN + "noise.module.Erosion",
             WORLDGEN + "noise.module.Frequency",
+            WORLDGEN + "noise.module.Warp",
             WORLDGEN + "cell.heightmap.Heightmap",
             WORLDGEN + "cell.continent.advanced.AbstractContinent",
             WORLDGEN + "cell.continent.advanced.AdvancedContinentGenerator",
@@ -82,6 +83,7 @@ class RtfLapClosureTest {
             WORLDGEN + "densityfunction.CellSampler$CacheChunk",
             WORLDGEN + "densityfunction.NoiseFunction",
             WORLDGEN + "surface.rule.StrataRule$Source",
+            WORLDGEN + "feature.placement.poisson.FastPoisson",
             "net.minecraft.server.level.ChunkMap"};
 
     private static final Map<String, Noise> CONTINUOUS = Map.ofEntries(

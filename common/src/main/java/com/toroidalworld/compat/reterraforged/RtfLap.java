@@ -6,6 +6,7 @@ import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WrapDomain;
 import com.toroidalworld.engine.DoubleStack;
 import com.toroidalworld.engine.noise.ClimateScaleCompression;
+import com.toroidalworld.engine.noise.GenerationTransformerContext;
 
 import net.minecraft.core.Direction;
 
@@ -45,6 +46,7 @@ public final class RtfLap {
         }
 
         Frame frame = FRAME.get();
+        frame.followGeneration();
         return frame.bound() ? frame : null;
     }
 
@@ -59,6 +61,7 @@ public final class RtfLap {
         private double compression = ClimateScaleCompression.NO_COMPRESSION;
         private final DoubleStack saved = new DoubleStack();
         private final Scope scope = new Scope();
+        private @Nullable WorldFold followed;
 
         public boolean bound() {
             return this.xLap != OPEN || this.zLap != OPEN;
@@ -78,13 +81,29 @@ public final class RtfLap {
 
         public Scope bind(WorldFold fold) {
             push();
-            this.xLap = lapOf(fold.blockDomain(Direction.Axis.X));
-            this.zLap = lapOf(fold.blockDomain(Direction.Axis.Z));
+            seat(fold);
+            return this.scope;
+        }
+
+        void followGeneration() {
+            if (!this.saved.isEmpty()) {
+                return;
+            }
+
+            WorldFold fold = GenerationTransformerContext.context().wrappedTransformer();
+            if (fold != this.followed) {
+                this.followed = fold;
+                seat(fold);
+            }
+        }
+
+        private void seat(@Nullable WorldFold fold) {
+            this.xLap = fold == null ? OPEN : lapOf(fold.blockDomain(Direction.Axis.X));
+            this.zLap = fold == null ? OPEN : lapOf(fold.blockDomain(Direction.Axis.Z));
             this.torus = this.xLap != OPEN && this.zLap != OPEN;
             this.xPeriod = NO_PERIOD;
             this.zPeriod = NO_PERIOD;
             this.compression = ClimateScaleCompression.NO_COMPRESSION;
-            return this.scope;
         }
 
         public double compression() {
