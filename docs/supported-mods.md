@@ -19,6 +19,7 @@ Toroidal World ships for Minecraft 26.3, 26.2, 26.1.2 and 1.21.1, on NeoForge an
 | Mod | Minecraft | Loaders | Status | Notes |
 | --- | --- | --- | --- | --- |
 | [Distant Horizons](https://modrinth.com/mod/distanthorizons) | All | NeoForge, Fabric | Supported | |
+| Distant Horizons SeedGen | 26.3, 26.2, 1.21.1 | NeoForge, Fabric | Supported | |
 | [Voxy](https://modrinth.com/mod/voxy) | All | Fabric | No seam support | |
 | Bobby | — | — | Not tested | |
 
@@ -59,7 +60,8 @@ Toroidal World ships for Minecraft 26.3, 26.2, 26.1.2 and 1.21.1, on NeoForge an
 | Streams Reflowing | All | NeoForge | No patch needed | |
 | Tectonic | All | NeoForge, Fabric | No patch needed | |
 | Fast Noise | 26.3, 26.2, 1.21.1 | NeoForge, Fabric | No patch needed | |
-| [TerraBlender](https://modrinth.com/mod/terrablender) | 26.2, 26.1.2, 1.21.1 | NeoForge | Supported | |
+| [TerraBlender](https://modrinth.com/mod/terrablender) | All | NeoForge | Supported | |
 | [Biolith](https://modrinth.com/mod/biolith) | All | NeoForge, Fabric | Supported | |
-| BetterEnd and BetterNether | 26.2, 26.1.2, 1.21.1 | Fabric | No seam support | |
+| BetterEnd and BetterNether | 26.2, 26.1.2, 1.21.1 | NeoForge, Fabric | Partially supported | On 26.1.2 and 1.21.1 the biomes, and the End's islands with Custom End terrain on, end in a straight border at the world's edge |
+| [ReTerraForged](https://www.curseforge.com/minecraft/mc-mods/reterraforged-unofficial) | 1.21.1 | NeoForge, Fabric | Supported | Small worlds get shorter rivers or none |
 | One Dimension | — | — | Not tested | |
