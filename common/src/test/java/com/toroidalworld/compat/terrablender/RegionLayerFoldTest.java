@@ -1,5 +1,6 @@
 package com.toroidalworld.compat.terrablender;
 
+import static com.toroidalworld.engine.noise.ClimateScaleCompression.NO_COMPRESSION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -40,6 +41,10 @@ class RegionLayerFoldTest {
     private static final int SWEEP_MIN_CHUNKS = 16;
     private static final int SWEEP_MAX_CHUNKS = 3000;
     private static final double MAX_STRETCH = 2.0;
+
+    private static final double[] FACTORS = {NO_COMPRESSION, 2.5, 4.0};
+    private static final double[] COMPRESSED_FACTORS = {2.0, 2.5, 4.0};
+    private static final int SIZE_Z_STRIDE = 13;
 
     private static WorldFold torus(int chunkWidth) {
         return WorldFolds.of(FlatShape.torus(WorldLoopBounds.ofWidth(chunkWidth)));
@@ -87,24 +92,27 @@ class RegionLayerFoldTest {
 
     @Test
     void foldedMapReadsTheSameRegionOneLapAwayOnBothAxes() {
-        for (int regionSize : REGION_SIZES) {
-            for (int chunkWidth : CHUNK_WIDTHS) {
-                WorldFold torus = torus(chunkWidth);
-                RegionLayerFold fold = RegionLayerFold.of(torus, topDepth(regionSize));
-                Area map = regionMap(regionSize, fold);
-                LayerAxis axis = fold.x();
-                int stride = Math.max(1, axis.lap() / SAMPLES_PER_LINE);
-                String world = chunkWidth + " chunks, region size " + regionSize;
-
-                for (int line = 0; line < SAMPLE_LINES; line++) {
-                    int cross = axis.origin() + line * axis.lap() / SAMPLE_LINES;
-                    for (int along = axis.origin() - axis.lap(); along < axis.origin() + axis.lap(); along += stride) {
-                        assertEquals(map.get(along, cross), map.get(along + axis.lap(), cross),
-                                "X quart " + along + " in " + world);
-                        assertEquals(map.get(cross, along), map.get(cross, along + axis.lap()),
-                                "Z quart " + along + " in " + world);
-                    }
+        for (double factor : FACTORS) {
+            for (int regionSize : REGION_SIZES) {
+                for (int chunkWidth : CHUNK_WIDTHS) {
+                    assertPeriodic(RegionLayerFold.of(torus(chunkWidth), topDepth(regionSize), factor), regionSize,
+                            chunkWidth + " chunks, region size " + regionSize + ", factor " + factor);
                 }
+            }
+        }
+    }
+
+    private static void assertPeriodic(RegionLayerFold fold, int regionSize, String world) {
+        Area map = regionMap(regionSize, fold);
+        LayerAxis axis = fold.x();
+        int stride = Math.max(1, axis.lap() / SAMPLES_PER_LINE);
+        for (int line = 0; line < SAMPLE_LINES; line++) {
+            int cross = axis.origin() + line * axis.lap() / SAMPLE_LINES;
+            for (int along = axis.origin() - axis.lap(); along < axis.origin() + axis.lap(); along += stride) {
+                assertEquals(map.get(along, cross), map.get(along + axis.lap(), cross),
+                        "X quart " + along + " in " + world);
+                assertEquals(map.get(cross, along), map.get(cross, along + axis.lap()),
+                        "Z quart " + along + " in " + world);
             }
         }
     }
@@ -112,7 +120,7 @@ class RegionLayerFoldTest {
     @Test
     void seamStripReadsTheSameRegionOneLapAwayAtEveryQuart() {
         for (int chunkWidth : CHUNK_WIDTHS) {
-            RegionLayerFold fold = RegionLayerFold.of(torus(chunkWidth), topDepth(DEFAULT_REGION_SIZE));
+            RegionLayerFold fold = RegionLayerFold.of(torus(chunkWidth), topDepth(DEFAULT_REGION_SIZE), NO_COMPRESSION);
             Area map = regionMap(DEFAULT_REGION_SIZE, fold);
             LayerAxis axis = fold.x();
             int seam = axis.origin() + axis.lap() - axis.strip();
@@ -126,7 +134,7 @@ class RegionLayerFoldTest {
     @Test
     void wholeCellsInsideTheWorldKeepTerraBlendersLayout() {
         for (int chunkWidth : CHUNK_WIDTHS) {
-            RegionLayerFold fold = RegionLayerFold.of(torus(chunkWidth), topDepth(DEFAULT_REGION_SIZE));
+            RegionLayerFold fold = RegionLayerFold.of(torus(chunkWidth), topDepth(DEFAULT_REGION_SIZE), NO_COMPRESSION);
             Area folded = regionMap(DEFAULT_REGION_SIZE, fold);
             Area unfolded = regionMap(DEFAULT_REGION_SIZE, null);
             LayerAxis axis = fold.x();
@@ -145,7 +153,7 @@ class RegionLayerFoldTest {
     @Test
     void unboundedAxisIsNeverFolded() {
         WorldFold cylinder = WorldFolds.of(FlatShape.cylinder(WorldLoopBounds.ofWidth(Direction.Axis.X, 64)));
-        RegionLayerFold fold = RegionLayerFold.of(cylinder, topDepth(DEFAULT_REGION_SIZE));
+        RegionLayerFold fold = RegionLayerFold.of(cylinder, topDepth(DEFAULT_REGION_SIZE), NO_COMPRESSION);
         for (int depth = 0; depth <= topDepth(DEFAULT_REGION_SIZE); depth++) {
             for (int coord = -5000; coord < 5000; coord += 37) {
                 assertEquals(coord, fold.apply(Direction.Axis.Z, depth, coord));
@@ -155,19 +163,68 @@ class RegionLayerFoldTest {
 
     @Test
     void virtualLapIsWholeCellsAndStretchesTheSeamStripAtMostTwofold() {
-        for (int regionSize : REGION_SIZES) {
-            for (int chunkWidth = SWEEP_MIN_CHUNKS; chunkWidth <= SWEEP_MAX_CHUNKS; chunkWidth++) {
-                LayerAxis axis = RegionLayerFold.of(torus(chunkWidth), topDepth(regionSize)).x();
-                String world = chunkWidth + " chunks, region size " + regionSize;
-                assertEquals(0, axis.virtualLap() % axis.cell(), world);
-                assertEquals(0, axis.origin() % axis.cell(), world);
-                if (axis.strip() == 0 || axis.interior() == 0) {
-                    continue;
+        for (double factor : FACTORS) {
+            for (int regionSize : REGION_SIZES) {
+                for (int chunkWidth = SWEEP_MIN_CHUNKS; chunkWidth <= SWEEP_MAX_CHUNKS; chunkWidth++) {
+                    assertWholeCells(RegionLayerFold.of(torus(chunkWidth), topDepth(regionSize), factor).x(),
+                            chunkWidth + " chunks, region size " + regionSize + ", factor " + factor);
                 }
+            }
+        }
+    }
 
-                int stretchedStart = axis.stripCells() > 0 ? axis.interior() : axis.interior() - axis.cell();
-                double ratio = (double) (axis.virtualLap() - stretchedStart) / (axis.lap() - stretchedStart);
-                assertTrue(ratio <= MAX_STRETCH && ratio >= 1 / MAX_STRETCH, world + ": stretch " + ratio);
+    private static void assertWholeCells(LayerAxis axis, String world) {
+        assertEquals(0, axis.virtualLap() % axis.cell(), world);
+        assertEquals(0, axis.origin() % axis.cell(), world);
+        if (axis.strip() == 0 || axis.interior() == 0) {
+            return;
+        }
+
+        int stretchedStart = axis.stripCells() > 0 ? axis.interior() : axis.interior() - axis.cell();
+        double ratio = (double) (axis.virtualLap() - stretchedStart) / (axis.scaledLap() - stretchedStart);
+        assertTrue(ratio <= MAX_STRETCH && ratio >= 1 / MAX_STRETCH, world + ": stretch " + ratio);
+    }
+
+    @Test
+    void compressedMapInsideTheWorldReadsTerraBlendersMapAtTheScaledQuart() {
+        for (double factor : COMPRESSED_FACTORS) {
+            for (int chunkWidth : CHUNK_WIDTHS) {
+                RegionLayerFold fold = RegionLayerFold.of(torus(chunkWidth), topDepth(DEFAULT_REGION_SIZE), factor);
+                Area folded = regionMap(DEFAULT_REGION_SIZE, fold);
+                Area unfolded = regionMap(DEFAULT_REGION_SIZE, null);
+                LayerAxis axis = fold.x();
+                int untouchedEnd = axis.origin() + axis.interior() - 2 * axis.cell();
+                int stride = Math.max(1, axis.lap() / SAMPLES_PER_LINE);
+                String world = chunkWidth + " chunks, factor " + factor;
+                for (int x = axis.min(); x < axis.min() + axis.lap(); x += stride) {
+                    int scaledX = axis.min() + (int) Math.floor((x - axis.min()) * factor);
+                    for (int z = axis.min(); z < axis.min() + axis.lap(); z += SIZE_Z_STRIDE) {
+                        int scaledZ = axis.min() + (int) Math.floor((z - axis.min()) * factor);
+                        if (inside(scaledX, axis.origin(), untouchedEnd)
+                                && inside(scaledZ, axis.origin(), untouchedEnd)) {
+                            assertEquals(unfolded.get(scaledX, scaledZ), folded.get(x, z),
+                                    "quart " + x + ", " + z + " in " + world);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static boolean inside(int coord, int from, int to) {
+        return coord >= from && coord < to;
+    }
+
+    @Test
+    void unboundedAxisIsScaledAtTheTopLayerAlone() {
+        double factor = 2.5;
+        int topDepth = topDepth(DEFAULT_REGION_SIZE);
+        WorldFold cylinder = WorldFolds.of(FlatShape.cylinder(WorldLoopBounds.ofWidth(Direction.Axis.X, 64)));
+        RegionLayerFold fold = RegionLayerFold.of(cylinder, topDepth, factor);
+        for (int coord = -5000; coord < 5000; coord += 37) {
+            assertEquals((int) Math.floor(coord * factor), fold.apply(Direction.Axis.Z, topDepth, coord));
+            for (int depth = 0; depth < topDepth; depth++) {
+                assertEquals(coord, fold.apply(Direction.Axis.Z, depth, coord));
             }
         }
     }
