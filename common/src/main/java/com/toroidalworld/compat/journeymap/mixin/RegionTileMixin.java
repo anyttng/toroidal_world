@@ -1,8 +1,11 @@
 package com.toroidalworld.compat.journeymap.mixin;
 
+import java.awt.geom.Rectangle2D;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Coerce;
 
 import com.mojang.blaze3d.platform.Window;
@@ -11,6 +14,7 @@ import com.toroidalworld.compat.FullscreenZoomFloor;
 import com.toroidalworld.compat.journeymap.JourneyMapFold;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
 import journeymap.api.v2.client.display.Context.UI;
 import journeymap.client.model.map.MapType;
@@ -29,6 +33,14 @@ public abstract class RegionTileMixin {
 
     @Shadow(remap = false)
     private int zoom;
+
+    @WrapOperation(method = "setPosition",
+            at = @At(value = "INVOKE", target = "Ljava/awt/geom/Rectangle2D$Double;contains(DD)Z"))
+    private boolean toroidal$showTilesWhoseCopyMeetsTheGrid(Rectangle2D.Double regionBounds, double regionX,
+            double regionZ, Operation<Boolean> original) {
+        return original.call(regionBounds, regionX, regionZ)
+                || JourneyMapFold.active() && JourneyMapFold.regionInView(regionBounds, (int) regionX, (int) regionZ);
+    }
 
     @WrapMethod(method = "render")
     private void toroidal$renderWrappedCopies(GuiGraphicsExtractor graphics, @Coerce Object quads,

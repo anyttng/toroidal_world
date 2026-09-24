@@ -19,6 +19,7 @@
     "ModOverlayLayerMixin",
     "PolygonGeometryDrawPassMixin",
     "RegionCoordMixin",
+    "RegionTileAccessor",
     "RegionTileMixin"
   ],
   "injectors": {

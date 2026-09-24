@@ -2,6 +2,7 @@ package com.toroidalworld.compat.journeymap;
 
 import java.awt.geom.Rectangle2D;
 import java.io.File;
+import java.util.stream.IntStream;
 
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -180,9 +181,65 @@ public final class JourneyMapFold {
             return new int[] {0};
         }
 
-        int first = Math.max(-range, Math.floorDiv(spanMin - tileMin - tileSize, copies.width()) + 1);
-        int last = Math.min(range, Math.floorDiv(spanMax - 1 - tileMin, copies.width()));
+        int first = Math.max(-range, firstLap(copies, tileMin, tileSize, spanMin));
+        int last = Math.min(range, lastLap(copies, tileMin, spanMax));
         return AxisCopies.lapRange(first, last);
+    }
+
+    public static boolean regionInView(Rectangle2D.Double regionBounds, int regionX, int regionZ) {
+        return regionInView(copies(Direction.Axis.X), regionX, regionBounds.getMinX(), regionBounds.getMaxX())
+                && regionInView(copies(Direction.Axis.Z), regionZ, regionBounds.getMinY(), regionBounds.getMaxY());
+    }
+
+    static boolean regionInView(AxisCopies copies, int region, double boundsMin, double boundsMax) {
+        if (!copies.loops()) {
+            return region >= boundsMin && region < boundsMax;
+        }
+
+        int tileMin = region * FullscreenZoomFloor.JOURNEYMAP_REGION_BLOCKS;
+        int spanMin = (int) Math.floor(boundsMin * FullscreenZoomFloor.JOURNEYMAP_REGION_BLOCKS);
+        int spanMax = (int) Math.ceil(boundsMax * FullscreenZoomFloor.JOURNEYMAP_REGION_BLOCKS);
+        return firstLap(copies, tileMin, FullscreenZoomFloor.JOURNEYMAP_REGION_BLOCKS, spanMin)
+                <= lastLap(copies, tileMin, spanMax);
+    }
+
+    private static int firstLap(AxisCopies copies, int tileMin, int tileSize, int spanMin) {
+        return Math.floorDiv(spanMin - tileMin - tileSize, copies.width()) + 1;
+    }
+
+    private static int lastLap(AxisCopies copies, int tileMin, int spanMax) {
+        return Math.floorDiv(spanMax - 1 - tileMin, copies.width());
+    }
+
+    public static int[] gridRegions(Direction.Axis axis, int firstRegion, int lastRegion) {
+        ToroidalShape shape = ClientShapes.current();
+        return foldedRegions(shape == null ? AxisCopies.UNBOUNDED : AxisCopies.ofChunks(shape, axis),
+                firstRegion, lastRegion);
+    }
+
+    static int[] foldedRegions(AxisCopies chunks, int firstRegion, int lastRegion) {
+        if (!chunks.loops()) {
+            return IntStream.rangeClosed(firstRegion, lastRegion).toArray();
+        }
+
+        int spanChunks = (lastRegion - firstRegion + 1) * REGION_CHUNKS;
+        if (spanChunks >= chunks.width()) {
+            return IntStream.rangeClosed(regionOf(chunks.min()), regionOf(chunks.max() - 1)).toArray();
+        }
+
+        int start = chunks.min() + Math.floorMod(firstRegion * REGION_CHUNKS - chunks.min(), chunks.width());
+        int end = start + spanChunks - 1;
+        if (end < chunks.max()) {
+            return IntStream.rangeClosed(regionOf(start), regionOf(end)).toArray();
+        }
+
+        return IntStream.concat(
+                IntStream.rangeClosed(regionOf(chunks.min()), regionOf(end - chunks.width())),
+                IntStream.rangeClosed(regionOf(start), regionOf(chunks.max() - 1))).distinct().toArray();
+    }
+
+    private static int regionOf(int chunk) {
+        return Math.floorDiv(chunk, REGION_CHUNKS);
     }
 
     public static void recordView(Context.UI ui, double centerX, double centerZ, int tiles) {
@@ -279,26 +336,6 @@ public final class JourneyMapFold {
     public static void gridDropped(String reason, String from, String to, int tilesDropped) {
         LOGGER.info("[jm-compat] grid_dropped reason={} from={} to={} tiles_dropped={}",
                 reason, from.replace(' ', '_'), to.replace(' ', '_'), tilesDropped);
-    }
-
-    public static int minGridSize() {
-        ToroidalShape shape = ClientShapes.current();
-        if (shape == null) {
-            return 0;
-        }
-
-        int span = Math.max(regionSpan(shape, Direction.Axis.X), regionSpan(shape, Direction.Axis.Z));
-        return span == 0 ? 0 : 2 * span + 3;
-    }
-
-    private static int regionSpan(ToroidalShape shape, Direction.Axis axis) {
-        if (!shape.loops(axis)) {
-            return 0;
-        }
-
-        int minRegion = Math.floorDiv(shape.minChunk(axis), REGION_CHUNKS);
-        int maxRegion = Math.floorDiv(shape.maxChunk(axis) - 1, REGION_CHUNKS);
-        return maxRegion - minRegion + 1;
     }
 
     private JourneyMapFold() {
