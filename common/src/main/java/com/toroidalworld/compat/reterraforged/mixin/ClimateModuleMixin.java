@@ -4,22 +4,29 @@ import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.toroidalworld.compat.reterraforged.ReTerraForgedInjectionTargets;
+import com.toroidalworld.compat.reterraforged.RtfClimateScales;
 import com.toroidalworld.compat.reterraforged.RtfLap;
+import com.toroidalworld.engine.noise.ClimateScaleCompression;
 
 import net.minecraft.core.Direction;
 import raccoonman.reterraforged.world.worldgen.cell.Cell;
 import raccoonman.reterraforged.world.worldgen.cell.climate.ClimateModule;
+import raccoonman.reterraforged.world.worldgen.cell.continent.Continent;
 import raccoonman.reterraforged.world.worldgen.noise.module.Noise;
 
 @Mixin(value = ClimateModule.class, remap = false)
-public abstract class ClimateModuleMixin {
+public abstract class ClimateModuleMixin implements RtfClimateScales {
     private static final String APPLY = "apply(Lraccoonman/reterraforged/world/worldgen/cell/Cell;FFFFZ)V";
 
     private static final String BIOME_FREQUENCY =
@@ -33,6 +40,20 @@ public abstract class ClimateModuleMixin {
 
     private static final int CENTER_Z_READ = 3;
 
+    private static final int MOUNTAIN_X_READ = 4;
+
+    private static final int MOUNTAIN_Z_READ = 5;
+
+    private static final int MOISTURE_SCALE_LOCAL = 1;
+
+    private static final int TEMPERATURE_SCALE_LOCAL = 2;
+
+    @Unique
+    private int toroidal$temperatureScale;
+
+    @Unique
+    private int toroidal$moistureScale;
+
     @Shadow
     private float biomeFreq;
 
@@ -43,6 +64,29 @@ public abstract class ClimateModuleMixin {
     @Shadow
     @Final
     private Noise warpZ;
+
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void toroidal$keepScales(CallbackInfo callback,
+            @Local(ordinal = MOISTURE_SCALE_LOCAL) int moistScale,
+            @Local(ordinal = TEMPERATURE_SCALE_LOCAL) int tempScale) {
+        this.toroidal$moistureScale = moistScale;
+        this.toroidal$temperatureScale = tempScale;
+    }
+
+    @Override
+    public float toroidal$biomeFrequency() {
+        return this.biomeFreq;
+    }
+
+    @Override
+    public int toroidal$temperatureScale() {
+        return this.toroidal$temperatureScale;
+    }
+
+    @Override
+    public int toroidal$moistureScale() {
+        return this.toroidal$moistureScale;
+    }
 
     @WrapMethod(method = APPLY)
     private void toroidal$closeApply(Cell cell, float x, float z, float originalX, float originalZ, boolean mask,
@@ -59,20 +103,59 @@ public abstract class ClimateModuleMixin {
         }
     }
 
-    @ModifyExpressionValue(method = APPLY, at = {
-            @At(value = "FIELD", target = BIOME_FREQUENCY, opcode = Opcodes.GETFIELD, ordinal = X_READ),
-            @At(value = "FIELD", target = BIOME_FREQUENCY, opcode = Opcodes.GETFIELD, ordinal = CENTER_X_READ)})
+    @ModifyExpressionValue(method = APPLY,
+            at = @At(value = "FIELD", target = BIOME_FREQUENCY, opcode = Opcodes.GETFIELD, ordinal = X_READ))
     private float toroidal$snapX(float frequency) {
         RtfLap.Frame frame = RtfLap.boundFrame();
         return frame == null ? frequency : frame.snappedFrequency(Direction.Axis.X, frequency);
     }
 
-    @ModifyExpressionValue(method = APPLY, at = {
-            @At(value = "FIELD", target = BIOME_FREQUENCY, opcode = Opcodes.GETFIELD, ordinal = Z_READ),
-            @At(value = "FIELD", target = BIOME_FREQUENCY, opcode = Opcodes.GETFIELD, ordinal = CENTER_Z_READ)})
+    @ModifyExpressionValue(method = APPLY,
+            at = @At(value = "FIELD", target = BIOME_FREQUENCY, opcode = Opcodes.GETFIELD, ordinal = Z_READ))
     private float toroidal$snapZ(float frequency) {
         RtfLap.Frame frame = RtfLap.boundFrame();
         return frame == null ? frequency : frame.snappedFrequency(Direction.Axis.Z, frequency);
+    }
+
+    // A cell centre divided by this read is the block the continent is asked about, which Compact biomes never moves.
+    @ModifyExpressionValue(method = APPLY,
+            at = @At(value = "FIELD", target = BIOME_FREQUENCY, opcode = Opcodes.GETFIELD, ordinal = CENTER_X_READ))
+    private float toroidal$centreBlockX(float frequency) {
+        RtfLap.Frame frame = RtfLap.boundFrame();
+        return frame == null
+                ? frequency
+                : (float) (frame.snappedFrequency(Direction.Axis.X, frequency) * frame.compression());
+    }
+
+    @ModifyExpressionValue(method = APPLY,
+            at = @At(value = "FIELD", target = BIOME_FREQUENCY, opcode = Opcodes.GETFIELD, ordinal = CENTER_Z_READ))
+    private float toroidal$centreBlockZ(float frequency) {
+        RtfLap.Frame frame = RtfLap.boundFrame();
+        return frame == null
+                ? frequency
+                : (float) (frame.snappedFrequency(Direction.Axis.Z, frequency) * frame.compression());
+    }
+
+    // A terrain region centre is a block of the world, read into the compressed climate cells here.
+    @ModifyExpressionValue(method = APPLY, at = {
+            @At(value = "FIELD", target = BIOME_FREQUENCY, opcode = Opcodes.GETFIELD, ordinal = MOUNTAIN_X_READ),
+            @At(value = "FIELD", target = BIOME_FREQUENCY, opcode = Opcodes.GETFIELD, ordinal = MOUNTAIN_Z_READ)})
+    private float toroidal$compressMountain(float frequency) {
+        RtfLap.Frame frame = RtfLap.boundFrame();
+        return frame == null ? frequency : (float) (frequency * frame.compression());
+    }
+
+    @WrapOperation(method = APPLY, at = @At(value = "INVOKE",
+            target = "Lraccoonman/reterraforged/world/worldgen/cell/continent/Continent;getLandValue(FF)F"))
+    private float toroidal$landOnTheWorldLap(Continent continent, float x, float z, Operation<Float> original) {
+        RtfLap.Frame frame = RtfLap.boundFrame();
+        if (frame == null || frame.compression() == ClimateScaleCompression.NO_COMPRESSION) {
+            return original.call(continent, x, z);
+        }
+
+        try (RtfLap.Frame.Scope expanded = frame.expand()) {
+            return original.call(continent, x, z);
+        }
     }
 
     // Past the warps every climate noise is read at a lattice position, a biome cell's point or a region centre times

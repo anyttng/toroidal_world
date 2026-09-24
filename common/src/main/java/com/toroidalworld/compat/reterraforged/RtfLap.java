@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WrapDomain;
 import com.toroidalworld.engine.DoubleStack;
+import com.toroidalworld.engine.noise.ClimateScaleCompression;
 
 import net.minecraft.core.Direction;
 
@@ -55,6 +56,7 @@ public final class RtfLap {
         private int zPeriod = NO_PERIOD;
         private float xScale;
         private float zScale;
+        private double compression = ClimateScaleCompression.NO_COMPRESSION;
         private final DoubleStack saved = new DoubleStack();
         private final Scope scope = new Scope();
 
@@ -81,6 +83,27 @@ public final class RtfLap {
             this.torus = this.xLap != OPEN && this.zLap != OPEN;
             this.xPeriod = NO_PERIOD;
             this.zPeriod = NO_PERIOD;
+            this.compression = ClimateScaleCompression.NO_COMPRESSION;
+            return this.scope;
+        }
+
+        public double compression() {
+            return this.compression;
+        }
+
+        public Scope compress(double factor) {
+            push();
+            this.xLap *= factor;
+            this.zLap *= factor;
+            this.compression = factor;
+            return this.scope;
+        }
+
+        public Scope expand() {
+            push();
+            this.xLap /= this.compression;
+            this.zLap /= this.compression;
+            this.compression = ClimateScaleCompression.NO_COMPRESSION;
             return this.scope;
         }
 
@@ -170,9 +193,11 @@ public final class RtfLap {
             this.saved.push(this.torus ? 1.0 : 0.0);
             this.saved.push(this.xPeriod);
             this.saved.push(this.zPeriod);
+            this.saved.push(this.compression);
         }
 
         private void pop() {
+            this.compression = this.saved.pop();
             this.zPeriod = (int) this.saved.pop();
             this.xPeriod = (int) this.saved.pop();
             this.torus = this.saved.pop() != 0.0;

@@ -11,12 +11,16 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.toroidalworld.compat.reterraforged.LapCarrier;
+import com.toroidalworld.compat.reterraforged.RtfClimateCompression;
+import com.toroidalworld.compat.reterraforged.RtfClimateScales;
 import com.toroidalworld.compat.reterraforged.RtfLap;
 import com.toroidalworld.core.WorldFold;
+import com.toroidalworld.engine.noise.ClimateScaleCompression;
 
 import net.minecraft.core.Direction;
 import raccoonman.reterraforged.world.worldgen.cell.Cell;
 import raccoonman.reterraforged.world.worldgen.cell.CellPopulator;
+import raccoonman.reterraforged.world.worldgen.cell.climate.Climate;
 import raccoonman.reterraforged.world.worldgen.cell.heightmap.Heightmap;
 import raccoonman.reterraforged.world.worldgen.cell.rivermap.Rivermap;
 
@@ -30,9 +34,16 @@ public abstract class HeightmapMixin implements LapCarrier {
     @Unique
     private volatile @Nullable WorldFold toroidal$fold;
 
+    @Unique
+    private volatile double toroidal$climateCompression = ClimateScaleCompression.NO_COMPRESSION;
+
     @Shadow
     @Final
     private float terrainFrequency;
+
+    @Shadow
+    @Final
+    private Climate climate;
 
     @Override
     public @Nullable WorldFold toroidal$fold() {
@@ -41,7 +52,14 @@ public abstract class HeightmapMixin implements LapCarrier {
 
     @Override
     public void toroidal$carryFold(WorldFold fold) {
+        this.toroidal$climateCompression =
+                RtfClimateCompression.factor(fold, (RtfClimateScales) (Object) this.climate.biomeNoise());
         this.toroidal$fold = fold;
+    }
+
+    @Override
+    public double toroidal$climateCompression() {
+        return this.toroidal$climateCompression;
     }
 
     @WrapMethod(method = "apply")
@@ -97,6 +115,23 @@ public abstract class HeightmapMixin implements LapCarrier {
         RtfLap.Frame frame = RtfLap.frame();
         try (RtfLap.Frame.Scope lap = frame.bind(fold)) {
             original.call(cell, frame.shift(Direction.Axis.X, x), frame.shift(Direction.Axis.Z, z), applyClimate);
+        }
+    }
+
+    @WrapOperation(method = "applyClimate", at = @At(value = "INVOKE",
+            target = "Lraccoonman/reterraforged/world/worldgen/cell/climate/Climate;apply"
+                    + "(Lraccoonman/reterraforged/world/worldgen/cell/Cell;FFZ)V"))
+    private void toroidal$compressClimate(Climate climate, Cell cell, float x, float z, boolean applyClimate,
+            Operation<Void> original) {
+        RtfLap.Frame frame = RtfLap.boundFrame();
+        double factor = this.toroidal$climateCompression;
+        if (frame == null || factor == ClimateScaleCompression.NO_COMPRESSION) {
+            original.call(climate, cell, x, z, applyClimate);
+            return;
+        }
+
+        try (RtfLap.Frame.Scope compressed = frame.compress(factor)) {
+            original.call(climate, cell, (float) (x * factor), (float) (z * factor), applyClimate);
         }
     }
 

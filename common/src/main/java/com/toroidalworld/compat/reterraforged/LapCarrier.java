@@ -8,4 +8,6 @@ public interface LapCarrier {
     @Nullable WorldFold toroidal$fold();
 
     void toroidal$carryFold(WorldFold fold);
+
+    double toroidal$climateCompression();
 }
