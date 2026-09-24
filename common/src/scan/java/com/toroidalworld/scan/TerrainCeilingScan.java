@@ -6,8 +6,9 @@ import static com.toroidalworld.engine.noise.ClimateScanFixture.torusOfWidth;
 import static com.toroidalworld.scan.SuspendedLand.TOP_Y;
 import static com.toroidalworld.scan.SuspendedLand.WIDTH_BLOCKS;
 import static com.toroidalworld.scan.SuspendedLand.at;
+import static com.toroidalworld.scan.SuspendedLand.parkedSurface;
 import static com.toroidalworld.scan.SuspendedLand.topSolid;
-import static com.toroidalworld.scan.SuspendedLand.withCeilingParked;
+import static com.toroidalworld.scan.SuspendedLand.withProbesParked;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
@@ -22,7 +23,6 @@ import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.engine.noise.ClimateScanFixture;
 import com.toroidalworld.engine.noise.ClimateScanFixture.WorldType;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
-import com.toroidalworld.engine.noise.PreliminarySurfaceLevel;
 import com.toroidalworld.engine.noise.TerrainCeiling;
 
 import net.minecraft.world.level.levelgen.DensityFunction;
@@ -194,7 +194,7 @@ class TerrainCeilingScan {
         DensityFunction rawCeiling = TerrainCeiling.ceiling(settings);
         assertTrue(rawCeiling != null, "no jaggedness node in the " + type.name() + " router — nothing to measure");
 
-        NoiseGeneratorSettings probe = withCeilingParked(settings, rawCeiling);
+        NoiseGeneratorSettings probe = withProbesParked(settings, rawCeiling);
         double step = WIDTH_BLOCKS / (double) GRID;
 
         for (int s = 0; s < SEEDS; s++) {
@@ -203,7 +203,7 @@ class TerrainCeilingScan {
             NoiseRouter router = randomState.router();
             DensityFunction ceiling = router.barrierNoise();
             DensityFunction density = router.finalDensity();
-            DensityFunction surface = new PreliminarySurfaceLevel(router.initialDensityWithoutJaggedness());
+            DensityFunction surface = parkedSurface(randomState);
             GenerationTransformerContext.runWithTransformer(fold, () -> {
                 for (int ix = 0; ix < GRID; ix++) {
                     for (int iz = 0; iz < GRID; iz++) {
@@ -270,7 +270,7 @@ class TerrainCeilingScan {
         DensityFunction rawCeiling = TerrainCeiling.ceiling(vanilla);
         assertTrue(rawCeiling != null, "no ceiling for the " + site.type().name() + " settings");
 
-        RandomState probeState = randomState(withCeilingParked(vanilla, rawCeiling), fold, site.seed());
+        RandomState probeState = randomState(withProbesParked(vanilla, rawCeiling), fold, site.seed());
         RandomState cutState = randomState(TerrainCeiling.withCeiling(vanilla), fold, site.seed());
         DensityFunction ceiling = probeState.router().barrierNoise();
         DensityFunction vanillaDensity = probeState.router().finalDensity();

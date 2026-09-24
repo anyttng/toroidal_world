@@ -5,7 +5,8 @@ import static com.toroidalworld.engine.noise.ClimateScanFixture.settingsOf;
 import static com.toroidalworld.engine.noise.ClimateScanFixture.torusOfWidth;
 import static com.toroidalworld.scan.SuspendedLand.WIDTH_BLOCKS;
 import static com.toroidalworld.scan.SuspendedLand.at;
-import static com.toroidalworld.scan.SuspendedLand.withCeilingParked;
+import static com.toroidalworld.scan.SuspendedLand.parkedSurface;
+import static com.toroidalworld.scan.SuspendedLand.withProbesParked;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Path;
@@ -19,7 +20,6 @@ import org.junit.jupiter.api.Test;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.engine.noise.ClimateScanFixture;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
-import com.toroidalworld.engine.noise.PreliminarySurfaceLevel;
 import com.toroidalworld.engine.noise.TerrainCeiling;
 
 import net.minecraft.world.level.levelgen.DensityFunction;
@@ -53,11 +53,10 @@ class PillarSiteScan {
         DensityFunction rawCeiling = TerrainCeiling.ceiling(vanilla);
         assertTrue(rawCeiling != null, "no ceiling for the " + site.type().name() + " settings");
 
-        RandomState probeState = randomState(withCeilingParked(vanilla, rawCeiling), fold, site.seed());
+        RandomState probeState = randomState(withProbesParked(vanilla, rawCeiling), fold, site.seed());
         RandomState cutState = randomState(TerrainCeiling.withCeiling(vanilla), fold, site.seed());
         DensityFunction ceiling = probeState.router().barrierNoise();
-        DensityFunction surface =
-                new PreliminarySurfaceLevel(probeState.router().initialDensityWithoutJaggedness());
+        DensityFunction surface = parkedSurface(probeState);
 
         List<String> report = new ArrayList<>();
         report.add("Pillar site — " + site.describe());

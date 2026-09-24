@@ -4,6 +4,7 @@ import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.engine.noise.ClimateScanFixture;
 import com.toroidalworld.engine.noise.ClimateScanFixture.WorldType;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
+import com.toroidalworld.engine.noise.PreliminarySurfaceLevel;
 import com.toroidalworld.engine.noise.TerrainCeiling;
 import static com.toroidalworld.engine.noise.ClimateScanFixture.SEED_BASE;
 import static com.toroidalworld.engine.noise.ClimateScanFixture.randomState;
@@ -138,8 +139,9 @@ final class SuspendedLand {
         return function.compute(new DensityFunction.SinglePointContext(blockX, 0, blockZ));
     }
 
+    // The surface rides an unread slot so C2ME compiles around it as it does in play, never under it afterwards.
     @SuppressWarnings("deprecation")
-    static NoiseGeneratorSettings withCeilingParked(NoiseGeneratorSettings settings, DensityFunction ceiling) {
+    static NoiseGeneratorSettings withProbesParked(NoiseGeneratorSettings settings, DensityFunction ceiling) {
         NoiseRouter source = settings.noiseRouter();
         NoiseRouter parked = new NoiseRouter(
                 ceiling,
@@ -156,7 +158,7 @@ final class SuspendedLand {
                 source.finalDensity(),
                 source.veinToggle(),
                 source.veinRidged(),
-                source.veinGap());
+                new PreliminarySurfaceLevel(source.initialDensityWithoutJaggedness()));
         return new NoiseGeneratorSettings(
                 settings.noiseSettings(),
                 settings.defaultBlock(),
@@ -171,6 +173,10 @@ final class SuspendedLand {
                 settings.useLegacyRandomSource());
     }
 
+    static DensityFunction parkedSurface(RandomState state) {
+        return state.router().veinGap();
+    }
+
     private static void search() {
         List<String> types = new ArrayList<>();
         for (WorldType type : ClimateScanFixture.TYPES) {
@@ -181,7 +187,7 @@ final class SuspendedLand {
             }
 
             types.add(type.name());
-            NoiseGeneratorSettings probe = withCeilingParked(vanilla, rawCeiling);
+            NoiseGeneratorSettings probe = withProbesParked(vanilla, rawCeiling);
             WorldFold fold = torusOfWidth(WIDTH_BLOCKS);
             Site site = null;
             Hit highest = null;
