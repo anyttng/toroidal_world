@@ -158,7 +158,7 @@ public final class ClientPosition {
     }
 
     private static double clientCopy(MirrorWriter writer, Direction.Axis axis, Mirror currMirror, double reported) {
-        if (!writer.clientAuthored()) {
+        if (!writer.needsSeating()) {
             return reported;
         }
 

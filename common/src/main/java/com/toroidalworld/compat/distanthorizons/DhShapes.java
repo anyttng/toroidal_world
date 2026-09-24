@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 import com.toroidalworld.api.v1.ToroidalShape;
 import com.toroidalworld.api.v1.ToroidalWorldApi;
 import com.toroidalworld.compat.ClientShapes;
+import com.seibel.distanthorizons.api.interfaces.world.IDhApiLevelWrapper;
 import com.seibel.distanthorizons.core.level.IDhLevel;
 import com.seibel.distanthorizons.core.wrapperInterfaces.world.ILevelWrapper;
 
@@ -15,7 +16,7 @@ public final class DhShapes {
         return level == null ? null : of(level.getLevelWrapper());
     }
 
-    public static @Nullable ToroidalShape of(ILevelWrapper wrapper) {
+    public static @Nullable ToroidalShape of(IDhApiLevelWrapper wrapper) {
         return shapeOf(mcLevel(wrapper));
     }
 
@@ -24,7 +25,7 @@ public final class DhShapes {
         return mcLevel != null && mcLevel.isClientSide() ? shapeOf(mcLevel) : null;
     }
 
-    private static @Nullable Level mcLevel(ILevelWrapper wrapper) {
+    private static @Nullable Level mcLevel(IDhApiLevelWrapper wrapper) {
         return wrapper != null && wrapper.getWrappedMcObject() instanceof Level mcLevel ? mcLevel : null;
     }
 

@@ -6,17 +6,20 @@ Toroidal World ships for Minecraft 26.3, 26.2, 26.1.2 and 1.21.1, on NeoForge an
 
 | Mod | Minecraft | Loaders | Status | Notes |
 | --- | --- | --- | --- | --- |
-| [Sodium](https://modrinth.com/mod/sodium) and [Iris Shaders](https://modrinth.com/mod/iris) | All | NeoForge, Fabric | No patch needed | |
+| [Iris Shaders](https://modrinth.com/mod/iris) | All | NeoForge, Fabric | No patch needed | |
+| Separate Sable Render Distance | 1.21.1 | NeoForge | No patch needed | |
 | [Lithium](https://modrinth.com/mod/lithium) | All | NeoForge, Fabric | Supported | |
 | [C2ME](https://modrinth.com/mod/c2me-fabric) | All | NeoForge, Fabric | Supported | |
 | ScalableLux | All | NeoForge, Fabric | Supported | |
+| [Sodium](https://modrinth.com/mod/sodium) | All | NeoForge, Fabric | Supported | |
 | [Simple Clouds](https://modrinth.com/mod/simple-clouds) | 1.21.1 | NeoForge | Supported | |
 
 ## Distant terrain
 
 | Mod | Minecraft | Loaders | Status | Notes |
 | --- | --- | --- | --- | --- |
-| [Distant Horizons](https://modrinth.com/mod/distanthorizons) | 26.2, 26.1.2, 1.21.1 | NeoForge, Fabric | Supported | |
+| [Distant Horizons](https://modrinth.com/mod/distanthorizons) | All | NeoForge, Fabric | Supported | |
+| Distant Horizons SeedGen | 26.3, 26.2, 1.21.1 | NeoForge, Fabric | Supported | |
 | [Voxy](https://modrinth.com/mod/voxy) | All | Fabric | No seam support | |
 | Bobby | — | — | Not tested | |
 
@@ -58,7 +61,7 @@ Toroidal World ships for Minecraft 26.3, 26.2, 26.1.2 and 1.21.1, on NeoForge an
 | Streams Reflowing | All | NeoForge | No patch needed | |
 | Tectonic | All | NeoForge, Fabric | No patch needed | |
 | Fast Noise | 26.3, 26.2, 1.21.1 | NeoForge, Fabric | No patch needed | |
-| [TerraBlender](https://modrinth.com/mod/terrablender) | 26.2, 26.1.2, 1.21.1 | NeoForge | Supported | |
+| [TerraBlender](https://modrinth.com/mod/terrablender) | All | NeoForge | Supported | |
 | [Biolith](https://modrinth.com/mod/biolith) | All | NeoForge, Fabric | Supported | |
+| BetterEnd and BetterNether | 26.2, 26.1.2, 1.21.1 | NeoForge, Fabric | Partially supported | Biomes on the square map type and on vertical biome layers end in a straight border at the world's edge |
 | One Dimension | — | — | Not tested | |
-| BetterEnd and BetterNether | — | — | Not tested | |

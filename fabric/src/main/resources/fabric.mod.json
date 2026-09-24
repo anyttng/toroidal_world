@@ -24,12 +24,15 @@
   "mixins": [
     "toroidal_world.mixins.json",
     "toroidal_world.shape.mixins.json",
+    "toroidal_world.fabric.mixins.json",
     "toroidal_world.compat.journeymap.mixins.json",
     "toroidal_world.compat.xaero.mixins.json",
     "toroidal_world.compat.c2me.mixins.json",
     "toroidal_world.compat.distanthorizons.mixins.json",
     "toroidal_world.compat.scalablelux.mixins.json",
-    "toroidal_world.compat.biolith.mixins.json"
+    "toroidal_world.compat.terrablender.mixins.json",
+    "toroidal_world.compat.biolith.mixins.json",
+    "toroidal_world.compat.sodium.mixins.json"
   ],
   "accessWidener": "toroidal_world.accesswidener",
   "custom": {
@@ -47,6 +50,7 @@
     "modmenu": "*"
   },
   "breaks": {
-    "journeymap": "<${journeymap_min_version}"
+    "journeymap": "<${journeymap_min_version}",
+    "c2me": "<${c2me_min_version}"
   }
 }

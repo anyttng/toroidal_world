@@ -181,6 +181,11 @@ public class ServerGamePacketListenerImplMixin implements ClientPositionHolder {
         return (ChunkResender) (Object) this.player.level().getChunkSource().chunkMap;
     }
 
+    @Unique
+    private boolean toroidal$ridesUncontrolled() {
+        return this.player.getRootVehicle().getControllingPassenger() != this.player;
+    }
+
     @Shadow
     private double firstGoodX;
 
@@ -219,6 +224,13 @@ public class ServerGamePacketListenerImplMixin implements ClientPositionHolder {
         }
 
         ClientPosition mirror = this.toroidal$clientPosition;
+        if (this.player.isPassenger()) {
+            if (toroidal$ridesUncontrolled()) {
+                mirror.setX(this.player.getX(), MirrorWriter.PASSENGER);
+            }
+            return clamped;
+        }
+
         mirror.setX(clamped, MirrorWriter.PLAYER_MOVE);
         double unwrapped = transformer.blockDomain(Direction.Axis.X).unwrapAround(this.player.getX(), clamped);
 
@@ -241,6 +253,13 @@ public class ServerGamePacketListenerImplMixin implements ClientPositionHolder {
         }
 
         ClientPosition mirror = this.toroidal$clientPosition;
+        if (this.player.isPassenger()) {
+            if (toroidal$ridesUncontrolled()) {
+                mirror.setZ(this.player.getZ(), MirrorWriter.PASSENGER);
+            }
+            return clamped;
+        }
+
         mirror.setZ(clamped, MirrorWriter.PLAYER_MOVE);
         double unwrapped = transformer.blockDomain(Direction.Axis.Z).unwrapAround(this.player.getZ(), clamped);
 

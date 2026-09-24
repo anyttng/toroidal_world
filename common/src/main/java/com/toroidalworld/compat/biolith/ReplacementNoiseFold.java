@@ -4,6 +4,7 @@ import java.util.stream.IntStream;
 
 import org.jspecify.annotations.Nullable;
 
+import com.toroidalworld.compat.LevelClimateCompression;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.engine.noise.GenerationTransformerContext;
 import com.toroidalworld.engine.noise.LapFloor;
@@ -13,6 +14,7 @@ import com.toroidalworld.engine.noise.PeriodicNoiseSampler;
 import net.minecraft.core.QuartPos;
 import net.minecraft.world.level.levelgen.LegacyRandomSource;
 import net.minecraft.world.level.levelgen.WorldgenRandom;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunction;
 import net.minecraft.world.level.levelgen.synth.GradientNoise;
 import net.minecraft.world.level.levelgen.synth.PerlinNoise;
 
@@ -41,6 +43,8 @@ public final class ReplacementNoiseFold {
 
     private volatile @Nullable Octaves octaves;
 
+    private volatile @Nullable Compression compression;
+
     public ReplacementNoiseFold(double... weights) {
         this(weights, IntStream.range(0, weights.length).toArray(), IntStream.range(0, weights.length).toArray());
     }
@@ -55,20 +59,34 @@ public final class ReplacementNoiseFold {
         return !Double.isNaN(sum);
     }
 
-    public double sum(long seed, double[] scaleQuarts, int quartX, int quartZ) {
-        return sum(seed, scaleQuarts, quartX, FLAT_QUART_Y, quartZ, OPEN_SIMPLEX_FLAT_AMPLITUDE);
+    public double sum(long seed, double[] scaleQuarts, int quartX, int quartZ, DensityFunction temperature) {
+        return sum(seed, scaleQuarts, quartX, FLAT_QUART_Y, quartZ, OPEN_SIMPLEX_FLAT_AMPLITUDE, temperature);
     }
 
-    public double sum(long seed, double[] scaleQuarts, int quartX, int quartY, int quartZ) {
-        return sum(seed, scaleQuarts, quartX, quartY, quartZ, OPEN_SIMPLEX_VOLUME_AMPLITUDE);
+    public double sum(long seed, double[] scaleQuarts, int quartX, int quartY, int quartZ,
+            DensityFunction temperature) {
+        return sum(seed, scaleQuarts, quartX, quartY, quartZ, OPEN_SIMPLEX_VOLUME_AMPLITUDE, temperature);
     }
 
-    private double sum(long seed, double[] scaleQuarts, int quartX, int quartY, int quartZ, double amplitude) {
+    double compression(WorldFold fold, DensityFunction temperature) {
+        Compression held = this.compression;
+        if (held != null && held.temperature() == temperature && held.fold().equals(fold)) {
+            return held.factor();
+        }
+
+        double factor = LevelClimateCompression.factor(fold, temperature);
+        this.compression = new Compression(fold, temperature, factor);
+        return factor;
+    }
+
+    private double sum(long seed, double[] scaleQuarts, int quartX, int quartY, int quartZ, double amplitude,
+            DensityFunction temperature) {
         WorldFold fold = GenerationTransformerContext.context().wrappedTransformer();
         if (fold == null) {
             return NOT_FOLDED;
         }
 
+        double factor = compression(fold, temperature);
         Octaves resolved = octavesFor(seed);
         double x = QuartPos.toBlock(quartX);
         double y = QuartPos.toBlock(quartY);
@@ -76,9 +94,9 @@ public final class ReplacementNoiseFold {
         double sum = 0.0;
         for (int octave = 0; octave < this.weights.length; octave++) {
             PerlinNoise noise = resolved.noises()[octave];
-            double horizontalQuarts = scaleQuarts[this.horizontalScaleSlots[octave]] * OPEN_SIMPLEX_ROW_RATE;
+            double horizontalQuarts = scaleQuarts[this.horizontalScaleSlots[octave]] * OPEN_SIMPLEX_ROW_RATE / factor;
             double scale = 1.0 / (horizontalQuarts * BLOCKS_PER_QUART);
-            double verticalQuarts = scaleQuarts[this.verticalScaleSlots[octave]] * OPEN_SIMPLEX_COLUMN_RATE;
+            double verticalQuarts = scaleQuarts[this.verticalScaleSlots[octave]] * OPEN_SIMPLEX_COLUMN_RATE / factor;
             double verticalScale = 1.0 / (verticalQuarts * BLOCKS_PER_QUART);
             sum += this.weights[octave] * PeriodicNoiseSampler.sample(noise.perms, noise.offsetX, noise.offsetY,
                     noise.offsetZ, fold, UNDAMPED_FRAME, scale, x, GradientNoise.wrap(y * verticalScale), z,
@@ -106,5 +124,8 @@ public final class ReplacementNoiseFold {
     }
 
     private record Octaves(long seed, PerlinNoise[] noises) {
+    }
+
+    private record Compression(WorldFold fold, DensityFunction temperature, double factor) {
     }
 }

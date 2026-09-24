@@ -3,7 +3,9 @@ package com.toroidalworld.compat.journeymap.mixin;
 import java.awt.geom.Point2D;
 import java.io.File;
 import java.util.Collection;
+import java.util.Set;
 
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -11,12 +13,13 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.platform.Window;
 import com.toroidalworld.compat.MapCopies;
 import com.toroidalworld.compat.journeymap.JourneyMapFold;
@@ -24,6 +27,7 @@ import com.toroidalworld.compat.journeymap.JourneyMapSeamPass;
 
 import journeymap.api.v2.client.util.UIState;
 import journeymap.api.v2.common.Context;
+import journeymap.client.model.map.MapState;
 import journeymap.client.model.map.MapType;
 import journeymap.client.model.region.RegionCoord;
 import journeymap.client.model.region.RegionImageCache;
@@ -59,6 +63,9 @@ public abstract class MapRendererMixin implements JourneyMapSeamPass {
     @Unique
     private static final String MOVE = "move(DD)V";
 
+    @Unique
+    private static final String LAST_GRID_TOKEN = "Ljourneymap/client/render/map/MapRenderer;lastGridToken:J";
+
     @Shadow(remap = false)
     protected double centerBlockX;
 
@@ -72,6 +79,9 @@ public abstract class MapRendererMixin implements JourneyMapSeamPass {
     private volatile File worldDir;
 
     @Shadow(remap = false)
+    protected volatile MapState state;
+
+    @Shadow(remap = false)
     @Final
     TileGrid<RegionCoord, RegionTile> regions;
 
@@ -83,6 +93,13 @@ public abstract class MapRendererMixin implements JourneyMapSeamPass {
 
     @Shadow(remap = false)
     public abstract Point2D.Double getBlockPixelInGrid(BlockPos pos);
+
+    @Shadow(remap = false)
+    public abstract Context.UI getContext();
+
+    @Shadow(remap = false)
+    private void markSurfaceDirty() {
+    }
 
     @Unique
     private static final int SEAM_ARGB = 0x59FFFFFF;
@@ -121,6 +138,13 @@ public abstract class MapRendererMixin implements JourneyMapSeamPass {
         if (worldDir != null) {
             toroidal$lastWorldDir = worldDir;
         }
+    }
+
+    @Inject(
+            method = "render(Lnet/minecraft/client/gui/GuiGraphicsExtractor;DDFZLjava/util/List;DDLorg/joml/Matrix3x2f;)V",
+            at = @At("HEAD"))
+    private void toroidal$recordView(CallbackInfo ci) {
+        JourneyMapFold.recordView(this.getContext(), this.centerBlockX, this.centerBlockZ, this.regions.size());
     }
 
     @WrapOperation(
@@ -205,9 +229,28 @@ public abstract class MapRendererMixin implements JourneyMapSeamPass {
                 : deltaBlockZ;
     }
 
-    @ModifyReturnValue(method = "getCalculatedGridSize(I)I", at = @At("RETURN"))
-    private int toroidal$floorGridSizeToWorld(int original) {
-        return Math.max(original, JourneyMapFold.minGridSize());
+    @Inject(method = "updateGrid", at = @At(value = "FIELD", target = LAST_GRID_TOKEN, opcode = Opcodes.PUTFIELD))
+    private void toroidal$addTheSeamsFarSide(RegionCoord centerRegion, int gridSize, long token, CallbackInfo ci,
+            @Local Set<String> imageFiles) {
+        if (imageFiles == null || !JourneyMapFold.active()) {
+            return;
+        }
+
+        int regionCount = gridSize / 2;
+        int minX = centerRegion.regionX - regionCount;
+        int maxX = centerRegion.regionX + regionCount;
+        int minZ = centerRegion.regionZ - regionCount;
+        int maxZ = centerRegion.regionZ + regionCount;
+        int[] regionsZ = JourneyMapFold.gridRegions(Direction.Axis.Z, minZ, maxZ);
+        for (int x : JourneyMapFold.gridRegions(Direction.Axis.X, minX, maxX)) {
+            for (int z : regionsZ) {
+                boolean walkedByJourneyMap = x >= minX && x <= maxX && z >= minZ && z <= maxZ;
+                if (!walkedByJourneyMap && imageFiles.contains(x + "," + z + ".png")) {
+                    RegionCoord coord = RegionCoord.fromRegionPos(this.worldDir, x, z, this.state.getDimension());
+                    this.regions.putIfAbsent(token, coord, () -> RegionTileAccessor.toroidal$create(coord, this.state, this::markSurfaceDirty));
+                }
+            }
+        }
     }
 
     @ModifyVariable(method = "setZoom(D)Z", at = @At("HEAD"), argsOnly = true)

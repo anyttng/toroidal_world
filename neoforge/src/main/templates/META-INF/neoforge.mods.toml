@@ -60,6 +60,14 @@ Circumnavigate the world — walk, sail or fly past the border and come out on t
     ordering="NONE"
     side="CLIENT"
 
+# C2ME dependency — the compat mixins shadow C2ME internals the older C2ME has not got.
+[[dependencies.${mod_id}]]
+    modId="c2me"
+    type="optional"
+    versionRange="[${c2me_min_version},)"
+    ordering="NONE"
+    side="BOTH"
+
 [[mixins]]
 config="toroidal_world.mixins.json"
 
@@ -82,7 +90,13 @@ config="toroidal_world.compat.distanthorizons.mixins.json"
 config="toroidal_world.compat.scalablelux.mixins.json"
 
 [[mixins]]
+config="toroidal_world.compat.terrablender.mixins.json"
+
+[[mixins]]
 config="toroidal_world.compat.biolith.mixins.json"
+
+[[mixins]]
+config="toroidal_world.compat.sodium.mixins.json"
 
 [[mixins]]
 config="toroidal_world.neoforge.mixins.json"
