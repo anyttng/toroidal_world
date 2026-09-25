@@ -21,6 +21,10 @@
     "WireSpoolItemMixin",
     "WireSyncMixin"
   ],
+  "client": [
+    "MeteredConnectionReadMixin",
+    "SelectedNodeReadMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

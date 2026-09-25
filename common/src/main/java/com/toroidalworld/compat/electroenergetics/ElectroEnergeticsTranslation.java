@@ -2,7 +2,6 @@ package com.toroidalworld.compat.electroenergetics;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.UnaryOperator;
 
 import com.george_vi.electroenergetics.content.railway_electrification.catenary.CatenaryConnection;
 import com.george_vi.electroenergetics.content.railway_electrification.catenary.ClearCatenaryPacket;
@@ -19,7 +18,6 @@ import com.george_vi.electroenergetics.simulation.RequestVoltageDataPacket;
 import com.george_vi.electroenergetics.simulation.SendVoltageDataPacket;
 import com.george_vi.electroenergetics.simulation.infrastructure.SendNodeDataPacket;
 import com.george_vi.electroenergetics.simulation.infrastructure.WireData;
-import com.george_vi.electroenergetics.simulation.infrastructure.detached_nodes.DetachedNodeHelper;
 import com.toroidalworld.compat.electroenergetics.mixin.SendVoltageDataPacketAccessor;
 import com.toroidalworld.engine.fold.FoldedCopies;
 import com.toroidalworld.engine.net.PacketTranslator;
@@ -161,20 +159,11 @@ public final class ElectroEnergeticsTranslation {
     }
 
     private static InWorldNode seat(TranslationContext context, InWorldNode node) {
-        return moved(node, pos -> context.nearestCopy(pos));
+        return WireNodes.moved(node, pos -> context.nearestCopy(pos));
     }
 
     private static InWorldNode fold(TranslationContext context, InWorldNode node) {
-        return moved(node, pos -> context.toServer(pos));
-    }
-
-    private static InWorldNode moved(InWorldNode node, UnaryOperator<BlockPos> move) {
-        if (DetachedNodeHelper.isDetached(node)) {
-            return node;
-        }
-
-        BlockPos pos = move.apply(node.sourcePos());
-        return pos.equals(node.sourcePos()) ? node : new InWorldNode(node.id(), pos);
+        return WireNodes.moved(node, pos -> context.toServer(pos));
     }
 
     private ElectroEnergeticsTranslation() {
