@@ -6,10 +6,12 @@
   "plugin": "com.toroidalworld.compat.betterend.BetterEndMixinPlugin",
   "mixins": [
     "IslandLayerMixin",
+    "OpenSimplexNoiseMixin",
     "SplitNoiseConditionMixin",
     "SulphuricSurfaceNoiseConditionMixin",
     "TerrainGeneratorAccessor",
     "TerrainGeneratorMixin",
+    "TunelCaveFeatureMixin",
     "UmbraSurfaceNoiseConditionMixin"
   ],
   "injectors": {
