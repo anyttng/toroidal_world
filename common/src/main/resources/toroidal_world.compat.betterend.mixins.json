@@ -6,8 +6,11 @@
   "plugin": "com.toroidalworld.compat.betterend.BetterEndMixinPlugin",
   "mixins": [
     "IslandLayerMixin",
+    "SplitNoiseConditionMixin",
+    "SulphuricSurfaceNoiseConditionMixin",
     "TerrainGeneratorAccessor",
-    "TerrainGeneratorMixin"
+    "TerrainGeneratorMixin",
+    "UmbraSurfaceNoiseConditionMixin"
   ],
   "injectors": {
     "defaultRequire": 1
