@@ -45,7 +45,7 @@ Toroidal World ships for Minecraft 26.3, 26.2, 26.1.2 and 1.21.1, on NeoForge an
 | [Mekanism](https://modrinth.com/mod/mekanism) | 1.21.1 | NeoForge | Supported | |
 | Mekanism Generators | 1.21.1 | NeoForge | Supported | |
 | [AstikorCarts Redux](https://modrinth.com/mod/astikorcarts-redux) | 1.21.1 | NeoForge | Supported | |
-| Create Electroenergetics | — | — | No seam support | |
+| [Create Electro Energetics](https://modrinth.com/mod/create-electro-energetics) | 1.21.1 | NeoForge | Partially supported | Electric trains and structures do not keep wires across the world's edge |
 
 ## Content and server side
 
