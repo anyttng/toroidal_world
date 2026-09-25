@@ -58,7 +58,13 @@ public final class InjectionTargets {
 
     public static final String LIVING_ENTITY_GET_Z = "Lnet/minecraft/world/entity/LivingEntity;getZ()D";
 
-    public static final String MTH_ATAN2 = "Lnet/minecraft/util/Mth;atan2(DD)D";
+    public static final String MAP_ITEM_SAVED_DATA_CENTER_X =
+            "Lnet/minecraft/world/level/saveddata/maps/MapItemSavedData;centerX:I";
+
+    public static final String MAP_ITEM_SAVED_DATA_CENTER_Z =
+            "Lnet/minecraft/world/level/saveddata/maps/MapItemSavedData;centerZ:I";
+
+    public static final String MTH_ATAN2 ="Lnet/minecraft/util/Mth;atan2(DD)D";
 
     public static final String PATHFINDER_MOB_GET_HOME_POSITION =
             "Lnet/minecraft/world/entity/PathfinderMob;getHomePosition()Lnet/minecraft/core/BlockPos;";
