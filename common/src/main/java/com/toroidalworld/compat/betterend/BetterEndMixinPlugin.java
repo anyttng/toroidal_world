@@ -6,6 +6,7 @@ import com.mojang.logging.LogUtils;
 import com.toroidalworld.compat.ModPresence;
 import com.toroidalworld.compat.ModPresenceGatePlugin;
 import com.toroidalworld.compat.ModSymbol;
+import com.toroidalworld.compat.wover.WoverInjectionTargets;
 
 public class BetterEndMixinPlugin extends ModPresenceGatePlugin {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -15,6 +16,8 @@ public class BetterEndMixinPlugin extends ModPresenceGatePlugin {
     private static final String ISLAND_LAYER = "org/betterx/betterend/world/generator/IslandLayer";
 
     private static final String ISLAND_LAYER_TYPE = "Lorg/betterx/betterend/world/generator/IslandLayer;";
+
+    private static final String SPLIT_CONDITION = "org/betterx/betterend/world/surface/SplitNoiseCondition";
 
     static final ModSymbol LEVEL_INIT = new ModSymbol(TERRAIN_GENERATOR, "onServerLevelInit",
             "(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/dimension/LevelStem;J)V");
@@ -55,9 +58,25 @@ public class BetterEndMixinPlugin extends ModPresenceGatePlugin {
     static final ModSymbol ISLAND_OPTIONS = new ModSymbol(ISLAND_LAYER, "options",
             "Lorg/betterx/betterend/world/generator/LayerOptions;");
 
+    static final ModSymbol SPLIT_NUMBER = new ModSymbol(SPLIT_CONDITION, WoverInjectionTargets.NUMBER,
+            WoverInjectionTargets.NUMBER_DESCRIPTOR);
+
+    static final ModSymbol SPLIT_NOISE = new ModSymbol(SPLIT_CONDITION, "getNoise", "(III)D");
+
+    static final ModSymbol SULPHURIC_NUMBER = new ModSymbol(
+            "org/betterx/betterend/world/surface/SulphuricSurfaceNoiseCondition", WoverInjectionTargets.NUMBER,
+            WoverInjectionTargets.NUMBER_DESCRIPTOR);
+
+    static final ModSymbol UMBRA_DEPTH = new ModSymbol("org/betterx/betterend/world/surface/UmbraSurfaceNoiseCondition",
+            "getDepth", "(III)I");
+
+    static final ModSymbol NOISE_EVAL_2D = new ModSymbol("org/betterx/betterend/noise/OpenSimplexNoise", "eval",
+            "(DD)D");
+
     static final ModSymbol[] SYMBOLS = {LEVEL_INIT, FILL_DENSITY, IS_LAND, AVERAGE_DEPTH, LOCKER, LARGE_ISLANDS,
             MEDIUM_ISLANDS, SMALL_ISLANDS, BOOL_CACHE, BOOL_CACHE_KEY, ISLAND_SEED, ISLAND, RELATIVE_DISTANCE,
-            ISLAND_NOISE, ISLAND_DENSITY, ISLAND_OPTIONS};
+            ISLAND_NOISE, ISLAND_DENSITY, ISLAND_OPTIONS, SPLIT_NUMBER, SPLIT_NOISE, SULPHURIC_NUMBER, UMBRA_DEPTH,
+            NOISE_EVAL_2D};
 
     private static final ModPresence BETTER_END = ModPresence.of(LOGGER, TERRAIN_GENERATOR + ".class",
             "[betterend-compat] gate betterend_present", SYMBOLS);
