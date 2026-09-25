@@ -234,6 +234,7 @@ dependencies {
     compileOnly "maven.modrinth:astikorcarts-redux:${astikorcarts_version}"
     compileOnly "maven.modrinth:biolith:${biolith_version}"
     compileOnly "curse.maven:reterraforged-unofficial-1607000:${reterraforged_version}"
+    compileOnly "curse.maven:mt-chunk-generation-1120044:${mtchunkgeneration_version}"
     compileOnly "maven.modrinth:worldweaver-neoforge:${worldweaver_version}"
     compileOnly files(sodiumModJars).asFileTree.matching { include '*.jar' }
     compileOnly "com.github.bawnorton.mixinsquared:mixinsquared-common:${mixinsquared_version}"
