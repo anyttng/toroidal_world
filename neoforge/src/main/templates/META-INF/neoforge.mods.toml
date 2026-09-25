@@ -99,4 +99,7 @@ config="toroidal_world.compat.biolith.mixins.json"
 config="toroidal_world.compat.sodium.mixins.json"
 
 [[mixins]]
+config="toroidal_world.compat.lithium.mixins.json"
+
+[[mixins]]
 config="toroidal_world.neoforge.mixins.json"
