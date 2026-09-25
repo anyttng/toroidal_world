@@ -10,20 +10,33 @@ import com.toroidalworld.compat.ModSymbol;
 public class LithiumMixinPlugin extends ModPresenceGatePlugin {
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    private static final String TRACKER_PACKAGE = "net/caffeinemc/mods/lithium/common/tracking/entity/";
+    private static final String LITHIUM_PACKAGE = "net/caffeinemc/mods/lithium/common/";
+    private static final String TRACKER_PACKAGE = LITHIUM_PACKAGE + "tracking/entity/";
     private static final String TRACKER = TRACKER_PACKAGE + "SectionedEntityMovementTracker";
+    private static final String WORLD_HELPER = LITHIUM_PACKAGE + "world/WorldHelper";
     private static final String GET_ENTITIES = "getEntities";
     private static final String GET_ENTITIES_DESCRIPTOR = "(Lnet/minecraft/world/phys/AABB;)Ljava/util/List;";
 
-    private static final ModSymbol TRACKER_REGISTER = new ModSymbol(TRACKER, "register",
-            "(Lnet/minecraft/server/level/ServerLevel;)V");
     private static final ModSymbol INVENTORY_TRACKER_QUERY = new ModSymbol(
             TRACKER_PACKAGE + "SectionedInventoryEntityMovementTracker", GET_ENTITIES, GET_ENTITIES_DESCRIPTOR);
     private static final ModSymbol ITEM_TRACKER_QUERY = new ModSymbol(
             TRACKER_PACKAGE + "SectionedItemEntityMovementTracker", GET_ENTITIES, GET_ENTITIES_DESCRIPTOR);
+    private static final ModSymbol GROUP_WALK = new ModSymbol(WORLD_HELPER, "getEntitiesOfEntityGroupPlusDragonPieces",
+            "(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/entity/EntitySectionStorage;"
+                    + "Lnet/minecraft/world/entity/Entity;L" + LITHIUM_PACKAGE + "entity/EntityClassGroup;"
+                    + "Lnet/minecraft/world/phys/AABB;Ljava/util/function/Predicate;)Ljava/util/List;");
+    private static final ModSymbol PUSHABLE_WALK = new ModSymbol(WORLD_HELPER, "getPushableEntities",
+            "(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/entity/EntitySectionStorage;"
+                    + "Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;L" + LITHIUM_PACKAGE
+                    + "entity/pushable/EntityPushablePredicate;)Ljava/util/List;");
+    private static final ModSymbol ENTITY_COLLISIONS = new ModSymbol(LITHIUM_PACKAGE + "entity/LithiumEntityCollisions",
+            "appendEntityCollisions",
+            "(Ljava/util/List;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/Entity;"
+                    + "Lnet/minecraft/world/phys/AABB;)V");
 
     private static final ModPresence LITHIUM = ModPresence.of(LOGGER, TRACKER + ".class",
-            "[lithium-compat] gate lithium_present", TRACKER_REGISTER, INVENTORY_TRACKER_QUERY, ITEM_TRACKER_QUERY);
+            "[lithium-compat] gate lithium_present", INVENTORY_TRACKER_QUERY, ITEM_TRACKER_QUERY, GROUP_WALK,
+            PUSHABLE_WALK, ENTITY_COLLISIONS);
 
     public LithiumMixinPlugin() {
         super(LITHIUM);
