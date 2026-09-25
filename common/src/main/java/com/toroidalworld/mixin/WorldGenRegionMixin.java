@@ -11,6 +11,8 @@ import com.toroidalworld.accessors.LevelHolder;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WorldLoopAttachments;
 import com.toroidalworld.engine.fold.NearestCopy;
+import com.toroidalworld.engine.gen.ChunkFrameTicks;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -18,17 +20,21 @@ import com.llamalad7.mixinextras.sugar.Local;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.chunk.status.ChunkStep;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.ticks.LevelTickAccess;
 
 @Mixin(WorldGenRegion.class)
 public abstract class WorldGenRegionMixin implements LevelHolder {
@@ -43,6 +49,12 @@ public abstract class WorldGenRegionMixin implements LevelHolder {
     @Shadow
     @Final
     private ChunkStep generatingStep;
+
+    @Unique
+    private @Nullable LevelTickAccess<Block> toroidal$blockTicks;
+
+    @Unique
+    private @Nullable LevelTickAccess<Fluid> toroidal$fluidTicks;
 
     @Override
     public ServerLevel toroidal$level() {
@@ -69,6 +81,17 @@ public abstract class WorldGenRegionMixin implements LevelHolder {
         return nearest == null
                 ? original.call(chunkX, chunkZ, targetStatus, loadOrGenerate)
                 : original.call(nearest.x, nearest.z, targetStatus, loadOrGenerate);
+    }
+
+    @WrapMethod(method = "ensureCanWrite")
+    private boolean toroidal$writeZoneThroughTheSeam(BlockPos pos, Operation<Boolean> original) {
+        int chunkX = SectionPos.blockToSectionCoord(pos.getX());
+        int chunkZ = SectionPos.blockToSectionCoord(pos.getZ());
+        ChunkPos nearest = this.toroidal$nearestPastTheReach(chunkX, chunkZ);
+        return nearest == null
+                ? original.call(pos)
+                : original.call(pos.offset(SectionPos.sectionToBlockCoord(nearest.x - chunkX), 0,
+                        SectionPos.sectionToBlockCoord(nearest.z - chunkZ)));
     }
 
     @WrapMethod(method = "hasChunk")
@@ -170,6 +193,34 @@ public abstract class WorldGenRegionMixin implements LevelHolder {
             Operation<BlockEntity> original,
             @Local ChunkAccess chunk) {
         return original.call(this.toroidal$keyIn(chunk, pos), state, tag, registries);
+    }
+
+    @ModifyReturnValue(method = "getBlockTicks", at = @At("RETURN"))
+    private LevelTickAccess<Block> toroidal$blockTicksInChunkFrame(LevelTickAccess<Block> ticks) {
+        if (this.toroidal$blockTicks == null) {
+            this.toroidal$blockTicks = this.toroidal$ticksInChunkFrame(ticks);
+        }
+
+        return this.toroidal$blockTicks;
+    }
+
+    @ModifyReturnValue(method = "getFluidTicks", at = @At("RETURN"))
+    private LevelTickAccess<Fluid> toroidal$fluidTicksInChunkFrame(LevelTickAccess<Fluid> ticks) {
+        if (this.toroidal$fluidTicks == null) {
+            this.toroidal$fluidTicks = this.toroidal$ticksInChunkFrame(ticks);
+        }
+
+        return this.toroidal$fluidTicks;
+    }
+
+    @Unique
+    private <T> LevelTickAccess<T> toroidal$ticksInChunkFrame(LevelTickAccess<T> ticks) {
+        if (WorldLoopAttachments.wrappedTransformerOf(this.level) == null) {
+            return ticks;
+        }
+
+        WorldGenRegion region = (WorldGenRegion) (Object) this;
+        return new ChunkFrameTicks<>(ticks, pos -> this.toroidal$keyIn(region.getChunk(pos), pos));
     }
 
     @WrapOperation(
