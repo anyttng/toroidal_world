@@ -92,6 +92,7 @@
     "EntityPredicateDistanceMixin",
     "EntitySectionCallbackMixin",
     "EntitySectionManagerMixin",
+    "EntitySectionStorageMixin",
     "EntitySelectorMixin",
     "EuclideanGameEventListenerRegistryMixin",
     "EvokerFangsAimMixin",

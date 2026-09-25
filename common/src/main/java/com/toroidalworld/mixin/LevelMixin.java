@@ -15,12 +15,12 @@ import com.toroidalworld.accessors.RelocatableBlockEntity;
 import com.toroidalworld.accessors.TerrainMaskCache;
 import com.toroidalworld.accessors.TransformerCache;
 import com.toroidalworld.accessors.TransformerHolder;
-import com.toroidalworld.core.CoordinateConstants;
 import com.toroidalworld.core.ForeignFrame;
 import com.toroidalworld.core.ForeignFrames;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WorldFold.Folded;
 import com.toroidalworld.core.WorldFolds;
+import com.toroidalworld.engine.fold.SeamEntitySearch;
 import com.toroidalworld.engine.gen.FloatingCrumbs;
 import com.toroidalworld.core.ShapedChunkGenerator;
 import com.toroidalworld.core.CarriedShape;
@@ -119,13 +119,13 @@ public class LevelMixin implements TransformerCache, CrumbSweepCache, TerrainMas
                     target = "Lnet/minecraft/world/level/entity/LevelEntityGetter;get(Lnet/minecraft/world/phys/AABB;Ljava/util/function/Consumer;)V"))
     private void toroidal$entitiesThroughSeam(LevelEntityGetter<Entity> entities, AABB box, Consumer<Entity> output,
             Operation<Void> original) {
-        AABB reach = toroidal$sectionReach(box);
-        if (!toroidal$crossesSeam(reach)) {
+        WorldFold transformer = toroidal$transformer();
+        AABB reach = SeamEntitySearch.sectionReach(box);
+        if (!SeamEntitySearch.crossesSeam(transformer, reach)) {
             original.call(entities, box, output);
             return;
         }
 
-        WorldFold transformer = toroidal$transformer();
         Set<Entity> seen = Collections.newSetFromMap(new IdentityHashMap<>());
         for (Folded<AABB> piece : transformer.split(reach)) {
             original.call(entities, piece.value(), (Consumer<Entity>) entity -> {
@@ -143,13 +143,13 @@ public class LevelMixin implements TransformerCache, CrumbSweepCache, TerrainMas
                     target = "Lnet/minecraft/world/level/entity/LevelEntityGetter;get(Lnet/minecraft/world/level/entity/EntityTypeTest;Lnet/minecraft/world/phys/AABB;Lnet/minecraft/util/AbortableIterationConsumer;)V"))
     private <U extends Entity> void toroidal$typedEntitiesThroughSeam(LevelEntityGetter<Entity> entities,
             EntityTypeTest<Entity, U> type, AABB box, AbortableIterationConsumer<U> output, Operation<Void> original) {
-        AABB reach = toroidal$sectionReach(box);
-        if (!toroidal$crossesSeam(reach)) {
+        WorldFold transformer = toroidal$transformer();
+        AABB reach = SeamEntitySearch.sectionReach(box);
+        if (!SeamEntitySearch.crossesSeam(transformer, reach)) {
             original.call(entities, type, box, output);
             return;
         }
 
-        WorldFold transformer = toroidal$transformer();
         Set<Entity> seen = Collections.newSetFromMap(new IdentityHashMap<>());
         MutableBoolean aborted = new MutableBoolean();
         for (Folded<AABB> piece : transformer.split(reach)) {
@@ -169,18 +169,6 @@ public class LevelMixin implements TransformerCache, CrumbSweepCache, TerrainMas
                 return;
             }
         }
-    }
-
-    @Unique
-    private boolean toroidal$crossesSeam(AABB box) {
-        WorldFold transformer = toroidal$transformer();
-        return transformer.isWrapped() && transformer.crossesBounds(box);
-    }
-
-    @Unique
-    private static AABB toroidal$sectionReach(AABB box) {
-        return box.inflate(CoordinateConstants.ENTITY_SECTION_SEARCH_GRACE, 0.0,
-                CoordinateConstants.ENTITY_SECTION_SEARCH_GRACE);
     }
 
     @Unique

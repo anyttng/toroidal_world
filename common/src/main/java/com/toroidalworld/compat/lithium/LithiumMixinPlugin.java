@@ -10,23 +10,26 @@ import com.toroidalworld.compat.ModSymbol;
 public class LithiumMixinPlugin extends ModPresenceGatePlugin {
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    private static final String TRACKER_PACKAGE = "net/caffeinemc/mods/lithium/common/tracking/entity/";
+    private static final String LITHIUM_PACKAGE = "net/caffeinemc/mods/lithium/common/";
+    private static final String TRACKER_PACKAGE = LITHIUM_PACKAGE + "tracking/entity/";
     private static final String TRACKER = TRACKER_PACKAGE + "SectionedEntityMovementTracker";
     private static final String CONSTRUCTOR = "<init>";
     private static final String TRACKER_CONSTRUCTOR_DESCRIPTOR =
             "(Lnet/caffeinemc/mods/lithium/common/util/tuples/WorldSectionBox;Ljava/lang/Class;)V";
 
     // A game type is spelled per loader on this line, so a target class is gated by a member naming none.
-    private static final ModSymbol TRACKER_CONSTRUCTOR = new ModSymbol(TRACKER, CONSTRUCTOR,
-            TRACKER_CONSTRUCTOR_DESCRIPTOR);
     private static final ModSymbol INVENTORY_TRACKER_CONSTRUCTOR = new ModSymbol(
             TRACKER_PACKAGE + "SectionedInventoryEntityMovementTracker", CONSTRUCTOR, TRACKER_CONSTRUCTOR_DESCRIPTOR);
     private static final ModSymbol ITEM_TRACKER_CONSTRUCTOR = new ModSymbol(
             TRACKER_PACKAGE + "SectionedItemEntityMovementTracker", CONSTRUCTOR, TRACKER_CONSTRUCTOR_DESCRIPTOR);
+    private static final ModSymbol GROUP_FILTER_SWITCH = new ModSymbol(LITHIUM_PACKAGE + "world/WorldHelper",
+            "CUSTOM_TYPE_FILTERABLE_LIST_DISABLED", "Z");
+    private static final ModSymbol COLLISION_EPSILON = new ModSymbol(LITHIUM_PACKAGE + "entity/LithiumEntityCollisions",
+            "EPSILON", "D");
 
     private static final ModPresence LITHIUM = ModPresence.of(LOGGER, TRACKER + ".class",
-            "[lithium-compat] gate lithium_present", TRACKER_CONSTRUCTOR, INVENTORY_TRACKER_CONSTRUCTOR,
-            ITEM_TRACKER_CONSTRUCTOR);
+            "[lithium-compat] gate lithium_present", INVENTORY_TRACKER_CONSTRUCTOR, ITEM_TRACKER_CONSTRUCTOR,
+            GROUP_FILTER_SWITCH, COLLISION_EPSILON);
 
     public LithiumMixinPlugin() {
         super(LITHIUM);

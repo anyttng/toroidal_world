@@ -1,7 +1,9 @@
 package com.toroidalworld.mixin;
 
 import org.jspecify.annotations.Nullable;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,16 +19,22 @@ import com.toroidalworld.engine.seam.SeamSnap;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.entity.EntityAccess;
+import net.minecraft.world.level.entity.EntitySectionStorage;
 import net.minecraft.world.level.entity.PersistentEntitySectionManager;
 
 @Mixin(PersistentEntitySectionManager.class)
-public class EntitySectionManagerMixin implements LevelBindable {
+public class EntitySectionManagerMixin<T extends EntityAccess> implements LevelBindable {
+    @Shadow
+    @Final
+    private EntitySectionStorage<T> sectionStorage;
+
     @Unique
     private @Nullable ServerLevel toroidal$level;
 
     @Override
     public void toroidal$bindLevel(ServerLevel level) {
         this.toroidal$level = level;
+        ((LevelBindable) this.sectionStorage).toroidal$bindLevel(level);
     }
 
     @Inject(
