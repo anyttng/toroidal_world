@@ -11,6 +11,7 @@
     "ChangeLengthWirePacketMixin",
     "DetachedNodeEntityMixin",
     "InfrastructureSavedDataMixin",
+    "SendVoltageDataPacketAccessor",
     "WireCrossContactModuleMixin",
     "WireElectrocutionModuleMixin",
     "WireInteractionBehaviourMixin",

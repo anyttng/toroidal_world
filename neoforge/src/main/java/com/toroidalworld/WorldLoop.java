@@ -3,6 +3,7 @@ package com.toroidalworld;
 import com.toroidalworld.client.settings.SettingsScreenFactory;
 import com.toroidalworld.compat.aeronautics.AeronauticsTranslation;
 import com.toroidalworld.compat.create.CreateTranslation;
+import com.toroidalworld.compat.electroenergetics.ElectroEnergeticsTranslation;
 import com.toroidalworld.compat.aeronautics.AeronauticsMod;
 import com.toroidalworld.compat.sable.SableMod;
 import com.toroidalworld.engine.gen.LoopedChunkGenerator;
@@ -42,6 +43,7 @@ public final class WorldLoop {
         AeronauticsMod.register();
         CreateTranslation.register();
         AeronauticsTranslation.register();
+        ElectroEnergeticsTranslation.register();
         GenerationHookSetup.registerAll();
 
         CHUNK_GENERATORS.register(WorldLoopGenerators.TOROIDAL_ID, () -> LoopedChunkGenerator.CODEC);

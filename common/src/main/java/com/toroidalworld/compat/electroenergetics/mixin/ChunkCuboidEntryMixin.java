@@ -53,6 +53,6 @@ public abstract class ChunkCuboidEntryMixin implements TransformerHolder {
 
     @ModifyReturnValue(method = "iterator()Lit/unimi/dsi/fastutil/longs/LongIterator;", at = @At("RETURN"))
     private LongIterator toroidal$foldedChunks(LongIterator raw) {
-        return WireChunkKeys.of(raw, this.toroidal$transformer, this.minX, this.maxX, this.minZ, this.maxZ);
+        return WireChunkKeys.of(raw, this.toroidal$transformer);
     }
 }

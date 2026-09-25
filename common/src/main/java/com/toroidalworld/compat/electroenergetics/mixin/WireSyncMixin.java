@@ -24,6 +24,12 @@ public abstract class WireSyncMixin {
     @Final
     private ServerLevel level;
 
+    @ModifyExpressionValue(method = "handlePlayerEnterNewSection", at = @At(value = "INVOKE",
+            target = "Lcom/george_vi/electroenergetics/content/wire/WireSync;getViewDistance()I"))
+    private int toroidal$boxWithinHalfTheWorld(int viewDistance) {
+        return WorldLoopAttachments.transformerOf(this.level).limitViewDistance(viewDistance);
+    }
+
     @WrapOperation(method = "handlePlayerEnterNewSection",
             at = @At(value = "INVOKE", target = InjectionTargets.MAP_PUT))
     private Object toroidal$bindBoxFold(Map<Object, Object> boxes, Object player, Object box,
