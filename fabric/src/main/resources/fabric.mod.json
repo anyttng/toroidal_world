@@ -41,8 +41,7 @@
   "accessWidener": "toroidal_world.accesswidener",
   "custom": {
     "lithium:options": {
-      "mixin.ai.poi": false,
-      "mixin.world.game_events.dispatch": false
+      "mixin.ai.poi": false
     }
   },
   "depends": {
