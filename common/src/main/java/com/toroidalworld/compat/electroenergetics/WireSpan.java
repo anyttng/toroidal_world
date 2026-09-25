@@ -32,6 +32,10 @@ public final class WireSpan {
         return WorldLoopAttachments.transformerOf(level).foldSectionNode(section);
     }
 
+    public static long chunkKey(Level level, long chunk) {
+        return WorldLoopAttachments.transformerOf(level).foldChunkKey(chunk);
+    }
+
     public static DeckTransformation wireToward(Level level, Vec3 anchor, AABB wireBox) {
         WorldFold fold = WorldLoopAttachments.transformerOf(level);
         return fold.nearestCopyTransformation(anchor, wireBox.getCenter());

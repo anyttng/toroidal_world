@@ -43,6 +43,9 @@ public final class InjectionTargets {
 
     public static final String CHUNK_POS_AS_LONG = "Lnet/minecraft/world/level/ChunkPos;asLong(II)J";
 
+    public static final String CHUNK_POS_AS_LONG_BLOCK =
+            "Lnet/minecraft/world/level/ChunkPos;asLong(Lnet/minecraft/core/BlockPos;)J";
+
     public static final String DENSITY_FUNCTION_COMPUTE =
             "Lnet/minecraft/world/level/levelgen/DensityFunction;compute(Lnet/minecraft/world/level/levelgen/DensityFunction$FunctionContext;)D";
 
@@ -77,6 +80,8 @@ public final class InjectionTargets {
     public static final String LIVING_ENTITY_GET_X = "Lnet/minecraft/world/entity/LivingEntity;getX()D";
 
     public static final String LIVING_ENTITY_GET_Z = "Lnet/minecraft/world/entity/LivingEntity;getZ()D";
+
+    public static final String MAP_PUT = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
 
     public static final String MTH_ATAN2 = "Lnet/minecraft/util/Mth;atan2(DD)D";
 

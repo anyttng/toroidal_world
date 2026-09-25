@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.toroidalworld.InjectionTargets;
 import com.toroidalworld.compat.mekanism.RadiationBoxFrame;
 import com.toroidalworld.compat.mekanism.RadiationIndexFrame;
 import com.toroidalworld.core.WorldFold;
@@ -66,7 +67,7 @@ public class IndexedCuboidMapMixin implements RadiationIndexFrame {
     }
 
     @WrapOperation(method = TRACK_BOX,
-            at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
+            at = @At(value = "INVOKE", target = InjectionTargets.MAP_PUT))
     private Object toroidal$bindBoxFold(Map<Object, Object> values, Object box, Object value,
             Operation<Object> original) {
         ((RadiationBoxFrame) box).toroidal$setFold(this.toroidal$fold);
@@ -95,8 +96,7 @@ public class IndexedCuboidMapMixin implements RadiationIndexFrame {
     }
 
     @WrapOperation(method = {"find", "findFirstAt"},
-            at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/ChunkPos;asLong(Lnet/minecraft/core/BlockPos;)J"),
+            at = @At(value = "INVOKE", target = InjectionTargets.CHUNK_POS_AS_LONG_BLOCK),
             require = 2,
             expect = 2)
     private long toroidal$lookUpFoldedChunk(BlockPos pos, Operation<Long> original) {

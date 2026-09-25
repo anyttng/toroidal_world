@@ -28,10 +28,17 @@ public class ElectroEnergeticsMixinPlugin extends ModPresenceGatePlugin {
                     + "Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/player/Player;"
                     + "Lnet/minecraft/world/item/ItemStack;)V");
 
+    private static final ModSymbol PLAYER_BOX = new ModSymbol(
+            "com/george_vi/electroenergetics/content/wire/WireSync$ChunkCuboidEntry", "includes", "(II)Z");
+
+    private static final ModSymbol LEAVING_NODES = new ModSymbol(
+            "com/george_vi/electroenergetics/content/wire/WireSync", "lambda$handlePlayerEnterNewSection$4",
+            "(Lit/unimi/dsi/fastutil/longs/LongList;Lcom/george_vi/electroenergetics/foundation/nodes/InWorldNode;)Z");
+
     private static final ModPresence ELECTRO_ENERGETICS = ModPresence.of(LOGGER,
             "com/george_vi/electroenergetics/CreateElectroEnergetics.class",
             "[electroenergetics-compat] gate electroenergetics_present",
-            SECTION_INDEX, DETACHED_NODE_TICK, CHANGE_LENGTH_PACKET, LINEMANS_STICK);
+            SECTION_INDEX, DETACHED_NODE_TICK, CHANGE_LENGTH_PACKET, LINEMANS_STICK, PLAYER_BOX, LEAVING_NODES);
 
     public ElectroEnergeticsMixinPlugin() {
         super(ELECTRO_ENERGETICS);
