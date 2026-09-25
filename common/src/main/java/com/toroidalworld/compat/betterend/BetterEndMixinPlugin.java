@@ -23,6 +23,11 @@ public class BetterEndMixinPlugin extends ModPresenceGatePlugin {
 
     private static final String NOISE_TYPE = "L" + OPEN_SIMPLEX_NOISE + ";";
 
+    private static final String PLACEMENT = "getStateForPlacement";
+
+    private static final String PLACEMENT_DESCRIPTOR =
+            "(Lnet/minecraft/world/item/context/BlockPlaceContext;)Lnet/minecraft/world/level/block/state/BlockState;";
+
     static final ModSymbol LEVEL_INIT = new ModSymbol(TERRAIN_GENERATOR, "onServerLevelInit",
             "(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/dimension/LevelStem;J)V");
 
@@ -84,10 +89,20 @@ public class BetterEndMixinPlugin extends ModPresenceGatePlugin {
             "(Lnet/minecraft/world/level/chunk/ChunkAccess;IIFFFF" + NOISE_TYPE + NOISE_TYPE + NOISE_TYPE
                     + "Lnet/minecraft/world/level/WorldGenLevel;Ljava/util/Set;I)V");
 
+    static final ModSymbol HELIX_LEAVES_PLACEMENT = new ModSymbol(
+            "org/betterx/betterend/blocks/HelixTreeLeavesBlock", PLACEMENT, PLACEMENT_DESCRIPTOR);
+
+    static final ModSymbol JELLYSHROOM_CAP_PLACEMENT = new ModSymbol(
+            "org/betterx/betterend/blocks/JellyshroomCapBlock", PLACEMENT, PLACEMENT_DESCRIPTOR);
+
+    static final ModSymbol UMBRELLA_MEMBRANE_PLACEMENT = new ModSymbol(
+            "org/betterx/betterend/blocks/UmbrellaTreeMembraneBlock", PLACEMENT, PLACEMENT_DESCRIPTOR);
+
     static final ModSymbol[] SYMBOLS = {LEVEL_INIT, FILL_DENSITY, IS_LAND, AVERAGE_DEPTH, LOCKER, LARGE_ISLANDS,
             MEDIUM_ISLANDS, SMALL_ISLANDS, BOOL_CACHE, BOOL_CACHE_KEY, ISLAND_SEED, ISLAND, RELATIVE_DISTANCE,
             ISLAND_NOISE, ISLAND_DENSITY, ISLAND_OPTIONS, SPLIT_NUMBER, SPLIT_NOISE, SULPHURIC_NUMBER, UMBRA_DEPTH,
-            NOISE_EVAL_2D, NOISE_EVAL_3D, NOISE_SEEDED, TUNNEL_COLUMN};
+            NOISE_EVAL_2D, NOISE_EVAL_3D, NOISE_SEEDED, TUNNEL_COLUMN, HELIX_LEAVES_PLACEMENT,
+            JELLYSHROOM_CAP_PLACEMENT, UMBRELLA_MEMBRANE_PLACEMENT};
 
     private static final ModPresence BETTER_END = ModPresence.of(LOGGER, TERRAIN_GENERATOR + ".class",
             "[betterend-compat] gate betterend_present", SYMBOLS);
