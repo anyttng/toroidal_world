@@ -23,6 +23,8 @@ public class BetterEndMixinPlugin extends ModPresenceGatePlugin {
 
     private static final String NOISE_TYPE = "L" + OPEN_SIMPLEX_NOISE + ";";
 
+    private static final String COLOUR_NOISE = "NOISE";
+
     static final ModSymbol FILL_DENSITY = new ModSymbol(TERRAIN_GENERATOR, "fillTerrainDensity", "([DIIIII)V");
 
     static final ModSymbol IS_LAND = new ModSymbol(TERRAIN_GENERATOR, "isLand", "(III)Ljava/lang/Boolean;");
@@ -73,11 +75,20 @@ public class BetterEndMixinPlugin extends ModPresenceGatePlugin {
     static final ModSymbol TUNNEL_FEATURE = new ModSymbol(
             "org/betterx/betterend/world/features/terrain/caves/TunelCaveFeature", "<init>", "()V");
 
+    static final ModSymbol HELIX_LEAVES_NOISE = new ModSymbol("org/betterx/betterend/blocks/HelixTreeLeavesBlock",
+            COLOUR_NOISE, NOISE_TYPE);
+
+    static final ModSymbol JELLYSHROOM_CAP_NOISE = new ModSymbol("org/betterx/betterend/blocks/JellyshroomCapBlock",
+            COLOUR_NOISE, NOISE_TYPE);
+
+    static final ModSymbol UMBRELLA_MEMBRANE_NOISE = new ModSymbol(
+            "org/betterx/betterend/blocks/UmbrellaTreeMembraneBlock", COLOUR_NOISE, NOISE_TYPE);
+
     // A game type is spelled per loader on this line, so a target class is gated by members naming none.
     static final ModSymbol[] SYMBOLS = {FILL_DENSITY, IS_LAND, AVERAGE_DEPTH, LOCKER, LARGE_ISLANDS, MEDIUM_ISLANDS,
             SMALL_ISLANDS, BOOL_CACHE, BOOL_CACHE_KEY, ISLAND_SEED, ISLAND_NOISE, ISLAND_DENSITY, ISLAND_OPTIONS,
             SPLIT_NUMBER, SPLIT_NOISE, SULPHURIC_NUMBER, UMBRA_DEPTH, NOISE_EVAL_2D, NOISE_EVAL_3D, NOISE_SEEDED,
-            TUNNEL_FEATURE};
+            TUNNEL_FEATURE, HELIX_LEAVES_NOISE, JELLYSHROOM_CAP_NOISE, UMBRELLA_MEMBRANE_NOISE};
 
     private static final ModPresence BETTER_END = ModPresence.of(LOGGER, TERRAIN_GENERATOR + ".class",
             "[betterend-compat] gate betterend_present", SYMBOLS);

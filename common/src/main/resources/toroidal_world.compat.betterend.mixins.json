@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_21",
   "plugin": "com.toroidalworld.compat.betterend.BetterEndMixinPlugin",
   "mixins": [
+    "ColourBlockPlacementMixin",
     "IslandLayerMixin",
     "OpenSimplexNoiseMixin",
     "SplitNoiseConditionMixin",
