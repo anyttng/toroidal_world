@@ -64,6 +64,7 @@ Toroidal World ships for Minecraft 26.3, 26.2, 26.1.2 and 1.21.1, on NeoForge an
 | Fast Noise | 26.3, 26.2, 1.21.1 | NeoForge, Fabric | No patch needed | |
 | [TerraBlender](https://modrinth.com/mod/terrablender) | All | NeoForge | Supported | |
 | [Biolith](https://modrinth.com/mod/biolith) | All | NeoForge, Fabric | Supported | |
+| MTChunkGeneration | 1.21.1 | NeoForge | Supported | |
 | BetterEnd and BetterNether | 26.2, 26.1.2, 1.21.1 | NeoForge, Fabric | Partially supported | On 26.1.2 and 1.21.1 the biomes, and the End's islands with Custom End terrain on, end in a straight border at the world's edge |
 | [ReTerraForged](https://www.curseforge.com/minecraft/mc-mods/reterraforged-unofficial) | 1.21.1 | NeoForge, Fabric | Supported | Small worlds get shorter rivers or none |
 | One Dimension | — | — | Not tested | |
