@@ -7,8 +7,8 @@ How the shape is made to work — terrain, distances and the seam crossing — i
 ## Versions
 
 - Minecraft **26.2**
-- NeoForge **26.2.0.59+**
-- Fabric Loader **0.19.3+** with Fabric API **0.157.0+26.2**
+- NeoForge
+- Fabric Loader with Fabric API
 
 ## Dedicated server
 

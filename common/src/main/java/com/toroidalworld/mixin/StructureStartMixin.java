@@ -1,5 +1,6 @@
 package com.toroidalworld.mixin;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -9,11 +10,19 @@ import org.spongepowered.asm.mixin.Unique;
 
 import com.toroidalworld.accessors.FramedStructureStart;
 import com.toroidalworld.core.DeckTransformation;
+import com.toroidalworld.core.WorldLoopAttachments;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.structure.PoolElementStructurePiece;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.levelgen.structure.StructurePiece;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSerializationContext;
 import net.minecraft.world.level.levelgen.structure.pools.JigsawJunction;
@@ -43,6 +52,28 @@ public class StructureStartMixin implements FramedStructureStart {
 
         StructureStart raced = framed.putIfAbsent(move, made);
         return raced != null ? raced : made;
+    }
+
+    @WrapMethod(method = "placeInChunk")
+    private void toroidal$placeInTheStartsFrame(WorldGenLevel level, StructureManager structureManager,
+            ChunkGenerator generator, RandomSource random, BoundingBox chunkBB, ChunkPos chunkPos,
+            Operation<Void> original) {
+        List<StructurePiece> pieces = ((StructureStart) (Object) this).getPieces();
+        if (pieces.isEmpty()) {
+            original.call(level, structureManager, generator, random, chunkBB, chunkPos);
+            return;
+        }
+
+        BlockPos reference = pieces.getFirst().getBoundingBox().getCenter();
+        DeckTransformation move = WorldLoopAttachments.transformerOf(level.getLevel())
+                .nearestCopyTransformation(reference, chunkPos.getMiddleBlockPosition(reference.getY()));
+        if (move.isIdentity()) {
+            original.call(level, structureManager, generator, random, chunkBB, chunkPos);
+            return;
+        }
+
+        original.call(level, structureManager, generator, random, move.apply(chunkBB),
+                ChunkPos.containing(move.apply(chunkPos.getWorldPosition())));
     }
 
     @Unique

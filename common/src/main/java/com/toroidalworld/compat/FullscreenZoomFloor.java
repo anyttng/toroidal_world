@@ -4,6 +4,7 @@ import com.toroidalworld.api.v1.ToroidalShape;
 import com.toroidalworld.core.CoordinateConstants;
 
 import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 
 public final class FullscreenZoomFloor {
     public static final int MIN_WORLD_PIXELS = 64;
@@ -55,6 +56,14 @@ public final class FullscreenZoomFloor {
         }
 
         return floor;
+    }
+
+    public static int journeyMapSeatedZoom(int zoom, int floor, MapCopies copies) {
+        if (zoom >= floor) {
+            return zoom;
+        }
+
+        return copies == MapCopies.SINGLE ? floor : Mth.smallestEncompassingPowerOfTwo(floor);
     }
 
     static int journeyMapCoverZoom(int widthBlocks, int windowPixels) {

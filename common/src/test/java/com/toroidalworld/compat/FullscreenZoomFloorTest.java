@@ -40,6 +40,20 @@ class FullscreenZoomFloorTest {
     }
 
     @Test
+    void journeyMapSeatsAStoredLevelBelowTheFloor() {
+        assertEquals(64, FullscreenZoomFloor.journeyMapSeatedZoom(8, 64, MapCopies.REPEATED),
+                "a level of 8 under a floor of 64 is lifted onto the floor");
+        assertEquals(128, FullscreenZoomFloor.journeyMapSeatedZoom(8, 110, MapCopies.REPEATED),
+                "repeated copies keep the power-of-two levels: a floor of 110 seats at 128");
+        assertEquals(2560, FullscreenZoomFloor.journeyMapSeatedZoom(512, 2560, MapCopies.SINGLE),
+                "one copy seats at the exact cover floor");
+        assertEquals(256, FullscreenZoomFloor.journeyMapSeatedZoom(256, 64, MapCopies.REPEATED),
+                "a level at or above the floor is left alone");
+        assertEquals(512, FullscreenZoomFloor.journeyMapSeatedZoom(512, 0, MapCopies.SINGLE),
+                "no looped world, no floor");
+    }
+
+    @Test
     void xaeroCoversTheWindow() {
         assertEquals(5.0, FullscreenZoomFloor.xaeroCoverScale(512, 1.0, 2560), 1e-12, "2560 px over 512 blocks at multiplier 1");
         assertEquals(1369 / (512 * 1.2676), FullscreenZoomFloor.xaeroCoverScale(512, 1.2676, 1369), 1e-12,

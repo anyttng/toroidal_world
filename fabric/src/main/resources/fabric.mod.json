@@ -32,13 +32,13 @@
     "toroidal_world.compat.scalablelux.mixins.json",
     "toroidal_world.compat.terrablender.mixins.json",
     "toroidal_world.compat.biolith.mixins.json",
-    "toroidal_world.compat.sodium.mixins.json"
+    "toroidal_world.compat.sodium.mixins.json",
+    "toroidal_world.compat.lithium.mixins.json"
   ],
   "accessWidener": "toroidal_world.accesswidener",
   "custom": {
     "lithium:options": {
-      "mixin.ai.poi": false,
-      "mixin.world.game_events.dispatch": false
+      "mixin.ai.poi": false
     }
   },
   "depends": {
