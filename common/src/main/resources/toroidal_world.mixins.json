@@ -93,6 +93,7 @@
     "EntityMixin",
     "EntitySectionCallbackMixin",
     "EntitySectionManagerMixin",
+    "EntitySectionStorageMixin",
     "EntitySelectorMixin",
     "EuclideanGameEventListenerRegistryMixin",
     "EvokerFangsAimMixin",
