@@ -1,0 +1,24 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.toroidalworld.compat.electroenergetics.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "plugin": "com.toroidalworld.compat.electroenergetics.ElectroEnergeticsMixinPlugin",
+  "mixins": [
+    "AttachmentInteractionMixin",
+    "ChangeLengthWireInteractionBehaviourMixin",
+    "ChangeLengthWirePacketMixin",
+    "DetachedNodeEntityMixin",
+    "InfrastructureSavedDataMixin",
+    "WireCrossContactModuleMixin",
+    "WireElectrocutionModuleMixin",
+    "WireInteractionBehaviourMixin",
+    "WireLifetimeModuleMixin",
+    "WireRemovalSoundMixin",
+    "WireSimulationStateMixin",
+    "WireSpoolItemMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

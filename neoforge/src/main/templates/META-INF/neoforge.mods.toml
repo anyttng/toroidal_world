@@ -148,6 +148,9 @@ config="toroidal_world.compat.reterraforged.mixins.json"
 config="toroidal_world.compat.astikorcarts.mixins.json"
 
 [[mixins]]
+config="toroidal_world.compat.electroenergetics.mixins.json"
+
+[[mixins]]
 config="toroidal_world.compat.mtchunkgeneration.mixins.json"
 
 [[mixins]]
