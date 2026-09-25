@@ -6,6 +6,7 @@
   "plugin": "com.toroidalworld.compat.lithium.LithiumMixinPlugin",
   "mixins": [
     "EnderDragonPartsMixin",
+    "GameEventDispatchKeyMixin",
     "LithiumEntityCollisionsMixin",
     "SectionedEntityQueryMixin",
     "WorldHelperMixin"
