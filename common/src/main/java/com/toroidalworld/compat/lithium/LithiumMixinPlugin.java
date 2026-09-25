@@ -2,13 +2,16 @@ package com.toroidalworld.compat.lithium;
 
 import org.slf4j.Logger;
 
+import com.bawnorton.mixinsquared.MixinSquaredBootstrap;
 import com.mojang.logging.LogUtils;
+import com.toroidalworld.MixinGatePlugin;
 import com.toroidalworld.compat.ModPresence;
-import com.toroidalworld.compat.ModPresenceGatePlugin;
 import com.toroidalworld.compat.ModSymbol;
 
-public class LithiumMixinPlugin extends ModPresenceGatePlugin {
+public class LithiumMixinPlugin extends MixinGatePlugin {
     private static final Logger LOGGER = LogUtils.getLogger();
+
+    private static final String STORE_KEY_MIXIN = "GameEventDispatchKeyMixin";
 
     private static final String LITHIUM_PACKAGE = "net/caffeinemc/mods/lithium/common/";
     private static final String TRACKER_PACKAGE = LITHIUM_PACKAGE + "tracking/entity/";
@@ -31,7 +34,18 @@ public class LithiumMixinPlugin extends ModPresenceGatePlugin {
             "[lithium-compat] gate lithium_present", INVENTORY_TRACKER_CONSTRUCTOR, ITEM_TRACKER_CONSTRUCTOR,
             GROUP_FILTER_SWITCH, COLLISION_EPSILON);
 
-    public LithiumMixinPlugin() {
-        super(LITHIUM);
+    @Override
+    public void onLoad(String mixinPackage) {
+        MixinSquaredBootstrap.init();
+        LITHIUM.present();
+    }
+
+    @Override
+    public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        if (mixinClassName.endsWith(STORE_KEY_MIXIN)) {
+            return LithiumGameEventDispatch.applies();
+        }
+
+        return LITHIUM.present();
     }
 }

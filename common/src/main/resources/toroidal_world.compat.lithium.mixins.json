@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_21",
   "plugin": "com.toroidalworld.compat.lithium.LithiumMixinPlugin",
   "mixins": [
+    "GameEventDispatchKeyMixin",
     "LithiumEntityCollisionsMixin",
     "SectionedEntityQueryMixin",
     "WorldHelperMixin"
