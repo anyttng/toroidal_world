@@ -39,11 +39,6 @@
     "toroidal_world.compat.lithium.mixins.json"
   ],
   "accessWidener": "toroidal_world.accesswidener",
-  "custom": {
-    "lithium:options": {
-      "mixin.ai.poi": false
-    }
-  },
   "depends": {
     "fabricloader": ">=0.19.3",
     "fabric-api": "*",
