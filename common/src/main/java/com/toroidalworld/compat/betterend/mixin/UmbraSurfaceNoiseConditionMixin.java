@@ -16,7 +16,9 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
 @Mixin(UmbraSurfaceNoiseCondition.class)
 public class UmbraSurfaceNoiseConditionMixin {
-    private static final String GET_DEPTH = "getDepth(III)I";
+    private static final String GET_DEPTH_2D = "getDepth(II)I";
+
+    private static final String GET_DEPTH_3D = "getDepth(III)I";
 
     private static final long SEED = 1512L;
 
@@ -28,7 +30,7 @@ public class UmbraSurfaceNoiseConditionMixin {
     private static final OpenSimplexStandIn toroidal$STAND_IN = new OpenSimplexStandIn(SEED);
 
     @WrapOperation(
-            method = GET_DEPTH,
+            method = {GET_DEPTH_2D, GET_DEPTH_3D},
             at = @At(value = "INVOKE", target = BetterEndInjectionTargets.NOISE_EVAL_2D, ordinal = 0))
     private static double toroidal$lapBroadNoise(OpenSimplexNoise noise, double x, double z,
             Operation<Double> original) {
@@ -36,7 +38,7 @@ public class UmbraSurfaceNoiseConditionMixin {
     }
 
     @WrapOperation(
-            method = GET_DEPTH,
+            method = {GET_DEPTH_2D, GET_DEPTH_3D},
             at = @At(value = "INVOKE", target = BetterEndInjectionTargets.NOISE_EVAL_2D, ordinal = 1))
     private static double toroidal$lapFineNoise(OpenSimplexNoise noise, double x, double z,
             Operation<Double> original) {

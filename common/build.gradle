@@ -104,6 +104,16 @@ var woverModuleJars = tasks.register('unpackWoverModules', Sync) {
     into layout.buildDirectory.dir('wover-modules')
 }
 
+// BetterEnd's NeoForge file beside the Fabric one the module compiles against: the gate-symbol test reads both, off
+// the classpath so neither hides the other's class files.
+configurations {
+    betterEndNeoForge
+}
+
+dependencies {
+    betterEndNeoForge "maven.modrinth:betterend-neoforge:${betterend_neoforge_version}"
+}
+
 // NeoForm brings only vanilla; the mixin annotations the sources carry come from the same artifacts the NeoForge
 // runtime ships (pinned in gradle.properties from the neo_version userdev config). compileOnly — applying them is
 // the loaders' business.
@@ -187,6 +197,9 @@ test {
     systemProperty 'toroidal.reports', layout.buildDirectory.dir('reports').get().asFile.absolutePath
     // The datapack templates under docs/ are not on the classpath, so the test that gates them is given the repo root.
     systemProperty 'toroidal.repoRoot', rootDir.absolutePath
+    def betterEndNeoForgeJar = configurations.betterEndNeoForge
+    inputs.files(betterEndNeoForgeJar)
+    doFirst { systemProperty 'toroidal.betterEndNeoForgeJar', betterEndNeoForgeJar.singleFile.absolutePath }
 }
 
 tasks.withType(JavaCompile).configureEach {

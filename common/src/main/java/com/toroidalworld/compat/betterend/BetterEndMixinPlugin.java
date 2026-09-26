@@ -69,14 +69,14 @@ public class BetterEndMixinPlugin extends ModPresenceGatePlugin {
     static final ModSymbol SPLIT_NUMBER = new ModSymbol(SPLIT_CONDITION, WoverInjectionTargets.NUMBER,
             WoverInjectionTargets.NUMBER_DESCRIPTOR);
 
-    static final ModSymbol SPLIT_NOISE = new ModSymbol(SPLIT_CONDITION, "getNoise", "(III)D");
+    static final ModSymbol SPLIT_NOISE = new ModSymbol(SPLIT_CONDITION, "getNoise", "(II)D");
 
     static final ModSymbol SULPHURIC_NUMBER = new ModSymbol(
             "org/betterx/betterend/world/surface/SulphuricSurfaceNoiseCondition", WoverInjectionTargets.NUMBER,
             WoverInjectionTargets.NUMBER_DESCRIPTOR);
 
     static final ModSymbol UMBRA_DEPTH = new ModSymbol("org/betterx/betterend/world/surface/UmbraSurfaceNoiseCondition",
-            "getDepth", "(III)I");
+            "getDepth", "(II)I");
 
     static final ModSymbol NOISE_EVAL_2D = new ModSymbol(OPEN_SIMPLEX_NOISE, "eval", "(DD)D");
 

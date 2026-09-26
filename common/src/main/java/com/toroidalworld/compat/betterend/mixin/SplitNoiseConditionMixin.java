@@ -25,7 +25,7 @@ public class SplitNoiseConditionMixin {
     private static final OpenSimplexStandIn toroidal$STAND_IN = new OpenSimplexStandIn(SEED);
 
     @WrapOperation(
-            method = {WoverInjectionTargets.GET_NUMBER, "getNoise(III)D"},
+            method = {WoverInjectionTargets.GET_NUMBER, "getNoise(II)D", "getNoise(III)D"},
             at = @At(value = "INVOKE", target = BetterEndInjectionTargets.NOISE_EVAL_2D))
     private double toroidal$lapNoise(OpenSimplexNoise noise, double x, double z, Operation<Double> original) {
         WorldFold fold = GenerationTransformerContext.context().wrappedTransformer();
