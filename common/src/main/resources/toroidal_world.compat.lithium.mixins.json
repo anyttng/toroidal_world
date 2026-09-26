@@ -5,9 +5,11 @@
   "compatibilityLevel": "JAVA_25",
   "plugin": "com.toroidalworld.compat.lithium.LithiumMixinPlugin",
   "mixins": [
+    "AcquirePoiRetryMixin",
     "EnderDragonPartsMixin",
     "GameEventDispatchKeyMixin",
     "LithiumEntityCollisionsMixin",
+    "PoiClosestBatchMixin",
     "SectionedEntityQueryMixin",
     "WorldHelperMixin"
   ],
