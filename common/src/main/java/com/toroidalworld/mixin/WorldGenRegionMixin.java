@@ -20,6 +20,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.WorldGenRegion;
@@ -88,6 +89,17 @@ public abstract class WorldGenRegionMixin implements LevelHolder {
         return nearest == null
                 ? original.call(chunkX, chunkZ)
                 : original.call(nearest.x(), nearest.z());
+    }
+
+    @WrapMethod(method = "ensureCanWrite")
+    private boolean toroidal$writeGateThroughTheSeam(BlockPos pos, Operation<Boolean> original) {
+        int chunkX = SectionPos.blockToSectionCoord(pos.getX());
+        int chunkZ = SectionPos.blockToSectionCoord(pos.getZ());
+        ChunkPos nearest = this.toroidal$nearestPastTheReach(chunkX, chunkZ);
+        return nearest == null
+                ? original.call(pos)
+                : original.call(pos.offset(SectionPos.sectionToBlockCoord(nearest.x() - chunkX), 0,
+                        SectionPos.sectionToBlockCoord(nearest.z() - chunkZ)));
     }
 
     @WrapMethod(method = "hasChunk")
