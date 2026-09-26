@@ -10,6 +10,8 @@ import com.toroidalworld.compat.ModSymbol;
 public class ElectroEnergeticsMixinPlugin extends ModPresenceGatePlugin {
     private static final Logger LOGGER = LogUtils.getLogger();
 
+    private static final String COLLECTOR_HANDLER = "(Ljava/util/function/UnaryOperator;Ljava/util/function/UnaryOperator;)V";
+
     private static final ModSymbol SECTION_INDEX = new ModSymbol(
             "com/george_vi/electroenergetics/simulation/infrastructure/WireSimulationState",
             "getConnectionsInSection", "(J)Ljava/util/Map;");
@@ -35,10 +37,23 @@ public class ElectroEnergeticsMixinPlugin extends ModPresenceGatePlugin {
             "com/george_vi/electroenergetics/content/wire/WireSync", "lambda$handlePlayerEnterNewSection$4",
             "(Lit/unimi/dsi/fastutil/longs/LongList;Lcom/george_vi/electroenergetics/foundation/nodes/InWorldNode;)Z");
 
+    private static final ModSymbol TRAIN_COLLECTORS = new ModSymbol(
+            "com/george_vi/electroenergetics/simulation/infrastructure/CatenaryModule", "buildCircuit",
+            "(Lcom/george_vi/electroenergetics/simulation/CircuitBuilder;)V");
+
+    private static final ModSymbol PANTOGRAPH_BLOCK = new ModSymbol(
+            "com/george_vi/electroenergetics/content/railway_electrification/pantograph/PantographBlockEntity",
+            "handleOnServer", COLLECTOR_HANDLER);
+
+    private static final ModSymbol SHOE_BLOCK = new ModSymbol(
+            "com/george_vi/electroenergetics/content/railway_electrification/third_rail/RailContactShoeBlockEntity",
+            "handleOnServer", COLLECTOR_HANDLER);
+
     private static final ModPresence ELECTRO_ENERGETICS = ModPresence.of(LOGGER,
             "com/george_vi/electroenergetics/CreateElectroEnergetics.class",
             "[electroenergetics-compat] gate electroenergetics_present",
-            SECTION_INDEX, DETACHED_NODE_TICK, CHANGE_LENGTH_PACKET, LINEMANS_STICK, PLAYER_BOX, LEAVING_NODES);
+            SECTION_INDEX, DETACHED_NODE_TICK, CHANGE_LENGTH_PACKET, LINEMANS_STICK, PLAYER_BOX, LEAVING_NODES,
+            TRAIN_COLLECTORS, PANTOGRAPH_BLOCK, SHOE_BLOCK);
 
     public ElectroEnergeticsMixinPlugin() {
         super(ELECTRO_ENERGETICS);

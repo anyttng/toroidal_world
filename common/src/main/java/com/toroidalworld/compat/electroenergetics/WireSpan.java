@@ -2,6 +2,8 @@ package com.toroidalworld.compat.electroenergetics;
 
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
+
 import com.toroidalworld.core.DeckTransformation;
 import com.toroidalworld.core.WorldFold;
 import com.toroidalworld.core.WorldLoopAttachments;
@@ -17,6 +19,10 @@ import net.minecraft.world.phys.Vec3;
 public final class WireSpan {
     public static Vec3 seat(Level level, Vec3 anchor, Vec3 end) {
         return WorldLoopAttachments.transformerOf(level).nearestCopy(anchor, end);
+    }
+
+    public static @Nullable Vec3 seatIfPresent(Level level, @Nullable Vec3 anchor, @Nullable Vec3 end) {
+        return anchor == null || end == null ? end : seat(level, anchor, end);
     }
 
     public static BlockPos seat(Level level, BlockPos anchor, Vec3i end) {

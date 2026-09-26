@@ -9,6 +9,10 @@ public final class ElectroEnergeticsInjectionTargets {
             "Lcom/george_vi/electroenergetics/foundation/nodes/NodeConnectionPoint;posAt"
                     + "(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/Vec3;F)Lnet/minecraft/world/phys/Vec3;";
 
+    public static final String NODE_GET_POSITION =
+            "Lcom/george_vi/electroenergetics/foundation/nodes/InWorldNode;getPosition"
+                    + "(Lnet/minecraft/world/level/Level;)Lnet/minecraft/world/phys/Vec3;";
+
     private ElectroEnergeticsInjectionTargets() {
     }
 }
